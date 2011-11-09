@@ -8,10 +8,13 @@
     "type": "git",
     "url": "git://github.com/samcday/node-google-spreadsheets.git"
   },
-  "main": "lib/spreadsheet.js",
+  "main": "lib/spreadsheets.js",
   "engines": {
     "node": ">= 0.4.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "request": ">= 2.0.2",
+    "xml2js": ">= 0.1.9"
+  },
   "devDependencies": {}
 }
