@@ -86,7 +86,7 @@ key from Google ClientLogin. The actualy authentication is not handled by this
 library. I would recommend the [googleclientlogin](https://github.com/Ajnasz/GoogleClientLogin)
 
 ### Authentication example (using googleclientlogin):
-    var GoogleClientLogin = require("googleclientlogin").GoogleClientLogin;
+	var GoogleClientLogin = require("googleclientlogin").GoogleClientLogin;
 
 	var googleAuth = new GoogleClientLogin({
 	  email: '<email>',
