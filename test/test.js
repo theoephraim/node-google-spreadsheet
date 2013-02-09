@@ -1,5 +1,5 @@
 var assert = require("assert");
-var GoogleSpreadsheets = require("google-spreadsheets");
+var GoogleSpreadsheets = require("../lib/spreadsheets");
 require("should");
 
 describe("google-spreadsheets", function() {
