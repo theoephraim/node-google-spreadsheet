@@ -1,0 +1,5 @@
+.gitignore
+test/
+examples/
+.npmignore
+.travis.yml
