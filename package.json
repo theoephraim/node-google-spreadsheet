@@ -16,5 +16,11 @@
     "request": ">= 2.0.2",
     "xml2js": ">= 0.1.9"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "mocha": "~1.8.1",
+    "should": "~1.2.1"
+  },
+  "scripts": {
+    "test": "mocha"
+  }
 }
