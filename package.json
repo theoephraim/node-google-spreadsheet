@@ -2,7 +2,7 @@
   "author": "Sam <sam.c.day@gmail.com> (http://sam.is-super-awesome.com/)",
   "name": "google-spreadsheets",
   "description": "Google Spreadsheet Data API for Node.js",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "homepage": "https://github.com/samcday/node-google-spreadsheets",
   "repository": {
     "type": "git",
