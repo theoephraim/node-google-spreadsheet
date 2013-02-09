@@ -110,10 +110,6 @@ library. I would recommend the [googleclientlogin](https://github.com/Ajnasz/Goo
 
 	googleAuth.login();
 
-## TODO:
-	- Publish to npm (lol)
-	- Write some tests
-
 ## Further possibilities for this library
 	- Edit functionality
 	- Sorting/filtering on row listing
