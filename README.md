@@ -122,3 +122,7 @@ library. I would recommend the [googleclientlogin](https://github.com/Ajnasz/Goo
 ## Links
 	- <http://code.google.com/apis/spreadsheets/>
 	- <https://github.com/Ajnasz/GoogleClientLogin>
+
+## License
+
+node-google-spreadsheets is free and unencumbered public domain software. For more information, see the accompanying UNLICENSE file.
