@@ -1,24 +1,25 @@
 {
-  "author": "Sam <sam.c.day@gmail.com> (http://sam.is-super-awesome.com/)",
-  "name": "google-spreadsheets",
+  "author": "Theo Ephraim <theozero@gmail.com> (http://theoephraim.com)",
+  "name": "google-spreadsheet",
   "description": "Google Spreadsheet Data API for Node.js",
-  "version": "0.1.0",
-  "homepage": "https://github.com/samcday/node-google-spreadsheets",
+  "version": "0.2.0",
+  "homepage": "https://github.com/theoephraim/node-google-spreadsheets",
   "repository": {
     "type": "git",
-    "url": "git://github.com/samcday/node-google-spreadsheets.git"
+    "url": "git://github.com/theoephraim/node-google-spreadsheets.git"
   },
-  "main": "lib/spreadsheets.js",
+  "main": "index.js",
   "engines": {
     "node": ">= 0.4.0"
   },
   "dependencies": {
     "request": ">= 2.0.2",
-    "xml2js": ">= 0.1.9"
+    "xml2js": ">= 0.1.9",
+    "googleclientlogin": "0.2.x"
   },
   "devDependencies": {
     "mocha": "~1.8.1",
-    "should": "~1.2.1"
+    "should": ">1.2.1"
   },
   "scripts": {
     "test": "mocha"

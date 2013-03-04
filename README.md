@@ -1,80 +1,50 @@
-[![build status](https://secure.travis-ci.org/samcday/node-google-spreadsheets.png)](http://travis-ci.org/samcday/node-google-spreadsheets)
-# NodeJS Google Spreadsheets Data API `v0.1.0`
+# NodeJS Google Spreadsheets Data API `v0.2.0`
 
-A simple Node.js library to read data from a Google Spreadsheet.
+A simple Node.js library to read and manipulate data in a Google Spreadsheet.
+
+Works without authentication for read-only sheets or with auth for adding/editing/deleting data. Currently only supports list-based feeds (dealing with rows) as it seems more useful, but will probably add in cell-based feeds eventually.
 
 ## Installation
 
-	npm install google-spreadsheets
+	npm install google-spreadsheet
 
-## Quick Example
-	var GoogleSpreadsheets = require("google-spreadsheets");
+## Basic Usage
+	var GoogleSpreadsheet = require("google-spreadsheet");
 	
-	GoogleSpreadsheets({
-		key: "<spreadsheet key>"
-	}, function(err, spreadsheet) {
-		spreadsheet.worksheets[0].cells({
-			range: "R1C1:R5C5"
-		}, function(err, cells) {
-			// Cells will contain a 2 dimensional array with all cell data in the
-			// range requested.
+	var my_sheet = new GoogleSpreadsheet('<spreadsheet key>');
+
+	// without auth -- read only
+	// # is worksheet id - IDs start at 1
+	my_sheet.getRows( 1, function(err, row_data){
+		console.log( 'pulled in '+row_data.length + ' rows ')
+	})
+
+	// set auth to be able to edit/add/delete
+	my_sheet.setAuth('<google email/username>','<google pass>', function(err){
+		my_sheet.getInfo( function( err, sheet_info ){
+			console.log( sheet_info.title + ' is loaded' );
+			// use worksheet object if you want to forget about ids
+			sheet_info.worksheets[0].getRows( function( err, rows ){
+				rows[0].colname = 'new val';
+				rows[0].colname.save();
+				rows[0].del();
+			}
+		}
+
+		// column names are set by google based on the first row of your sheet
+		my_sheet.addRow( 2, { colname: 'col value'} );
+
+		my_sheet.getRows( 2, {
+			start: 100,			// start index
+			num: 100			// number of rows to pull
+		}, function(err, row_data){
+			// do something...
 		});
-	});
-	
-## API
-
-*GoogleSpreadsheets = module.exports = function(opts, callback);*
-
-Loads a `Spreadsheet` from the API. `opts` may contain the following:
-
-	- `key`: *(required)* spreadsheet key
-	- `auth`: *(optional)* authentication key from Google ClientLogin
-
-
-*GoogleSpreadsheets.rows = function(opts, callback);*
-
-Loads a set of rows for a specific Spreadsheet from the API. Note that this call is direct, you must supply all auth, spreadsheet and worksheet information.
-
-`opts`:
-	- `key`: *(required)* spreadsheet key
-	- `worksheet`: *(required)* worksheet id. Can be a numeric index (starting from 1), or the proper string identifier for a worksheet.
-	- `start`: *(optional)* starting index for returned results
-	- `num`: *(optional)* number of results to return 
-	- `auth`: *(optional)* authentication key from Google ClientLogin
-
-
-*GoogleSpreadsheets.cells = function(opts, callback);*
-
-Loads a group of cells for a specific Spreadsheet from the API. Note that this call is direct, you must supply all auth, spreadsheet and worksheet information.
-
-`opts`:
-	- `key`: *(required)* spreadsheet key
-	- `worksheet`: *(required)* worksheet id. Can be a numeric index (starting from 1), or the proper string identifier for a worksheet.
-	- `range`: *(optional)* A range (in the format of R1C1) of cells to retrieve. e.g R15C2:R37C8. Range is inclusive.
-	- `auth`: *(optional)* authentication key from Google ClientLogin
-
-*Spreadsheet*
-
-Object returned from `GoogleSpreadsheets()` call. This object has the following properties:
-	- `title`: title of Spreadsheet
-	- `updated`: date Spreadsheet was last updated.
-	- `author`: object containing `name` and `email` of author of Spreadsheet.
-	- `worksheets`: Array of Worksheets contained in this spreadsheet.
-
-*Worksheet*
-
-Represents a single worksheet contained in a Spreadsheet. Obtain this via `Spreadsheet.worksheets`.
-
-Worksheet has the following properties:
-	- `rowCount`: number of rows in worksheet.
-	- `colCount`: number of columns in worksheet.
-	- `Worksheet.rows(opts, cb)`: convenience method to call `Spreadsheets.rows`, just pass in `start` and `num` - will automatically pass spreadsheet key, worksheet id, and auth info (if applicable) 
-	- `Worksheet.cols(opts, cb)`: convenience method to call `Spreadsheets.cols`, will automatically pass spreadsheet key, worksheet id, and auth info (if applicable). opts can contain `range`, etc.
+	})
 	
 ## A note on authentication
 
-The Google Spreadsheets Data API reference and developers guide is a little ambiguous
- about how you access a "published" public Spreadsheet.
+The Google Spreadsheets Data API reference and developers guide is a little ambiguous about how you access a "published" public Spreadsheet.
 
 If you wish to work with a Google Spreadsheet without authenticating, not only 
 must the Spreadsheet in question be visible to the web, but it must also have 
@@ -85,43 +55,22 @@ Generally, you'll find alot of public spreadsheets may not have had this
 treatment, so your best bet is to just authenticate a Google account and 
 access the API in that manner.
 
-This library supports authenticated calls, when it is provided an authentication 
-key from Google ClientLogin. The actualy authentication is not handled by this 
-library. I would recommend the [googleclientlogin](https://github.com/Ajnasz/GoogleClientLogin)
-
-### Authentication example (using googleclientlogin):
-	var GoogleClientLogin = require("googleclientlogin").GoogleClientLogin;
-
-	var googleAuth = new GoogleClientLogin({
-	  email: '<email>',
-	  password: '<password>',
-	  service: 'spreadsheets',
-	  accountType: GoogleClientLogin.accountTypes.google
-	});
-	
-	googleAuth.on(GoogleClientLogin.events.login, function(){
-		GoogleSpreadsheets({
-			key: "<key>",
-			auth: googleAuth.getAuthId()
-		}, function(err, spreadsheet) {
-			spreadsheet.worksheets[0].cells({
-				range: "R1C1:R5C6"
-			}, function(err, cells) {
-				// bleh!
-			});
-		});
-	});
-
-	googleAuth.login();
+This library uses [googleclientlogin](https://github.com/Ajnasz/GoogleClientLogin) to provide simple authentication. Optionally you can pass in an auth token that you have created already (using googleclientlogin or whatever else)
 
 ## Further possibilities for this library
-	- Edit functionality
-	- Sorting/filtering on row listing
-	- Filtering on cell listing.
+	- Adding cell-based feeds (was in the original package)
+	- adding query capabilities for list-feeds
+	- batch requests for cell based updates
+	- modifying worksheet/spreadsheet properties
+	- getting list of available spreadsheets for an authenticated user
 
 ## Links
-	- <http://code.google.com/apis/spreadsheets/>
+	- <https://developers.google.com/google-apps/spreadsheets/>
 	- <https://github.com/Ajnasz/GoogleClientLogin>
+
+## Thanks
+This is a fairly major rewrite of code by [samcday](https://github.com/samcday). original version [here](https://github.com/samcday/node-google-spreadsheets)
+Also big thanks fo GoogleClientLogin for dealing with authentication.
 
 ## License
 
