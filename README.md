@@ -26,7 +26,7 @@ Works without authentication for read-only sheets or with auth for adding/editin
 			// use worksheet object if you want to forget about ids
 			sheet_info.worksheets[0].getRows( function( err, rows ){
 				rows[0].colname = 'new val';
-				rows[0].colname.save();
+				rows[0].save();
 				rows[0].del();
 			}
 		}
