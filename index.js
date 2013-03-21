@@ -83,6 +83,35 @@ module.exports = function( ss_key, auth_id ){
 
 	}
 
+	this.getCells = function (worksheet_id, opts, cb) {
+		// opts is optional
+		if (typeof( opts ) == 'function') {
+			cb = opts;
+			opts = {};
+		}
+
+		// NOT TESTED
+		var query = {};
+		if (opts.minRow) query["min-row"] = opts.minRow;
+		if (opts.maxRow) query["max-row"] = opts.maxRow;
+		if (opts.minCol) query["min-col"] = opts.minCol;
+		if (opts.maxCol) query["max-col"] = opts.maxCol;
+		//---
+
+		self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data, xml) {
+			if (err) return cb(err);
+
+			var rows = [];
+			var entries = forceArray(data['entry']);
+			var i = 0;
+			entries.forEach(function (cell_data) {
+				rows.push(new SpreadsheetCell(self, cell_data));
+			});
+
+			cb(null, rows);
+		});
+	}
+
 	this.addRow = function( worksheet_id, data, cb ){
 		if( !worksheet_id ) throw new Error("Worksheet not specified.");
 
@@ -128,7 +157,7 @@ module.exports = function( ss_key, auth_id ){
 			url: url,
 			method: method,
 			headers: headers,
-			body: method == 'POST' || method == 'PUT' ? query_or_data : null,
+			body: method == 'POST' || method == 'PUT' ? query_or_data : null
 		}, function(err, response, body){
 			if (err) {
 				return cb( err );
@@ -168,6 +197,9 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
 
 	this.getRows = function( opts, cb ){
 		spreadsheet.getRows( self.id, opts, cb );
+	}
+	this.getCells = function (opts, cb) {
+		spreadsheet.getCells(self.id, opts, cb);
 	}
 	this.addRow = function( data, cb ){
 		spreadsheet.addRow( self.id, data, cb );	
@@ -223,6 +255,15 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 	self.del = function( cb ){
 		spreadsheet.makeFeedRequest( self['_links']['edit'], 'DELETE', null, cb );
 	}
+}
+
+var SpreadsheetCell = function( spreadsheet, data){
+	var self = this;
+
+	var cell = data['gs:cell'];
+	self.value = cell['#'];
+	self.row = parseInt(cell['@'].row);
+	self.col = parseInt(cell['@'].col);
 }
 
 //utils
