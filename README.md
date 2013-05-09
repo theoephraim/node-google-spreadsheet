@@ -1,4 +1,6 @@
-# NodeJS Google Spreadsheets Data API `v0.2.0`
+# NodeJS Google Spreadsheets Data API
+
+[![NPM version](https://badge.fury.io/js/google-spreadsheet.png)](http://badge.fury.io/js/google-spreadsheet)
 
 A simple Node.js library to read and manipulate data in a Google Spreadsheet.
 
