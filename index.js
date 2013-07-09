@@ -89,7 +89,7 @@ module.exports = function( ss_key, auth_id ){
 		var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">' + "\n";
 	    Object.keys(data).forEach(function(key) {
 	    	if (key != 'id' && key != 'title' && key != 'content' && key != '_links'){
-	    		data_xml += '<gsx:'+ key + '>' + xmlSafeValue(data[key]) + '</gsx:'+ key + '>' + "\n"	
+	    		data_xml += '<gsx:'+ xmlSafeColumnName(key) + '>' + xmlSafeValue(data[key]) + '</gsx:'+ xmlSafeColumnName(key) + '>' + "\n"	
 	    	}
 		});
 	    data_xml += '</entry>';
@@ -215,7 +215,7 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 		data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gsx='http://schemas.google.com/spreadsheets/2006/extended'>");
 	    Object.keys( self ).forEach( function(key) {
 	    	if (key.substr(0,1) != '_' && typeof( self[key] == 'string') ){
-	    		data_xml = data_xml.replace( new RegExp('<gsx:'+key+'>(.*?)</gsx:'+key+'>'), '<gsx:'+key+'>'+ xmlSafeValue(self[key]) +'</gsx:'+key+'>');
+	    		data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+'>(.*?)</gsx:'+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key+)'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
 	    	}
 		});
 		spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
@@ -238,3 +238,9 @@ var xmlSafeValue = function(val){
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
 }
+var xmlSafeColumnName = function(val){
+    if (!val) return '';
+    return String(val).replace(/\s+/g, '')
+        .toLowerCase();
+}
+
