@@ -2,7 +2,7 @@
   "author": "Theo Ephraim <theozero@gmail.com> (http://theoephraim.com)",
   "name": "google-spreadsheet",
   "description": "Google Spreadsheet Data API for Node.js",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "homepage": "https://github.com/theoephraim/node-google-spreadsheets",
   "repository": {
     "type": "git",

@@ -21,21 +21,22 @@ testsheet.getInfo( function(err, ss_info){
 
 
 // if auth is set, you can edit. you read the rows while authenticated in order to get the edit feed URLs from google
-testsheet.setAuth( 'youremail@gmail.com', 'YOURPASSWORD', function(err){
+testsheet.setAuth( 'youremail@gmail.com', '*PASSWORD*', function(err){
 	if (err) console.log(err);
 
 	console.log(' GOOGLE AUTH SUCCESS!' );
 
 	// you can also add and read rows by just indicating the worksheet id (starts at 1)
 	testsheet.addRow( 1, { 
-		testdate: (new Date()).toString('yyyy-MM-dd') 
+		testdate: ( new Date() ).toString('yyyy-MM-dd'),
+		testnum: 0
 	})
 	
 	testsheet.getRows( 2, function(err, rows){
 		if (err) console.log( err );
 
 		// to edit row data, just edit the data and call save()
-		rows[0].testcount++;
+		rows[0].testnum++;
 		rows[0].save();
 
 		// you can also delete rows by calling .del()

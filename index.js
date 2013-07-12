@@ -93,6 +93,7 @@ module.exports = function( ss_key, auth_id ){
 	    	}
 		});
 	    data_xml += '</entry>';
+	    console.log( data_xml );
 		self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
 	}
 
@@ -215,7 +216,7 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 		data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gsx='http://schemas.google.com/spreadsheets/2006/extended'>");
 	    Object.keys( self ).forEach( function(key) {
 	    	if (key.substr(0,1) != '_' && typeof( self[key] == 'string') ){
-	    		data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+'>(.*?)</gsx:'+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key+)'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
+	    		data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+'>(.*?)</gsx:'+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key)+'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
 	    	}
 		});
 		spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
@@ -232,7 +233,7 @@ var forceArray = function(val) {
 	return [ val ];
 }
 var xmlSafeValue = function(val){
-    if (!val) return '';
+    if ( val == null ) return '';
     return String(val).replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
