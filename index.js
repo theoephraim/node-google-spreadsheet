@@ -53,7 +53,7 @@ module.exports = function( ss_key, auth_id ){
 			cb( null, ss_data );
 		});
 	}
-	this.getRows = function( worksheet_id, opts, cb ){
+	this.getRows = function( worksheet_id, opts, query, cb ){
 		// the first row is used as titles/keys and is not included
 
 		// opts is optional
@@ -61,8 +61,8 @@ module.exports = function( ss_key, auth_id ){
 			cb = opts;
 			opts = {};
 		}
-
-		var query = {};
+                
+		var query = query;
 		if ( opts.start ) query["start-index"] = opts.start;
 		if ( opts.num ) query["max-results"] = opts.num;
 		if ( opts.orderby ) query["orderby"] = opts.orderby;
@@ -71,6 +71,9 @@ module.exports = function( ss_key, auth_id ){
 		self.makeFeedRequest( ["list", ss_key, worksheet_id], 'GET', query, function(err, data, xml) {
 			if ( err ) return cb( err );
 			// gets the raw xml for each entry -- this is passed to the row object so we can do updates on it later
+                        // Credit http://stackoverflow.com/questions/9745874/javascript-replacing-all-instances-of-new-line-character-ascii-13-with-r-n
+                        var xml = xml.replace(/\n/g, " "); //This can't cope with new lines, it seems, so we get rid of them
+                        console.log(xml);
 			var entries_xml = xml.match(/<entry[^>]*>(.*?)<\/entry>/g);
 			var rows = [];
 			var entries = forceArray( data.entry );
@@ -124,7 +127,8 @@ module.exports = function( ss_key, auth_id ){
 			url += "?" + querystring.stringify( query_or_data );
 		}
 
-		console.log( 'making request -- ' + method + ' - ' + url);
+		console.log( 'making request -- ' + method + ' - ' + url + ' - body: ' + (method == 'POST' || method == 'PUT' ? query_or_data : null) + ' - headers: ');
+                console.log(headers);
 		request( {
 			url: url,
 			method: method,
@@ -167,8 +171,8 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
 	self.rowCount = data['gs:rowCount'];
 	self.colCount = data['gs:colCount'];
 
-	this.getRows = function( opts, cb ){
-		spreadsheet.getRows( self.id, opts, cb );
+	this.getRows = function( opts, query, cb ){
+		spreadsheet.getRows( self.id, opts, query, cb );
 	}
 	this.addRow = function( data, cb ){
 		spreadsheet.addRow( self.id, data, cb );	
