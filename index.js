@@ -73,7 +73,6 @@ module.exports = function( ss_key, auth_id ){
 			// gets the raw xml for each entry -- this is passed to the row object so we can do updates on it later
                         // Credit http://stackoverflow.com/questions/9745874/javascript-replacing-all-instances-of-new-line-character-ascii-13-with-r-n
                         var xml = xml.replace(/\n/g, " "); //This can't cope with new lines, it seems, so we get rid of them
-                        console.log(xml);
 			var entries_xml = xml.match(/<entry[^>]*>(.*?)<\/entry>/g);
 			var rows = [];
 			var entries = forceArray( data.entry );
@@ -96,7 +95,6 @@ module.exports = function( ss_key, auth_id ){
 	    	}
 		});
 	    data_xml += '</entry>';
-	    console.log( data_xml );
 		self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
 	}
 
@@ -127,8 +125,8 @@ module.exports = function( ss_key, auth_id ){
 			url += "?" + querystring.stringify( query_or_data );
 		}
 
-		console.log( 'making request -- ' + method + ' - ' + url + ' - body: ' + (method == 'POST' || method == 'PUT' ? query_or_data : null) + ' - headers: ');
-                console.log(headers);
+		//console.log( 'making request -- ' + method + ' - ' + url + ' - body: ' + (method == 'POST' || method == 'PUT' ? query_or_data : null) + ' - headers: ');
+        //console.log(headers);
 		request( {
 			url: url,
 			method: method,
