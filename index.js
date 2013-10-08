@@ -61,7 +61,7 @@ module.exports = function( ss_key, auth_id ){
 			cb = opts;
 			opts = {};
 		}
-                
+
 		var query = query;
 		if ( opts.start ) query["start-index"] = opts.start;
 		if ( opts.num ) query["max-results"] = opts.num;
@@ -70,8 +70,9 @@ module.exports = function( ss_key, auth_id ){
 
 		self.makeFeedRequest( ["list", ss_key, worksheet_id], 'GET', query, function(err, data, xml) {
 			if ( err ) return cb( err );
+
 			// gets the raw xml for each entry -- this is passed to the row object so we can do updates on it later
-            var entries_xml = xml.match(/<entry[^>]*>(.[\s\S]*?)<\/entry>/g);
+      var entries_xml = xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
 			var rows = [];
 			var entries = forceArray( data.entry );
 			var i=0;
@@ -89,7 +90,7 @@ module.exports = function( ss_key, auth_id ){
 		var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">' + "\n";
 	    Object.keys(data).forEach(function(key) {
 	    	if (key != 'id' && key != 'title' && key != 'content' && key != '_links'){
-	    		data_xml += '<gsx:'+ xmlSafeColumnName(key) + '>' + xmlSafeValue(data[key]) + '</gsx:'+ xmlSafeColumnName(key) + '>' + "\n"	
+	    		data_xml += '<gsx:'+ xmlSafeColumnName(key) + '>' + xmlSafeValue(data[key]) + '</gsx:'+ xmlSafeColumnName(key) + '>' + "\n"
 	    	}
 		});
 	    data_xml += '</entry>';
@@ -124,7 +125,7 @@ module.exports = function( ss_key, auth_id ){
 		}
 
 		//console.log( 'making request -- ' + method + ' - ' + url + ' - body: ' + (method == 'POST' || method == 'PUT' ? query_or_data : null) + ' - headers: ');
-        //console.log(headers);
+    //console.log(headers);
 		request( {
 			url: url,
 			method: method,
@@ -149,12 +150,12 @@ module.exports = function( ss_key, auth_id ){
 					cb( err );
 				});
 
-				parser.parseString(body);	
+				parser.parseString(body);
 			} else {
 				if ( err ) cb( err );
 				else cb( null, true );
 			}
-			
+
 		})
 	}
 };
@@ -171,7 +172,7 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
 		spreadsheet.getRows( self.id, opts, query, cb );
 	}
 	this.addRow = function( data, cb ){
-		spreadsheet.addRow( self.id, data, cb );	
+		spreadsheet.addRow( self.id, data, cb );
 	}
 }
 
@@ -209,17 +210,18 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 		API for edits is very strict with the XML it accepts
 		So we just do a find replace on the original XML.
 		It's dumb, but I couldnt get any JSON->XML conversion to work
-		*/ 
-		
+		*/
+
 		var data_xml = self['_xml'];
 		// probably should make this part more robust?
 		data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gsx='http://schemas.google.com/spreadsheets/2006/extended'>");
 	    Object.keys( self ).forEach( function(key) {
 	    	if (key.substr(0,1) != '_' && typeof( self[key] == 'string') ){
-	    		data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+'>(.*?)</gsx:'+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key)+'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
+	    		data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+">([\\s\\S]*?)</gsx:"+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key)+'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
 	    	}
 		});
 		spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
+    //console.log(data_xml);
 	}
 	self.del = function( cb ){
 		spreadsheet.makeFeedRequest( self['_links']['edit'], 'DELETE', null, cb );
@@ -244,4 +246,3 @@ var xmlSafeColumnName = function(val){
     return String(val).replace(/\s+/g, '')
         .toLowerCase();
 }
-
