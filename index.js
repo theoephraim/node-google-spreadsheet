@@ -60,9 +60,13 @@ module.exports = function( ss_key, auth_id ){
 		if ( typeof( opts ) == 'function' ){
 			cb = opts;
 			opts = {};
+			query = null;
+		// so is query
+		} else if ( typeof( query ) == 'function' ){
+			cb = query;
+			query = null;
 		}
 
-		var query = query;
 		if ( opts.start ) query["start-index"] = opts.start;
 		if ( opts.num ) query["max-results"] = opts.num;
 		if ( opts.orderby ) query["orderby"] = opts.orderby;
@@ -124,8 +128,6 @@ module.exports = function( ss_key, auth_id ){
 			url += "?" + querystring.stringify( query_or_data );
 		}
 
-		//console.log( 'making request -- ' + method + ' - ' + url + ' - body: ' + (method == 'POST' || method == 'PUT' ? query_or_data : null) + ' - headers: ');
-    //console.log(headers);
 		request( {
 			url: url,
 			method: method,
@@ -221,7 +223,6 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 	    	}
 		});
 		spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
-    //console.log(data_xml);
 	}
 	self.del = function( cb ){
 		spreadsheet.makeFeedRequest( self['_links']['edit'], 'DELETE', null, cb );

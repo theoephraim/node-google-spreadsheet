@@ -58,24 +58,22 @@ The Google Spreadsheets Data API reference and developers guide is a little ambi
 
 If you wish to work with a Google Spreadsheet without authenticating, not only 
 must the Spreadsheet in question be visible to the web, but it must also have 
-been explicitly published using the "Share" button in the top right corner of 
-the Google Spreadsheets GUI.
+been explicitly published using "File > Publish to the web" menu option in the google spreadsheets GUI.
 
 Generally, you'll find alot of public spreadsheets may not have had this 
 treatment, so your best bet is to just authenticate a Google account and 
 access the API in that manner.
 
-This library uses [googleclientlogin](https://github.com/Ajnasz/GoogleClientLogin) to provide simple authentication. Optionally you can pass in an auth token that you have created already (using googleclientlogin or whatever else)
+This library uses [googleclientlogin](https://github.com/Ajnasz/GoogleClientLogin) internally to provide basic authentication. Optionally you can pass in an auth token that you have created already (using googleclientlogin or something else).
 
 
-## Further possibilities for this library
+## Further possibilities & to-do
 
 - Adding cell-based feeds (was in the original package)
-- adding query capabilities for list-feeds
 - batch requests for cell based updates
 - modifying worksheet/spreadsheet properties
 - getting list of available spreadsheets for an authenticated user
-
+- add some testing
 
 ## Links
 

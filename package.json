@@ -2,7 +2,7 @@
   "author": "Theo Ephraim <theozero@gmail.com> (http://theoephraim.com)",
   "name": "google-spreadsheet",
   "description": "Google Spreadsheet Data API for Node.js -- has functionality to read, edit, and create rows",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "keywords": ["google", "spreadsheet", "spreadsheets", "gdata", "api"],
   "homepage": "https://github.com/theoephraim/node-google-spreadsheets",
   "repository": {
@@ -17,12 +17,5 @@
     "request": ">= 2.0.2",
     "xml2js": ">= 0.1.9",
     "googleclientlogin": "0.2.x"
-  },
-  "devDependencies": {
-    "mocha": "~1.8.1",
-    "should": ">1.2.1"
-  },
-  "scripts": {
-    "test": "mocha"
   }
 }
