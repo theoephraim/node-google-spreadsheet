@@ -12,6 +12,12 @@ module.exports = function( ss_key, auth_id ){
 	var google_auth;
 	var self = this;
 
+	var xml_parser = new xml2js.Parser({
+		// options carried over from older version of xml2js -- might want to update how the code works, but for now this is fine
+		explicitArray: false,
+		explicitRoot: false,
+	});
+
 	if ( !ss_key ) {
 		throw new Error("Spreadsheet key not provided.");
 	}
@@ -41,7 +47,7 @@ module.exports = function( ss_key, auth_id ){
 		self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data, xml) {
 			if ( err ) return cb( err );
 			var ss_data = {
-				title: data.title["#"],
+				title: data.title["_"],
 				updated: data.updated,
 				author: data.author,
 				worksheets: []
@@ -143,16 +149,10 @@ module.exports = function( ss_key, auth_id ){
 			}
 
 			if ( body ){
-				var parser = new xml2js.Parser(xml2js.defaults["0.1"]);
-				parser.on("end", function(result) {
+				xml_parser.parseString(body, function(err, result){
+					if ( err ) return cb( err );
 					cb( null, result, body );
 				});
-
-				parser.on("error", function(err) {
-					cb( err );
-				});
-
-				parser.parseString(body);
 			} else {
 				if ( err ) cb( err );
 				else cb( null, true );
@@ -166,7 +166,7 @@ module.exports = function( ss_key, auth_id ){
 var SpreadsheetWorksheet = function( spreadsheet, data ){
 	var self = this;
 	self.id = data.id.substring( data.id.lastIndexOf("/") + 1 );
-	self.title = data.title["#"];
+	self.title = data.title["_"];
 	self.rowCount = data['gs:rowCount'];
 	self.colCount = data['gs:colCount'];
 
@@ -195,13 +195,13 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 		} else {
 			if (key == "id") {
 				self[key] = val;
-			} else if (val['#']) {
-				self[key] = val['#'];
+			} else if (val['_']) {
+				self[key] = val['_'];
 			} else if ( key == 'link' ){
 				self['_links'] = [];
 				val = forceArray( val );
 				val.forEach( function( link ){
-					self['_links'][ link['@']['rel'] ] = link['@']['href'];
+					self['_links'][ link['$']['rel'] ] = link['$']['href'];
 				});
 			}
 		}

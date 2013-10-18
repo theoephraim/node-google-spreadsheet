@@ -73,7 +73,6 @@ This library uses [googleclientlogin](https://github.com/Ajnasz/GoogleClientLogi
 - batch requests for cell based updates
 - modifying worksheet/spreadsheet properties
 - getting list of available spreadsheets for an authenticated user
-- add some testing
 
 ## Links
 
