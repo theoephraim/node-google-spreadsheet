@@ -107,6 +107,47 @@ module.exports = function( ss_key, auth_id ){
 		self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
 	}
 
+	this.getCells = function (worksheet_id, opts, cb) {
+		// opts is optional
+		if (typeof( opts ) == 'function') {
+			cb = opts;
+			opts = {};
+		}
+
+		var query = {};
+		if (opts.minRow) query["min-row"] = opts.minRow;
+		if (opts.maxRow) query["max-row"] = opts.maxRow;
+		if (opts.minCol) query["min-col"] = opts.minCol;
+		if (opts.maxCol) query["max-col"] = opts.maxCol;
+
+		self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data, xml) {
+			if (err) return cb(err);
+
+			var rows = [];
+			var entries = forceArray(data['entry']);
+			var i = 0;
+			entries.forEach(function (cell_data) {
+				rows.push(new SpreadsheetCell(self, worksheet_id, cell_data));
+			});
+
+			cb(null, rows);
+		});
+	}
+
+	this.editCell = function (worksheet_id, row, col, newValue, cb) {
+		var id = GOOGLE_FEED_URL + 'cells/' + ss_key + '/' + worksheet_id + '/private/full/R' + row + 'C' + col;
+
+		var xml =
+			'<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gs="http://schemas.google.com/spreadsheets/2006">' +
+				'  <id>' + id + '</id>' +
+				'  <link rel="edit" type="application/atom+xml" href="' + id + '"/>' +
+				'  <gs:cell row="' + row + '" col="' + col + '" inputValue="' + newValue + '"/>' +
+				'</entry>';
+		console.log(xml);
+
+		this.makeFeedRequest(id, 'PUT', xml, cb );
+	}
+
 	this.makeFeedRequest = function( url_params, method, query_or_data, cb ){
 		var url;
 		var headers = {};
@@ -128,6 +169,7 @@ module.exports = function( ss_key, auth_id ){
 
 		if ( method == 'POST' || method == 'PUT' ){
 			headers['content-type'] = 'application/atom+xml';
+			headers['If-Match'] = '*';
 		}
 
 		if ( method == 'GET' && query_or_data ) {
@@ -138,7 +180,7 @@ module.exports = function( ss_key, auth_id ){
 			url: url,
 			method: method,
 			headers: headers,
-			body: method == 'POST' || method == 'PUT' ? query_or_data : null,
+			body: method == 'POST' || method == 'PUT' ? query_or_data : null
 		}, function(err, response, body){
 			if (err) {
 				return cb( err );
@@ -172,6 +214,9 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
 
 	this.getRows = function( opts, query, cb ){
 		spreadsheet.getRows( self.id, opts, query, cb );
+	}
+	this.getCells = function (opts, cb) {
+		spreadsheet.getCells(self.id, opts, cb);
 	}
 	this.addRow = function( data, cb ){
 		spreadsheet.addRow( self.id, data, cb );
@@ -226,6 +271,28 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 	}
 	self.del = function( cb ){
 		spreadsheet.makeFeedRequest( self['_links']['edit'], 'DELETE', null, cb );
+	}
+}
+
+var SpreadsheetCell = function( spreadsheet, worksheet_id, data){
+	var self = this;
+
+	var cell = data['gs:cell'];
+	self.value = cell['#'];
+	self.row = parseInt(cell['@'].row);
+	self.col = parseInt(cell['@'].col);
+	self.id = data['id'];
+
+	self.setValue = function(newValue, cb) {
+		spreadsheet.editCell(worksheet_id, self.row, self.col, newValue, cb);
+	};
+
+	self.save = function(cb) {
+		self.setValue(self.value);
+	}
+
+	self.del = function(cb) {
+		self.setValue('');
 	}
 }
 
