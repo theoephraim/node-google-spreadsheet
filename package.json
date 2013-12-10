@@ -1,8 +1,8 @@
 {
   "author": "Theo Ephraim <theozero@gmail.com> (http://theoephraim.com)",
   "name": "google-spreadsheet",
-  "description": "Google Spreadsheet Data API for Node.js -- can read, write, edit, and delete rows",
-  "version": "0.2.5",
+  "description": "Google Spreadsheet Data API -- simple interface to read and write rows and cells",
+  "version": "0.2.6",
   "keywords": [
     "google",
     "spreadsheet",
