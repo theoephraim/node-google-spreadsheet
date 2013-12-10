@@ -9,8 +9,8 @@ var GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
 // NOTE: worksheet IDs start at 1
 
 module.exports = function( ss_key, auth_id ){
-  var google_auth;
   var self = this;
+  var google_auth;
 
   var xml_parser = new xml2js.Parser({
     // options carried over from older version of xml2js -- might want to update how the code works, but for now this is fine
@@ -41,7 +41,6 @@ module.exports = function( ss_key, auth_id ){
     })
     new_auth.login();
   }
-
 
   this.getInfo = function( cb ){
     self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data, xml) {
@@ -91,9 +90,7 @@ module.exports = function( ss_key, auth_id ){
       });
       cb(null, rows);
     });
-
   }
-
   this.addRow = function( worksheet_id, data, cb ){
     if( !worksheet_id ) throw new Error("Worksheet not specified.");
 
@@ -105,6 +102,32 @@ module.exports = function( ss_key, auth_id ){
     });
       data_xml += '</entry>';
     self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
+  }
+  this.getCells = function (worksheet_id, opts, cb) {
+    // opts is optional
+    if (typeof( opts ) == 'function') {
+      cb = opts;
+      opts = {};
+    }
+
+    var query = {};
+    if (opts.minRow) query["min-row"] = opts.minRow;
+    if (opts.maxRow) query["max-row"] = opts.maxRow;
+    if (opts.minCol) query["min-col"] = opts.minCol;
+    if (opts.maxCol) query["max-col"] = opts.maxCol;
+
+    self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data, xml) {
+      if (err) return cb(err);
+
+      var cells = [];
+      var entries = forceArray(data['entry']);
+      var i = 0;
+      entries.forEach(function( cell_data ){
+        cells.push( new SpreadsheetCell( self, worksheet_id, cell_data ) );
+      });
+
+      cb( null, cells );
+    });
   }
 
   this.makeFeedRequest = function( url_params, method, query_or_data, cb ){
@@ -136,19 +159,20 @@ module.exports = function( ss_key, auth_id ){
 
     if ( method == 'GET' && query_or_data ) {
       url += "?" + querystring.stringify( query_or_data );
-    }
+    }    
 
     request( {
       url: url,
       method: method,
       headers: headers,
-      body: method == 'POST' || method == 'PUT' ? query_or_data : null,
+      body: method == 'POST' || method == 'PUT' ? query_or_data : null
     }, function(err, response, body){
       if (err) {
         return cb( err );
       } else if( response.statusCode === 401 ) {
         return cb( new Error("Invalid authorization key."));
       } else if ( response.statusCode >= 400 ) {
+        console.log( body );
         return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]));
       }
 
@@ -176,6 +200,9 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
 
   this.getRows = function( opts, query, cb ){
     spreadsheet.getRows( self.id, opts, query, cb );
+  }
+  this.getCells = function (opts, cb) {
+    spreadsheet.getCells( self.id, opts, cb );
   }
   this.addRow = function( data, cb ){
     spreadsheet.addRow( self.id, data, cb );
@@ -230,6 +257,46 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
   }
   self.del = function( cb ){
     spreadsheet.makeFeedRequest( self['_links']['edit'], 'DELETE', null, cb );
+  }
+}
+
+var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
+  var self = this;
+
+  self.id = data['id'];
+  self.row = parseInt(data['gs:cell']['$']['row']);
+  self.col = parseInt(data['gs:cell']['$']['col']);
+  self.value = data['gs:cell']['_'];
+
+  self['_links'] = [];
+  links = forceArray( data.link );
+  links.forEach( function( link ){
+    self['_links'][ link['$']['rel'] ] = link['$']['href'];
+  });
+
+  self.setValue = function(new_value, cb) {
+    self.value = new_value;
+    self.save(cb);
+  };
+
+  self.save = function(cb) {
+    new_value = xmlSafeValue(self.value);
+    var edit_id = 'https://spreadsheets.google.com/feeds/cells/key/worksheetId/private/full/R'+self.row+'C'+self.col;
+    var data_xml =
+    '<entry><id>'+edit_id+'</id>'+
+    '<link rel="edit" type="application/atom+xml" href="'+edit_id+'"/>'+
+    '<gs:cell row="'+self.row+'" col="'+self.col+'" inputValue="'+new_value+'"/></entry>'
+
+    data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
+
+    console.log(self['_links']['edit']);
+    console.log(data_xml);
+
+    spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
+  }
+
+  self.del = function(cb) {
+    self.setValue('');
   }
 }
 
