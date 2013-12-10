@@ -12,7 +12,7 @@ var GoogleSpreadsheet = require("../index.js");
 var doc = new GoogleSpreadsheet('0Araic6gTol6SdGtyUVAzQmVLM0lxUWlBMkNraWVubUE');
 var sheet;
 
-exports.node_google_spreadsheet = {
+module.exports.node_google_spreadsheet = {
   test_info: function(test){
     test.expect(2);
     doc.getInfo( function(err, sheet_info){
@@ -65,6 +65,8 @@ exports.node_google_spreadsheet = {
     test.expect(2);
     async.waterfall([
       function write(cb){
+        // NOTE -- key and val are arbitrary headers.
+        // These are the column headers in the first row of the spreadsheet.
         sheet.addRow({ key: 'test-key', val: 'test-val' }, function(){
           cb();
         });

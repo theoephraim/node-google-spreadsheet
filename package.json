@@ -17,15 +17,15 @@
   },
   "main": "index.js",
   "engines": {
-    "node": "~0.4.0"
+    "node": ">=0.8.0"
   },
   "dependencies": {
-    "request": "~2.0.2",
-    "xml2js": "~0.2.8",
+    "request": "~2.29.0",
+    "xml2js": "~0.4.0",
     "googleclientlogin": "0.2.x"
   },
   "devDependencies": {
-    "nodeunit": "~0.8.1",
+    "nodeunit": "~0.8.2",
     "async": "~0.2.9"
   },
   "scripts": {
