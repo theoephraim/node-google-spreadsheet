@@ -142,6 +142,10 @@ module.exports = function( ss_key, auth_id ){
 
 			if ( body ){
 				var parser = new xml2js.Parser(xml2js.defaults["0.1"]);
+				//Override a couple of 0.1 options to 0.2 values
+				parser.options['trim'] = false;
+				parser.options['normalize'] = false;
+
 				parser.on("end", function(result) {
 					cb( null, result, body );
 				});
