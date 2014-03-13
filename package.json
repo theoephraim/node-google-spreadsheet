@@ -2,7 +2,7 @@
   "author": "Theo Ephraim <theozero@gmail.com> (http://theoephraim.com)",
   "name": "google-spreadsheet",
   "description": "Google Spreadsheet Data API -- simple interface to read and write rows and cells",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "keywords": [
     "google",
     "spreadsheet",
@@ -10,10 +10,10 @@
     "gdata",
     "api"
   ],
-  "homepage": "https://github.com/theoephraim/node-google-spreadsheets",
+  "homepage": "https://github.com/theoephraim/node-google-spreadsheet",
   "repository": {
     "type": "git",
-    "url": "git://github.com/theoephraim/node-google-spreadsheets.git"
+    "url": "git://github.com/theoephraim/node-google-spreadsheet.git"
   },
   "main": "index.js",
   "engines": {
