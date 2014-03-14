@@ -2,4 +2,4 @@
 test/
 examples/
 .npmignore
-.travis.yml
+.env
