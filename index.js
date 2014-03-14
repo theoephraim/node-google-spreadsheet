@@ -290,7 +290,7 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
 
     console.log(self['_links']['edit']);
-    console.log(data_xml);
+    //console.log(data_xml);
 
     spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
   }
