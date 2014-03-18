@@ -172,7 +172,7 @@ module.exports = function( ss_key, auth_id ){
       } else if( response.statusCode === 401 ) {
         return cb( new Error("Invalid authorization key."));
       } else if ( response.statusCode >= 400 ) {
-        console.log( body );
+        // console.log( body );
         return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]));
       }
 
@@ -289,8 +289,8 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
 
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
 
-    console.log(self['_links']['edit']);
-    console.log(data_xml);
+    // console.log(self['_links']['edit']);
+    // console.log(data_xml);
 
     spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
   }
