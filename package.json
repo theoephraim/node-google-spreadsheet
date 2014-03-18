@@ -22,7 +22,7 @@
   "dependencies": {
     "request": "~2.29.0",
     "xml2js": "~0.4.0",
-    "googleclientlogin": "0.2.x"
+    "googleclientlogin": ">=0.2.8"
   },
   "devDependencies": {
     "nodeunit": "~0.8.2",
