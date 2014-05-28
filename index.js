@@ -92,7 +92,10 @@ module.exports = function( ss_key, auth_id ){
     });
   }
   this.addRow = function( worksheet_id, data, cb ){
-    if( !worksheet_id ) throw new Error("Worksheet not specified.");
+    worksheet_id = parseInt(worksheet_id);
+    if (typeof worksheet_id !== 'number' || worksheet_id < 0) {
+      throw new Error('Valid worksheet not specified.');
+    }
 
     var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">' + "\n";
       Object.keys(data).forEach(function(key) {
