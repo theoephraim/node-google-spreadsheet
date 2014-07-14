@@ -270,6 +270,7 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   self.row = parseInt(data['gs:cell']['$']['row']);
   self.col = parseInt(data['gs:cell']['$']['col']);
   self.value = data['gs:cell']['_'];
+  self.numericValue = data['gs:cell']['$']['numericValue'];
 
   self['_links'] = [];
   links = forceArray( data.link );
