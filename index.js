@@ -99,9 +99,7 @@ module.exports = function( ss_key, auth_id ){
 
     var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">' + "\n";
       Object.keys(data).forEach(function(key) {
-        if (key != 'id' && key != 'title' && key != 'content' && key != '_links'){
-          data_xml += '<gsx:'+ xmlSafeColumnName(key) + '>' + xmlSafeValue(data[key]) + '</gsx:'+ xmlSafeColumnName(key) + '>' + "\n"
-        }
+        data_xml += '<gsx:'+ xmlSafeColumnName(key) + '>' + xmlSafeValue(data[key]) + '</gsx:'+ xmlSafeColumnName(key) + '>' + "\n";
     });
       data_xml += '</entry>';
     self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
@@ -162,7 +160,7 @@ module.exports = function( ss_key, auth_id ){
 
     if ( method == 'GET' && query_or_data ) {
       url += "?" + querystring.stringify( query_or_data );
-    }    
+    }
 
     request( {
       url: url,
