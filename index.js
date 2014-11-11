@@ -118,6 +118,7 @@ module.exports = function( ss_key, auth_id ){
     if (opts.maxRow) query["max-row"] = opts.maxRow;
     if (opts.minCol) query["min-col"] = opts.minCol;
     if (opts.maxCol) query["max-col"] = opts.maxCol;
+    if (opts.returnEmpty) query["return-empty"] = opts.returnEmpty;
 
     self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data, xml) {
       if (err) return cb(err);
@@ -162,7 +163,7 @@ module.exports = function( ss_key, auth_id ){
 
     if ( method == 'GET' && query_or_data ) {
       url += "?" + querystring.stringify( query_or_data );
-    }    
+    }
 
     request( {
       url: url,
