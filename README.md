@@ -36,7 +36,7 @@ my_sheet.setAuth('<google email/username>','<google pass>', function(err){
 			rows[0].colname = 'new val';
 			rows[0].save();
 			rows[0].del();
-		}
+		})
 	}
 
 	// column names are set by google based on the first row of your sheet
