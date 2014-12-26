@@ -8,10 +8,28 @@ var GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
 
 // NOTE: worksheet IDs start at 1
 
-module.exports = function( ss_key, auth_id ){
+module.exports = function( ss_key, auth_id, options ){
   var self = this;
-  var google_auth;
-
+  var google_auth = null;
+  var visibility = "public";
+  var projection = "values";
+  
+  this.setAuthAndDependencies = function( auth ) {
+    google_auth = auth;
+    if ( options!=null && "visibility" in options ) {
+      visibility = options.visibility;
+    }
+    else {
+      visibility = google_auth ? 'private' : 'public';
+    }
+    if ( options!=null && "projection" in options ) {
+      projection = options.projection;
+    }
+    else {
+      projection = google_auth ? 'full' : 'values';
+    }
+  }
+  
   var xml_parser = new xml2js.Parser({
     // options carried over from older version of xml2js -- might want to update how the code works, but for now this is fine
     explicitArray: false,
@@ -22,9 +40,13 @@ module.exports = function( ss_key, auth_id ){
     throw new Error("Spreadsheet key not provided.");
   }
   if ( auth_id ){
-    google_auth = auth_id;
+    self.setAuthAndDependencies(auth_id)
   }
 
+  this.setAuthId = function(auth_id) {
+    self.setAuthAndDependencies(auth_id);
+  }
+  
   this.setAuth = function( username, password, cb ){
     var new_auth = new GoogleClientLogin({
       email: username,
@@ -33,7 +55,7 @@ module.exports = function( ss_key, auth_id ){
       accountType: GoogleClientLogin.accountTypes.google
     })
     new_auth.on(GoogleClientLogin.events.login, function(){
-      google_auth = new_auth.getAuthId();
+      self.setAuthAndDependencies(new_auth.getAuthId());
       cb( null, new_auth );
     })
     new_auth.on(GoogleClientLogin.events.error, function(err){
@@ -142,8 +164,6 @@ module.exports = function( ss_key, auth_id ){
       url = url_params;
     } else if ( Array.isArray( url_params )){
       //used for get and post requets
-      var visibility = google_auth ? 'private' : 'public';
-      var projection = google_auth ? 'full' : 'values';
       url_params.push( visibility, projection );
       url = GOOGLE_FEED_URL + url_params.join("/");
     }
