@@ -177,6 +177,8 @@ module.exports = function( ss_key, auth_id ){
       } else if ( response.statusCode >= 400 ) {
         // console.log( body );
         return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]));
+      } else if ( response.statusCode === 200 && response.headers['content-type'].indexOf('text/html') >= 0 ) {
+        return cb( new Error("Sheet requires authentication."));
       }
 
       if ( body ){
