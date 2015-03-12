@@ -65,11 +65,11 @@ module.exports = function( ss_key, auth_id ){
     if ( typeof( opts ) == 'function' ){
       cb = opts;
       opts = {};
-      query = null;
+      query = [];
     // so is query
     } else if ( typeof( query ) == 'function' ){
       cb = query;
-      query = null;
+      query = [];
     }
 
     if ( opts.start ) query["start-index"] = opts.start;
