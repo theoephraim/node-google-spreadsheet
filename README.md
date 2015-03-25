@@ -60,7 +60,7 @@ If you wish to work with a Google Spreadsheet without authenticating, not only
 must the Spreadsheet in question be visible to the web, but it must also have 
 been explicitly published using "File > Publish to the web" menu option in the google spreadsheets GUI.
 
-Generally, you'll find alot of public spreadsheets may not have had this 
+Generally, you'll find a lot of public spreadsheets may not have had this 
 treatment, so your best bet is to just authenticate a Google account and 
 access the API in that manner.
 
