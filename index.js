@@ -90,11 +90,11 @@ module.exports = function( ss_key, auth_id, options ){
     if ( typeof( opts ) == 'function' ){
       cb = opts;
       opts = {};
-      query = null;
+      query = {};
     // so is query
     } else if ( typeof( query ) == 'function' ){
       cb = query;
-      query = null;
+      query = {};
     }
 
     if ( opts.start ) query["start-index"] = opts.start;
@@ -146,6 +146,7 @@ module.exports = function( ss_key, auth_id, options ){
     if (opts.maxRow) query["max-row"] = opts.maxRow;
     if (opts.minCol) query["min-col"] = opts.minCol;
     if (opts.maxCol) query["max-col"] = opts.maxCol;
+    if (opts.returnEmpty) query["return-empty"] = opts.returnEmpty;
 
     self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data, xml) {
       if (err) return cb(err);
@@ -191,7 +192,7 @@ module.exports = function( ss_key, auth_id, options ){
 
     if ( method == 'GET' && query_or_data ) {
       url += "?" + querystring.stringify( query_or_data );
-    }    
+    }
 
     request( {
       url: url,
