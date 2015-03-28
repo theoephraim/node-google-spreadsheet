@@ -205,7 +205,7 @@ module.exports = function( ss_key, auth_id, options ){
         return cb( new Error("Invalid authorization key."));
       } else if ( response.statusCode >= 400 ) {
         // console.log( body );
-        return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]));
+        return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]) + " "+JSON.stringify(body));
       }
 
       if ( body ){
