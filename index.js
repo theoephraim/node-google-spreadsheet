@@ -101,6 +101,7 @@ module.exports = function( ss_key, auth_id, options ){
     if ( opts.num ) query["max-results"] = opts.num;
     if ( opts.orderby ) query["orderby"] = opts.orderby;
     if ( opts.reverse ) query["reverse"] = opts.reverse;
+    if ( opts.sq ) query['sq'] = opts.sq;
 
     self.makeFeedRequest( ["list", ss_key, worksheet_id], 'GET', query, function(err, data, xml) {
       if ( err ) return cb( err );
