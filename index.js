@@ -3,6 +3,8 @@ var xml2js = require("xml2js");
 var http = require("http");
 var querystring = require("querystring");
 var GoogleClientLogin = require('googleclientlogin').GoogleClientLogin;
+var _ = require('lodash');
+
 
 var GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
 
@@ -11,51 +13,40 @@ var GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
 module.exports = function( ss_key, auth_id, options ){
   var self = this;
   var google_auth = null;
-  var visibility = "public";
-  var projection = "values";
-  
-  this.setAuthAndDependencies = function( auth ) {
-    google_auth = auth;
-    if ( options!=null && "visibility" in options ) {
-      visibility = options.visibility;
-    }
-    else {
-      visibility = google_auth ? 'private' : 'public';
-    }
-    if ( options!=null && "projection" in options ) {
-      projection = options.projection;
-    }
-    else {
-      projection = google_auth ? 'full' : 'values';
-    }
-  }
-  
+  var visibility = 'public';
+  var projection = 'values';
+
+  options = options || {};
+
   var xml_parser = new xml2js.Parser({
-    // options carried over from older version of xml2js -- might want to update how the code works, but for now this is fine
+    // options carried over from older version of xml2js
+    // might want to update how the code works, but for now this is fine
     explicitArray: false,
-    explicitRoot: false,
+    explicitRoot: false
   });
 
   if ( !ss_key ) {
     throw new Error("Spreadsheet key not provided.");
   }
-  if ( auth_id ){
-    self.setAuthAndDependencies(auth_id)
+
+  // auth_id may be null
+  setAuthAndDependencies(auth_id);
+
+  // Authentication Methods
+
+  this.setAuthToken = function( auth_id ) {
+    setAuthAndDependencies(auth_id);
   }
 
-  this.setAuthId = function(auth_id) {
-    self.setAuthAndDependencies(auth_id);
-  }
-  
   this.setAuth = function( username, password, cb ){
     var new_auth = new GoogleClientLogin({
       email: username,
       password: password,
       service: 'spreadsheets',
       accountType: GoogleClientLogin.accountTypes.google
-    })
+    });
     new_auth.on(GoogleClientLogin.events.login, function(){
-      self.setAuthAndDependencies(new_auth.getAuthId());
+      setAuthAndDependencies(new_auth.getAuthId());
       cb( null, new_auth );
     })
     new_auth.on(GoogleClientLogin.events.error, function(err){
@@ -64,107 +55,17 @@ module.exports = function( ss_key, auth_id, options ){
     new_auth.login();
   }
 
-  this.getInfo = function( cb ){
-    self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data, xml) {
-      if ( err ) return cb( err );
-      if (data===true) {
-        return cb(new Error('No response to getInfo call'))
-      }
-      var ss_data = {
-        title: data.title["_"],
-        updated: data.updated,
-        author: data.author,
-        worksheets: []
-      }
-      var worksheets = forceArray(data.entry);
-      worksheets.forEach( function( ws_data ) {
-        ss_data.worksheets.push( new SpreadsheetWorksheet( self, ws_data ) );
-      })
-      cb( null, ss_data );
-    });
-  }
-  this.getRows = function( worksheet_id, opts, query, cb ){
-    // the first row is used as titles/keys and is not included
-
-    // opts is optional
-    if ( typeof( opts ) == 'function' ){
-      cb = opts;
-      opts = {};
-      query = {};
-    // so is query
-    } else if ( typeof( query ) == 'function' ){
-      cb = query;
-      query = {};
+  function setAuthAndDependencies( auth ) {
+    google_auth = auth;
+    if (!options.visibility){
+      visibility = google_auth ? 'private' : 'public';
     }
-
-    if ( opts.start ) query["start-index"] = opts.start;
-    if ( opts.num ) query["max-results"] = opts.num;
-    if ( opts.orderby ) query["orderby"] = opts.orderby;
-    if ( opts.reverse ) query["reverse"] = opts.reverse;
-
-    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'GET', query, function(err, data, xml) {
-      if ( err ) return cb( err );
-      if (data===true) {
-        return cb(new Error('No response to getRows call'))
-      }
-
-      // gets the raw xml for each entry -- this is passed to the row object so we can do updates on it later
-      var entries_xml = xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
-      var rows = [];
-      var entries = forceArray( data.entry );
-      var i=0;
-      entries.forEach( function( row_data ) {
-        rows.push( new SpreadsheetRow( self, row_data, entries_xml[ i++ ] ) );
-      });
-      cb(null, rows);
-    });
-  }
-  this.addRow = function( worksheet_id, data, cb ){
-    worksheet_id = parseInt(worksheet_id);
-    if (typeof worksheet_id !== 'number' || worksheet_id < 0) {
-      throw new Error('Valid worksheet not specified.');
+    if (!options.projection){
+      projection = google_auth ? 'full' : 'values';
     }
-
-    var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">' + "\n";
-      Object.keys(data).forEach(function(key) {
-        if (key != 'id' && key != 'title' && key != 'content' && key != '_links'){
-          data_xml += '<gsx:'+ xmlSafeColumnName(key) + '>' + xmlSafeValue(data[key]) + '</gsx:'+ xmlSafeColumnName(key) + '>' + "\n"
-        }
-    });
-      data_xml += '</entry>';
-    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
-  }
-  this.getCells = function (worksheet_id, opts, cb) {
-    // opts is optional
-    if (typeof( opts ) == 'function') {
-      cb = opts;
-      opts = {};
-    }
-
-    var query = {};
-    if (opts.minRow) query["min-row"] = opts.minRow;
-    if (opts.maxRow) query["max-row"] = opts.maxRow;
-    if (opts.minCol) query["min-col"] = opts.minCol;
-    if (opts.maxCol) query["max-col"] = opts.maxCol;
-    if (opts.returnEmpty) query["return-empty"] = opts.returnEmpty;
-
-    self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data, xml) {
-      if (err) return cb(err);
-      if (data===true) {
-        return cb(new Error('No response to getCells call'))
-      }
-
-      var cells = [];
-      var entries = forceArray(data['entry']);
-      var i = 0;
-      entries.forEach(function( cell_data ){
-        cells.push( new SpreadsheetCell( self, worksheet_id, cell_data ) );
-      });
-
-      cb( null, cells );
-    });
   }
 
+  // This method is used internally to make all requests
   this.makeFeedRequest = function( url_params, method, query_or_data, cb ){
     var url;
     var headers = {};
@@ -205,7 +106,6 @@ module.exports = function( ss_key, auth_id, options ){
       } else if( response.statusCode === 401 ) {
         return cb( new Error("Invalid authorization key."));
       } else if ( response.statusCode >= 400 ) {
-        // console.log( body );
         return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]) + " "+JSON.stringify(body));
       }
 
@@ -221,18 +121,117 @@ module.exports = function( ss_key, auth_id, options ){
 
     })
   }
+
+
+
+  // public API methods
+  this.getInfo = function( cb ){
+    self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data, xml) {
+      if ( err ) return cb( err );
+      if (data===true) {
+        return cb(new Error('No response to getInfo call'))
+      }
+      var ss_data = {
+        title: data.title["_"],
+        updated: data.updated,
+        author: data.author,
+        worksheets: []
+      }
+      var worksheets = forceArray(data.entry);
+      worksheets.forEach( function( ws_data ) {
+        ss_data.worksheets.push( new SpreadsheetWorksheet( self, ws_data ) );
+      })
+      cb( null, ss_data );
+    });
+  }
+
+  this.getRows = function( worksheet_id, opts, cb ){
+    // the first row is used as titles/keys and is not included
+
+    // opts is optional
+    if ( typeof( opts ) == 'function' ){
+      cb = opts;
+      opts = {};
+    }
+
+
+    var query  = {}
+    if ( opts.start ) query["start-index"] = opts.start;
+    if ( opts.num ) query["max-results"] = opts.num;
+    if ( opts.orderby ) query["orderby"] = opts.orderby;
+    if ( opts.reverse ) query["reverse"] = opts.reverse;
+    if ( opts.query ) query['sq'] = opts.query;
+
+    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'GET', query, function(err, data, xml) {
+      if ( err ) return cb( err );
+      if (data===true) {
+        return cb(new Error('No response to getRows call'))
+      }
+
+      // gets the raw xml for each entry -- this is passed to the row object so we can do updates on it later
+      var entries_xml = xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
+      var rows = [];
+      var entries = forceArray( data.entry );
+      var i=0;
+      entries.forEach( function( row_data ) {
+        rows.push( new SpreadsheetRow( self, row_data, entries_xml[ i++ ] ) );
+      });
+      cb(null, rows);
+    });
+  }
+
+  this.addRow = function( worksheet_id, data, cb ){
+    var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">' + "\n";
+    Object.keys(data).forEach(function(key) {
+      if (key != 'id' && key != 'title' && key != 'content' && key != '_links'){
+        data_xml += '<gsx:'+ xmlSafeColumnName(key) + '>' + xmlSafeValue(data[key]) + '</gsx:'+ xmlSafeColumnName(key) + '>' + "\n"
+      }
+    });
+    data_xml += '</entry>';
+    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
+  }
+
+  this.getCells = function (worksheet_id, opts, cb) {
+    // opts is optional
+    if (typeof( opts ) == 'function') {
+      cb = opts;
+      opts = {};
+    }
+
+    // Supported options are:
+    // min-row, max-row, min-col, max-col, return-empty
+    var query = _.assign({}, opts);
+
+
+    self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data, xml) {
+      if (err) return cb(err);
+      if (data===true) {
+        return cb(new Error('No response to getCells call'))
+      }
+
+      var cells = [];
+      var entries = forceArray(data['entry']);
+      var i = 0;
+      entries.forEach(function( cell_data ){
+        cells.push( new SpreadsheetCell( self, worksheet_id, cell_data ) );
+      });
+
+      cb( null, cells );
+    });
+  }
 };
 
 // Classes
 var SpreadsheetWorksheet = function( spreadsheet, data ){
   var self = this;
+
   self.id = data.id.substring( data.id.lastIndexOf("/") + 1 );
   self.title = data.title["_"];
   self.rowCount = data['gs:rowCount'];
   self.colCount = data['gs:colCount'];
 
-  this.getRows = function( opts, query, cb ){
-    spreadsheet.getRows( self.id, opts, query, cb );
+  this.getRows = function( opts, cb ){
+    spreadsheet.getRows( self.id, opts, cb );
   }
   this.getCells = function (opts, cb) {
     spreadsheet.getCells( self.id, opts, cb );
@@ -322,14 +321,11 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
 
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
 
-    // console.log(self['_links']['edit']);
-    // console.log(data_xml);
-
     spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
   }
 
   self.del = function(cb) {
-    self.setValue('');
+    self.setValue('', cb);
   }
 }
 
@@ -340,14 +336,14 @@ var forceArray = function(val) {
   return [ val ];
 }
 var xmlSafeValue = function(val){
-    if ( val == null ) return '';
-    return String(val).replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+  if ( val == null ) return '';
+  return String(val).replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
 }
 var xmlSafeColumnName = function(val){
-    if (!val) return '';
-    return String(val).replace(/[\s_]+/g, '')
-        .toLowerCase();
+  if (!val) return '';
+  return String(val).replace(/[\s_]+/g, '')
+      .toLowerCase();
 }

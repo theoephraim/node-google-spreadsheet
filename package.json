@@ -1,8 +1,8 @@
 {
   "author": "Theo Ephraim <theozero@gmail.com> (http://theoephraim.com)",
   "name": "google-spreadsheet",
-  "description": "Google Spreadsheet Data API -- simple interface to read and write rows and cells",
-  "version": "0.2.7",
+  "description": "Google Spreadsheet Data API -- simple interface to read/write rows + cells",
+  "version": "0.3.0",
   "keywords": [
     "google",
     "spreadsheet",
@@ -20,9 +20,10 @@
     "node": ">=0.8.0"
   },
   "dependencies": {
+    "googleclientlogin": ">=0.2.8",
+    "lodash": "^3.7.0",
     "request": "~2.29.0",
-    "xml2js": "~0.4.0",
-    "googleclientlogin": ">=0.2.8"
+    "xml2js": "~0.4.0"
   },
   "devDependencies": {
     "nodeunit": "~0.8.2",

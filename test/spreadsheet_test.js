@@ -18,7 +18,7 @@ module.exports.node_google_spreadsheet = {
     doc.getInfo( function(err, sheet_info){
       // even with public read/write, I think sheet author should stay constant
       test.equal( sheet_info.author.email, 'theozero@gmail.com', 'can read sheet info from google doc');
-      
+
       sheet = sheet_info.worksheets[0];
       test.equal( sheet.title, 'Sheet1', 'can read sheet names from doc');
 
@@ -38,12 +38,13 @@ module.exports.node_google_spreadsheet = {
   },
   clear_sheet: function(test){
     sheet.getRows(function(err, rows){
-      if ( rows.length == 0 ) test.done();
+      if ( rows.length == 0 ) return test.done();
       async.each( rows, function(row, cb){
         row.del(cb);
-      }, function( cb ){
-        test.done();
-      })
+      }, function(err){
+        if (err) console.log(err);
+        test.done()
+      });
     })
   },
   check_delete: function(test){
@@ -58,7 +59,7 @@ module.exports.node_google_spreadsheet = {
       }
     ], function(err){
       if (err) console.log(err);
-      test.done();
+      test.done()
     });
   },
   basic_write_and_read: function(test){
@@ -67,28 +68,28 @@ module.exports.node_google_spreadsheet = {
       function write(cb){
         // NOTE -- key and val are arbitrary headers.
         // These are the column headers in the first row of the spreadsheet.
-        sheet.addRow({ key: 'test-key', val: 'test-val' }, function(){
-          cb();
+        sheet.addRow({ col1: 'test-col1', col2: 'test-col2' }, function(err) {
+          cb(err);
         });
       },
       function read(cb){
         sheet.getRows( cb );
       },
       function check(rows, cb){
-        test.equal( rows[0].key, 'test-key', 'newly written value should match read value');
-        test.equal( rows[0].val, 'test-val', 'newly written value should match read value');
+        test.equal( rows[0].col1, 'test-col1', 'newly written value should match read value');
+        test.equal( rows[0].col2, 'test-col2', 'newly written value should match read value');
         cb();
       }
     ], function(err){
       if (err) console.log(err);
-      test.done();
+      test.done()
     });
   },
   check_newlines_read: function(test){
     test.expect(2);
     async.waterfall([
       function write(cb){
-        sheet.addRow({ key: "Newline\ntest", val: "Double\n\nnewline test" }, function(){
+        sheet.addRow({ col1: "Newline\ntest", col2: "Double\n\nnewline test" }, function(){
           cb();
         });
       },
@@ -97,13 +98,13 @@ module.exports.node_google_spreadsheet = {
       },
       function check(rows, cb){
         // this was an issue before with an older version of xml2js
-        test.ok( rows[1].key.indexOf("\n") > 0, 'newline is read from sheet');
-        test.ok( rows[1].val.indexOf("\n\n") > 0, 'double newline is read from sheet');
+        test.ok( rows[1].col1.indexOf("\n") > 0, 'newline is read from sheet');
+        test.ok( rows[1].col2.indexOf("\n\n") > 0, 'double newline is read from sheet');
         cb();
       }
     ], function(err){
       if (err) console.log(err);
-      test.done();
+      test.done()
     });
   }
   // TODO - test cell based feeds
