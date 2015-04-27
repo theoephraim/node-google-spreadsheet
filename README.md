@@ -4,8 +4,8 @@
 
 A simple Node.js library to read and manipulate data in a Google Spreadsheet.
 
-Works without authentication for read-only sheets or with auth for adding/editing/deleting data. Currently only supports list-based feeds (dealing with rows) as it seems more useful, but will probably add in cell-based feeds eventually.
-
+Works without authentication for read-only sheets or with auth for adding/editing/deleting data.
+Supports both list-based and cell-based feeds.
 
 ## Installation
 

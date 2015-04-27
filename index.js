@@ -107,7 +107,10 @@ module.exports = function( ss_key, auth_id, options ){
         return cb( new Error("Invalid authorization key."));
       } else if ( response.statusCode >= 400 ) {
         return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]) + " "+JSON.stringify(body));
+      } else if ( response.statusCode === 200 && response.headers['content-type'].indexOf('text/html') >= 0 ) {
+        return cb( new Error("Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)"));
       }
+
 
       if ( body ){
         xml_parser.parseString(body, function(err, result){
