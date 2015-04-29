@@ -175,7 +175,7 @@ module.exports = function( ss_key, auth_id, options ){
       var entries_xml = xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
       var rows = [];
       var entries = forceArray( data.entry );
-      var i=0;
+      var i=-1;
       entries.forEach( function( row_data ) {
         rows.push( new SpreadsheetRow( self, row_data, entries_xml[ i++ ] ) );
       });
