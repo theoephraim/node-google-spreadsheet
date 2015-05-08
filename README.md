@@ -119,7 +119,9 @@ Get information about the spreadsheet. Calls callback passing an object that con
 
 
 
-#### `GoogleSpreadsheet.getRows(worksheet_id, options, query, callback)`
+#### `GoogleSpreadsheet.getRows(worksheet_id, options, callback)`
+
+Get an array of row objects from the sheet.
 
 - `worksheet_id` - the index of the sheet to read from (index starts at 1)
 - `options` (optional)
@@ -128,17 +130,17 @@ Get information about the spreadsheet. Calls callback passing an object that con
   - `orderby` - column key to order by
   - `reverse` - reverse results
   - `query` - send a structured query for rows ([more info](https://developers.google.com/google-apps/spreadsheets/#sending_a_structured_query_for_rows))
-- `callback(err, rows)` - will be called with an array of row objects
+- `callback(err, rows)` - will be called with an array of row objects (see below)
 
 
 
-#### `GoogleSpreadsheet.addRow(worksheet_id, data, callback)`
+#### `GoogleSpreadsheet.addRow(worksheet_id, new_row, callback)`
 
-Add a row to the spreadsheet.
+Add a single row to the sheet.
 
 - `worksheet_id` - the index of the sheet to add to (index starts at 1)
-- `data` - key-value object to add - keys should match the header row on your sheet
-- `callback(err)
+- `new_row` - key-value object to add - keys must match the header row on your sheet
+- `callback(err)` - callback called after row is added
 
 
 
@@ -147,8 +149,10 @@ Add a row to the spreadsheet.
 Get an array of cell objects.
 
 - `options` (optional)
-  - `min-row` + `max-row` - row range (uses #s visible on the left)
-  - `min-col` + `max-col` - column range (uses numbers, not letters!)
+  - `min-row` - row range min (uses #s visible on the left)
+  - `max-row` - row range max
+  - `min-col` - column range min (uses numbers, not letters!)
+  - `max-col` - column range max
   - `return-empty` - include empty cells (boolean)
 
 
@@ -172,7 +176,7 @@ See above.
 ### `SpreadsheetWorksheet.getCells(options, callback)`
 See above.
 
-### `SpreadsheetWorksheet.addRow(data, callback)`
+### `SpreadsheetWorksheet.addRow(new_row, callback)`
 See above.
 
 ----------------------------------
@@ -180,7 +184,7 @@ See above.
 ### `SpreadsheetRow`
 Represents a single row from a sheet.
 
-You can treat the row as a normal javascript object. Keys will be from the header row of your sheet, however the google API mangles the names a bit to make them simpler. It's easiest if you just use all lowercase keys to begin with.
+You can treat the row as a normal javascript object. Object keys will be from the header row of your sheet, however the google API mangles the names a bit to make them simpler. It's easiest if you just use all lowercase keys to begin with.
 
 #### `SpreadsheetRow.save( callback )`
 Saves any changes made to the row's values.
