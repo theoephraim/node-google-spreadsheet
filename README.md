@@ -50,7 +50,7 @@ my_sheet.setAuth('<google email/username>','<google pass>', function(err){
 
 	my_sheet.getRows( 2, {
 		start: 100,			 // start index
-		num: 100			   // number of rows to pull
+		num: 100,			   // number of rows to pull
 		orderby: 'name'  // column to order results by
 	}, function(err, row_data){
 		// do something...
