@@ -87,6 +87,9 @@ module.exports = function( ss_key, auth_id, options ){
       }
     }
 
+    // This is a required http header for 3.0 version of the API.
+    headers['Gdata-version'] = '3.0';
+
     if ( method == 'POST' || method == 'PUT' ){
       headers['content-type'] = 'application/atom+xml';
     }
