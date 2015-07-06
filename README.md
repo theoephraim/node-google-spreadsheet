@@ -1,4 +1,4 @@
-# Simple Google Spreadsheet Access for Node.js
+# Simple Google Spreadsheet Access (node.js)
 
 [![NPM version](https://badge.fury.io/js/google-spreadsheet.png)](http://badge.fury.io/js/google-spreadsheet)
 
@@ -9,7 +9,7 @@ Supports both list-based and cell-based feeds.
 
 ## Installation
 
-[![NPM Info](https://nodei.co/npm/google-spreadsheets.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.org/package/google-spreadsheets)
+[![NPM Info](https://nodei.co/npm/google-spreadsheet.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.org/package/google-spreadsheet)
 
 ## Basic Usage
 
