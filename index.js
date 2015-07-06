@@ -1,20 +1,26 @@
+var async = require("async");
 var request = require("request");
 var xml2js = require("xml2js");
 var http = require("http");
 var querystring = require("querystring");
-var GoogleClientLogin = require('googleclientlogin').GoogleClientLogin;
 var _ = require('lodash');
-
+var GoogleAuth = require("google-auth-library");
 
 var GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
+var GOOGLE_AUTH_SCOPE = ["https://spreadsheets.google.com/feeds"];
 
-// NOTE: worksheet IDs start at 1
-
-module.exports = function( ss_key, auth_id, options ){
+// The main class that represents a single sheet
+// this is the main module.exports
+var GooogleSpreadsheet = function( ss_key, auth_id, options ){
   var self = this;
   var google_auth = null;
   var visibility = 'public';
   var projection = 'values';
+
+  var auth_mode = 'anonymous';
+
+  var auth_client = new GoogleAuth();
+  var jwt_client;
 
   options = options || {};
 
@@ -35,25 +41,35 @@ module.exports = function( ss_key, auth_id, options ){
   // Authentication Methods
 
   this.setAuthToken = function( auth_id ) {
+    if (auth_mode == 'anonymous') auth_mode = 'token';
     setAuthAndDependencies(auth_id);
   }
 
+  // deprecated username/password login method
+  // leaving it here to help notify users why it doesn't work
   this.setAuth = function( username, password, cb ){
-    var new_auth = new GoogleClientLogin({
-      email: username,
-      password: password,
-      service: 'spreadsheets',
-      accountType: GoogleClientLogin.accountTypes.google
-    });
-    new_auth.on(GoogleClientLogin.events.login, function(){
-      setAuthAndDependencies(new_auth.getAuthId());
-      cb( null, new_auth );
-    })
-    new_auth.on(GoogleClientLogin.events.error, function(err){
-      cb( err );
-    })
-    new_auth.login();
+    return cb(new Error('Google has officially deprecated ClientLogin. Please upgrade this module and see the readme for more instrucations'))
   }
+
+  this.useServiceAccountAuth = function( creds, cb ){
+    if (typeof creds == 'string') creds = require(creds);
+    jwt_client = new auth_client.JWT(creds.client_email, null, creds.private_key, GOOGLE_AUTH_SCOPE, null);
+    renewJwtAuth(cb);
+  }
+
+  function renewJwtAuth(cb) {
+    auth_mode = 'jwt';
+    jwt_client.authorize(function (err, token) {
+      if (err) return cb(err);
+      self.setAuthToken({
+        type: token.token_type,
+        value: token.access_token,
+        expires: token.expiry_date
+      });
+      cb()
+    });
+  }
+
 
   function setAuthAndDependencies( auth ) {
     google_auth = auth;
@@ -79,50 +95,59 @@ module.exports = function( ss_key, auth_id, options ){
       url = GOOGLE_FEED_URL + url_params.join("/");
     }
 
-    if ( google_auth ) {
-      if (google_auth.type === 'Bearer') {
-        headers['Authorization'] = 'Bearer ' + google_auth.value;
-      } else {
-        headers['Authorization'] = "GoogleLogin auth=" + google_auth;
+    async.series({
+      auth: function(step) {
+        if (auth_mode != 'jwt') return step();
+        // check if jwt token is expired
+        if (google_auth.expires > +new Date()) return step();
+        renewJwtAuth(step);
+      },
+      request: function(result, step) {
+        if ( google_auth ) {
+          if (google_auth.type === 'Bearer') {
+            headers['Authorization'] = 'Bearer ' + google_auth.value;
+          } else {
+            headers['Authorization'] = "GoogleLogin auth=" + google_auth;
+          }
+        }
+
+        if ( method == 'POST' || method == 'PUT' ){
+          headers['content-type'] = 'application/atom+xml';
+        }
+
+        if ( method == 'GET' && query_or_data ) {
+          url += "?" + querystring.stringify( query_or_data );
+        }
+
+        request( {
+          url: url,
+          method: method,
+          headers: headers,
+          body: method == 'POST' || method == 'PUT' ? query_or_data : null
+        }, function(err, response, body){
+          if (err) {
+            return cb( err );
+          } else if( response.statusCode === 401 ) {
+            return cb( new Error("Invalid authorization key."));
+          } else if ( response.statusCode >= 400 ) {
+            return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]) + " "+JSON.stringify(body));
+          } else if ( response.statusCode === 200 && response.headers['content-type'].indexOf('text/html') >= 0 ) {
+            return cb( new Error("Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)"));
+          }
+
+
+          if ( body ){
+            xml_parser.parseString(body, function(err, result){
+              if ( err ) return cb( err );
+              cb( null, result, body );
+            });
+          } else {
+            if ( err ) cb( err );
+            else cb( null, true );
+          }
+        })
       }
-    }
-
-    if ( method == 'POST' || method == 'PUT' ){
-      headers['content-type'] = 'application/atom+xml';
-    }
-
-    if ( method == 'GET' && query_or_data ) {
-      url += "?" + querystring.stringify( query_or_data );
-    }
-
-    request( {
-      url: url,
-      method: method,
-      headers: headers,
-      body: method == 'POST' || method == 'PUT' ? query_or_data : null
-    }, function(err, response, body){
-      if (err) {
-        return cb( err );
-      } else if( response.statusCode === 401 ) {
-        return cb( new Error("Invalid authorization key."));
-      } else if ( response.statusCode >= 400 ) {
-        return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]) + " "+JSON.stringify(body));
-      } else if ( response.statusCode === 200 && response.headers['content-type'].indexOf('text/html') >= 0 ) {
-        return cb( new Error("Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)"));
-      }
-
-
-      if ( body ){
-        xml_parser.parseString(body, function(err, result){
-          if ( err ) return cb( err );
-          cb( null, result, body );
-        });
-      } else {
-        if ( err ) cb( err );
-        else cb( null, true );
-      }
-
-    })
+    });
   }
 
 
@@ -147,6 +172,8 @@ module.exports = function( ss_key, auth_id, options ){
       cb( null, ss_data );
     });
   }
+
+  // NOTE: worksheet IDs start at 1
 
   this.getRows = function( worksheet_id, opts, cb ){
     // the first row is used as titles/keys and is not included
@@ -333,6 +360,8 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   }
 }
 
+module.exports = GooogleSpreadsheet;
+
 //utils
 var forceArray = function(val) {
   if ( Array.isArray( val ) ) return val;
@@ -351,3 +380,6 @@ var xmlSafeColumnName = function(val){
   return String(val).replace(/[\s_]+/g, '')
       .toLowerCase();
 }
+
+
+

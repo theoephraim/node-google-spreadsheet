@@ -1,18 +1,15 @@
-# NodeJS Google Spreadsheets Data API
+# Simple Google Spreadsheet Access for Node.js
 
 [![NPM version](https://badge.fury.io/js/google-spreadsheet.png)](http://badge.fury.io/js/google-spreadsheet)
 
-A simple Node.js library to read and manipulate data in a Google Spreadsheet.
+A simple Node.js library to read and manipulate data in Google Spreadsheets.
 
 Works without authentication for read-only sheets or with auth for adding/editing/deleting data.
 Supports both list-based and cell-based feeds.
 
 ## Installation
 
-```
-npm install google-spreadsheet
-```
-
+[![NPM Info](https://nodei.co/npm/google-spreadsheets.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.org/package/google-spreadsheets)
 
 ## Basic Usage
 
@@ -26,12 +23,19 @@ var my_sheet = new GoogleSpreadsheet('<spreadsheet key>');
 // IMPORTANT: See note below on how to make a sheet public-readable!
 // # is worksheet id - IDs start at 1
 my_sheet.getRows( 1, function(err, row_data){
-	console.log( 'pulled in '+row_data.length + ' rows ')
-})
+	console.log( 'pulled in '+row_data.length + ' rows');
+});
 
-// Set auth to be able to edit/add/delete
-my_sheet.setAuth('<google email/username>','<google pass>', function(err){
+// With auth -- read + write
+// see below for authentication instructions
+var creds = require('./google-generated-creds.json');
+// OR, if you cannot save the file locally (like on heroku)
+var creds = {
+  client_email: 'yourserviceaccountemailhere@google.com',
+  private_key: 'your long private key stuff here'
+}
 
+my_sheet.useServiceAccountAuth(creds, function(err){
 	// getInfo returns info about the sheet and an array or "worksheet" objects
 	my_sheet.getInfo( function( err, sheet_info ){
 		console.log( sheet_info.title + ' is loaded' );
@@ -45,7 +49,8 @@ my_sheet.setAuth('<google email/username>','<google pass>', function(err){
 		});
 	});
 
-	// column names are set by google based on the header row of your sheet
+	// column names are set by google and are based
+  // on the header row (first row) of your sheet
 	my_sheet.addRow( 2, { colname: 'col value'} );
 
 	my_sheet.getRows( 2, {
@@ -58,21 +63,53 @@ my_sheet.setAuth('<google email/username>','<google pass>', function(err){
 })
 ```
 
-## A note on authentication
+## Authentication
 
-The Google Spreadsheets Data API reference and developers guide is a little ambiguous about how you access a "published" public Spreadsheet.
+IMPORTANT: Google recently deprecated their ClientLogin (username+password)
+access, so things are slightly more complicated now. Older versions of this
+module supported it, so just be aware that things changed.
+
+### Unauthenticated access (read-only access on public docs)
+
+By default, this module makes unauthenticated requests and can therefore
+only access spreadsheets that are "public".
+
+The Google Spreadsheets Data API reference and developers guide is a little
+ambiguous about how you access a "published" public Spreadsheet.
 
 If you wish to work with a Google Spreadsheet without authenticating, not only
 must the Spreadsheet in question be visible to the web, but it must also have
-been explicitly published using "File > Publish to the web" menu option in the google spreadsheets GUI.
+been explicitly published using "File > Publish to the web" menu option in
+the google spreadsheets GUI.
 
-Generally, you'll find a lot of public spreadsheets may not have had this
-treatment, so your best bet is to just authenticate a Google account and
-access the API in that manner.
+Many seemingly "public" sheets have not also been "published" so this may
+cause some confusion.
 
-This library uses [googleclientlogin](https://github.com/Ajnasz/GoogleClientLogin)
-internally to provide basic authentication. Optionally you can pass in an auth token
-that you have created already (using googleclientlogin or something else).
+
+### Service Account (recommended method)
+
+This is a 2-legged oauth method and designed to be "an account that belongs to your application instead of to an individual end user".
+Use this for an app that needs to access a set of documents that you have full access to.
+([read more](https://developers.google.com/identity/protocols/OAuth2ServiceAccount))
+
+__Setup Instructions__
+
+1. Go to the [Google Developers Console](https://console.developers.google.com/project)
+2. Select your project or create a new one (and then select it)
+3. Enable the Drive API for your project
+  - In the sidebar on the left, expand __APIs & auth__ > __APIs__
+  - Search for "drive"
+  - Click on "Drive API"
+  - click the blue "Enable API" button
+4. Create a service account for your project
+  - In the sidebar on the left, expand __APIs & auth__ > __Credentials__
+  - Click "Create new Client ID" button
+  - select the "Service account" option
+  - click "Create Client ID" button to continue
+  - when the dialog appears click "Okay, got it"
+  - your JSON key file is generated and downloaded to your machine (__it is the only copy!__)
+  - note your service account's email address (also available in the JSON key file)
+5. Share the doc (or docs) with your service account using the email noted above
 
 
 ## API
@@ -94,10 +131,18 @@ Create a new google spreadsheet object.
 
 
 
-#### `GoogleSpreadsheet.setAuth(username, password, callback)`
+#### `GoogleSpreadsheet.useServiceAccountAuth(account_info, callback)`
 
-Creates an auth token using a username and password. It will be used for all future requests. Internally uses [googleclientlogin](https://github.com/Ajnasz/GoogleClientLogin). Remember NEVER to save your google credentials in version control!
+Uses a service account email and public/private key to create a token to use to authenticated requests.
+Normally you would just pass in the require of the json file that google generates for you when you create a service account.
 
+See the "Authentication" section for more info.
+
+If you are using heroku or another environment where you cannot save a local file, you may just pass in an object with
+- `client_email` -- your service account's email address
+- `private_key` -- the private key found in the JSON file
+
+Internally, this uses a JWT client to generate a new auth token for your service account that is valid for 1 hour. The token will be automatically regenerated when it expires.
 
 
 #### `GoogleSpreadsheet.setAuthToken(id)`

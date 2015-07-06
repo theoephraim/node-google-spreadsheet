@@ -1,7 +1,7 @@
 'use strict';
 
 /*
-These tests use the test spreadsheet accessible at https://docs.google.com/spreadsheet/ccc?key=0Araic6gTol6SdEtwb1Badl92c2tlek45OUxJZDlyN2c#gid=0
+These tests use the test spreadsheet accessible at https://docs.google.com/spreadsheets/d/148tpVrZgcc-ReSMRXiQaqf9hstgT8HTzyPeKx6f399Y/edit#gid=0
 
 In order to allow other devs to test both read and write funcitonality, the doc must be public read/write which means if someone feels like it, they could mess up the sheet which would mess up the tests. Please don't do that...
 */
@@ -9,7 +9,8 @@ In order to allow other devs to test both read and write funcitonality, the doc 
 var async = require('async');
 
 var GoogleSpreadsheet = require("../index.js");
-var doc = new GoogleSpreadsheet('0Araic6gTol6SdGtyUVAzQmVLM0lxUWlBMkNraWVubUE');
+var doc = new GoogleSpreadsheet('148tpVrZgcc-ReSMRXiQaqf9hstgT8HTzyPeKx6f399Y');
+var creds = require('./test_creds');
 var sheet;
 
 module.exports.node_google_spreadsheet = {
@@ -25,15 +26,9 @@ module.exports.node_google_spreadsheet = {
       test.done();
     });
   },
-  check_auth_env_vars: function(test){
-    test.expect(1);
-    var auth_set = process.env.GOOGLE_ACCOUNT != null && process.env.GOOGLE_PASSWORD != null;
-    test.ok(auth_set, 'Please set env variables GOOGLE_ACCOUNT and GOOGLE_PASSWORD to run tests' );
-    test.done(false);
-  },
   check_init_auth: function(test){
-    doc.setAuth(process.env.GOOGLE_ACCOUNT, process.env.GOOGLE_PASSWORD, function(err){
-      test.done();
+    doc.useServiceAccountAuth(creds, function(err){
+      test.done(err);
     })
   },
   clear_sheet: function(test){
