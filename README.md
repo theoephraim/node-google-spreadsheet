@@ -189,10 +189,10 @@ Add a single row to the sheet.
 
 
 
-#### `GoogleSpreadsheet.getCells(options, callback)`
+#### `GoogleSpreadsheet.getCells(worksheet_id, options, callback)`
 
 Get an array of cell objects.
-
+- `worksheet_id` - the index of the sheet to add to (index starts at 1)
 - `options` (optional)
   - `min-row` - row range min (uses #s visible on the left)
   - `max-row` - row range max
