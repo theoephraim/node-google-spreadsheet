@@ -119,6 +119,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
           url += "?" + querystring.stringify( query_or_data );
         }
 
+
         request( {
           url: url,
           method: method,
@@ -154,6 +155,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
 
   // public API methods
   this.getInfo = function( cb ){
+
     self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data, xml) {
       if ( err ) return cb( err );
       if (data===true) {
@@ -210,6 +212,16 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
     });
   }
 
+  this.addWorkSheet = function ( name, data, cb){
+
+    var data_xml='<entry xmlns="http://www.w3.org/2005/Atom" ' +
+      'xmlns:gsx="http://schemas.google.com/spreadsheets/2006">' +
+      '<title>' + name + '</title><gsx:rowCount>50</gsx:rowCount><gsx:colCount>20</gsx:colCount>' +
+      '</entry>';
+       self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, cb );
+  }
+
+
   this.addRow = function( worksheet_id, data, cb ){
     var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">' + "\n";
     Object.keys(data).forEach(function(key) {
@@ -222,6 +234,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
   }
 
   this.getCells = function (worksheet_id, opts, cb) {
+
     // opts is optional
     if (typeof( opts ) == 'function') {
       cb = opts;
@@ -268,6 +281,10 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
   }
   this.addRow = function( data, cb ){
     spreadsheet.addRow( self.id, data, cb );
+  }
+  this.addWorkSheet = function( data, cb ){
+
+    spreadsheet.addWorkSheet( self.id, data, cb );
   }
 }
 
