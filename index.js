@@ -175,6 +175,27 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
 
   // NOTE: worksheet IDs start at 1
 
+  this.addWorksheet = function( opts, cb ) {
+    var opts = opts || {};
+    var defaults = {
+      title: 'New Worksheet',
+      rowCount: 50,
+      colCount: 10
+    };
+
+    var opts = _.extend(defaults, opts);
+
+    var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gs="http://schemas.google.com/spreadsheets/2006"><title>' +
+        opts.title +
+      '</title><gs:rowCount>' +
+        opts.rowCount +
+      '</gs:rowCount><gs:colCount>' +
+        opts.colCount +
+      '</gs:colCount></entry>';
+
+    self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, cb );
+  }
+
   this.getRows = function( worksheet_id, opts, cb ){
     // the first row is used as titles/keys and is not included
 
