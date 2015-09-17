@@ -255,6 +255,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
 var SpreadsheetWorksheet = function( spreadsheet, data ){
   var self = this;
 
+  self.url = data.id;
   self.id = data.id.substring( data.id.lastIndexOf("/") + 1 );
   self.title = data.title["_"];
   self.rowCount = data['gs:rowCount'];
@@ -268,6 +269,9 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
   }
   this.addRow = function( data, cb ){
     spreadsheet.addRow( self.id, data, cb );
+  }
+  this.del = function ( cb ){
+    spreadsheet.makeFeedRequest( self.url, 'DELETE', null, cb );
   }
 }
 
