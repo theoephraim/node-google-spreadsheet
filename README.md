@@ -192,6 +192,7 @@ Add a single row to the sheet.
 #### `GoogleSpreadsheet.getCells(worksheet_id, options, callback)`
 
 Get an array of cell objects.
+
 - `worksheet_id` - the index of the sheet to add to (index starts at 1)
 - `options` (optional)
   - `min-row` - row range min (uses #s visible on the left)
@@ -200,6 +201,27 @@ Get an array of cell objects.
   - `max-col` - column range max
   - `return-empty` - include empty cells (boolean)
 
+#### `GoogleSpreadsheet.bulkUpdateCells(worksheet_id, cells, callback)`
+
+Do a bulk update on cells.
+
+- `worksheet_id` - the index of the sheet to add to (index starts at 1)
+- `cells` - an array of SpreadsheetCell objects to save
+
+#### `GoogleSpreadsheet.addWorksheet(options, callback)`
+
+Add a new worksheet to the doc.
+
+- `options` (optional)
+  - `title` - title for the new sheet (default = 'New Worksheet')
+  - `rowCount` - number of rows (default = 50)
+  - `colCount` - number of columns (default = 10)
+
+#### `GoogleSpreadsheet.deleteWorksheet(worksheet_id, callback)`
+
+Remove a worksheet from the doc.
+
+- `worksheet_id` - the index of the sheet to add to (index starts at 1)
 
 ----------------------------------
 
@@ -210,6 +232,7 @@ Represents a single "sheet" from the spreadsheet. These are the different tabs/p
 This is a really just a wrapper to call the same functions on the spreadsheet without needing to include the worksheet id.
 
 __Properties:__
+- `url` - the URL for the sheet
 - `id` - the ID of the sheet
 - `title` - the title (visible on the tabs in google's interface)
 - `rowCount` - number of rows
@@ -223,6 +246,12 @@ See above.
 
 ### `SpreadsheetWorksheet.addRow(new_row, callback)`
 See above.
+
+#### `SpreadsheetWorksheet.bulkUpdateCells(cells, callback)`
+See above.
+
+### `SpreadsheetWorksheet.del(callback)`
+Remove this sheet from the doc.
 
 ----------------------------------
 
@@ -241,9 +270,25 @@ Deletes the row from the sheet.
 
 ### `SpreadsheetCell`
 Represents a single cell from the sheet.
+Using cells is the only way to read and modify the formulas in your sheet.
+
+__Properties:__
+- `id` - the ID of the cell
+- `row` - the row this cell is in
+- `col` - the column this cell is in
+- `value` - the value of the cell
+- `numericValue` - the value of the cell as a number
+- `inputValue` - the "raw" value of the cell which can be a formula
+
+__IMPORTANT__:
+- Cells with regular values can be modified by setting `value` and calling `save`
+- Cells with formulas in them can be modified by setting `inputValue` and calling `save`
 
 #### `SpreadsheetCell.setValue(val, callback)`
-Set the value of the cell and save it.
+Set the value of the cell and saves it.
+
+#### `SpreadsheetCell.save(callback)`
+Saves the current value/formula
 
 #### `SpreadsheetCell.del(callback)`
 Clear the cell -- internally just calls `.setValue('', callback)`

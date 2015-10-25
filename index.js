@@ -271,15 +271,16 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
     });
   }
 
-  // this.bulkUpdateCells = function (worksheet_id, cells, values, cb) {
+  // this.bulkUpdateCells = function (worksheet_id, cells, cb) {
   //   var entries = cells.map((cell, i) => {
+  //     cell._needsSave = false;
   //     return `<entry>
   //       <batch:id>${cell.id}</batch:id>
   //       <batch:operation type="update"/>
   //       <id>${cell.id}</id>
   //       <link rel="edit" type="application/atom+xml"
   //         href="${cell._links.edit}"/>
-  //       <gs:cell row="${cell.row}" col="${cell.col}" inputValue="${(values[i] || '')}"/>
+  //       <gs:cell row="${cell.row}" col="${cell.col}" inputValue="${cell.getValueForSave()}"/>
   //     </entry>`
   //   });
   //   var worksheetUrl = `https://spreadsheets.google.com/feeds/cells/${ss_key}/${worksheet_id}/private/full`;
@@ -294,9 +295,10 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
   //                        'POST', data_xml, cb)
   // }
 
-  this.bulkUpdateCells = function (worksheet_id, cells, values, cb) {
+  this.bulkUpdateCells = function (worksheet_id, cells, cb) {
     var entries = cells.map(function (cell, i) {
-      return "<entry>\n        <batch:id>" + cell.id + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + cell.id + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell._links.edit + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + (values[i] || '') + "\"/>\n      </entry>";
+      cell._needsSave = false;
+      return "<entry>\n        <batch:id>" + cell.id + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + cell.id + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell._links.edit + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.getValueForSave() + "\"/>\n      </entry>";
     });
     var worksheetUrl = "https://spreadsheets.google.com/feeds/cells/" + ss_key + "/" + worksheet_id + "/private/full";
     var data_xml = "<feed xmlns=\"http://www.w3.org/2005/Atom\"\n      xmlns:batch=\"http://schemas.google.com/gdata/batch\"\n      xmlns:gs=\"http://schemas.google.com/spreadsheets/2006\">\n      <id>" + worksheetUrl + "</id>\n      " + entries.join("\n") + "\n    </feed>";
@@ -322,6 +324,9 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
   }
   this.addRow = function( data, cb ){
     spreadsheet.addRow( self.id, data, cb );
+  }
+  this.bulkUpdateCells = function( cells, cb ) {
+    spreadsheet.bulkUpdateCells( self.id, cells, cb );
   }
   this.del = function ( cb ){
     spreadsheet.makeFeedRequest( self.url, 'DELETE', null, cb );
@@ -389,11 +394,21 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   self.numericValue = data['gs:cell']['$']['numericValue'];
   self.inputValue = data['gs:cell']['$']['inputValue'];
 
+  var _hasFormula = self.inputValue.substr(0,1) === '=';
+
   self['_links'] = [];
   links = forceArray( data.link );
   links.forEach( function( link ){
     self['_links'][ link['$']['rel'] ] = link['$']['href'];
   });
+
+  self.getValueForSave = function(){
+    if (_hasFormula){
+      return self.inputValue;
+    } else {
+      return xmlSafeValue(self.value);
+    }
+  }
 
   self.setValue = function(new_value, cb) {
     self.value = new_value;
@@ -401,12 +416,13 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   };
 
   self.save = function(cb) {
-    new_value = xmlSafeValue(self.value);
+    self._needsSave = false;
+
     var edit_id = 'https://spreadsheets.google.com/feeds/cells/key/worksheetId/private/full/R'+self.row+'C'+self.col;
     var data_xml =
     '<entry><id>'+edit_id+'</id>'+
     '<link rel="edit" type="application/atom+xml" href="'+edit_id+'"/>'+
-    '<gs:cell row="'+self.row+'" col="'+self.col+'" inputValue="'+new_value+'"/></entry>'
+    '<gs:cell row="'+self.row+'" col="'+self.col+'" inputValue="'+self.getValueForSave()+'"/></entry>'
 
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
 
