@@ -103,10 +103,10 @@ __Setup Instructions__
   - click the blue "Enable API" button
 4. Create a service account for your project
   - In the sidebar on the left, expand __APIs & auth__ > __Credentials__
-  - Click "Create new Client ID" button
-  - select the "Service account" option
-  - click "Create Client ID" button to continue
-  - when the dialog appears click "Okay, got it"
+  - Click blue "Add credentials" button
+  - Select the "Service account" option
+  - Select the "JSON" key type option
+  - Click blue "Create" button
   - your JSON key file is generated and downloaded to your machine (__it is the only copy!__)
   - note your service account's email address (also available in the JSON key file)
 5. Share the doc (or docs) with your service account using the email noted above
