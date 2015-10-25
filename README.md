@@ -155,6 +155,7 @@ Use an already created auth token for all future requets.
 
 Get information about the spreadsheet. Calls callback passing an object that contains:
 
+- `id` - the URL/id as returned from google
 - `title` - the title of the document
 - `updated` - last updated timestamp
 - `author` - auth info in an object
