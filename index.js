@@ -160,6 +160,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
         return cb(new Error('No response to getInfo call'))
       }
       var ss_data = {
+        id: data.id,
         title: data.title["_"],
         updated: data.updated,
         author: data.author,
