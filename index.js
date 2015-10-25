@@ -111,6 +111,8 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
           }
         }
 
+        headers['Gdata-version'] = '3.0';
+
         if ( method == 'POST' || method == 'PUT' ){
           headers['content-type'] = 'application/atom+xml';
         }
