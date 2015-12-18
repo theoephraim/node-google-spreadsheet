@@ -115,6 +115,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
 
         if ( method == 'POST' || method == 'PUT' ){
           headers['content-type'] = 'application/atom+xml';
+          headers['If-Match'] = '*';
         }
 
         if ( method == 'GET' && query_or_data ) {
