@@ -163,7 +163,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
       }
       var ss_data = {
         id: data.id,
-        title: data.title["_"],
+        title: data.title,
         updated: data.updated,
         author: data.author,
         worksheets: []
@@ -315,7 +315,7 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
 
   self.url = data.id;
   self.id = data.id.substring( data.id.lastIndexOf("/") + 1 );
-  self.title = data.title["_"];
+  self.title = data.title;
   self.rowCount = data['gs:rowCount'];
   self.colCount = data['gs:colCount'];
 
