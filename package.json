@@ -2,7 +2,7 @@
   "author": "Theo Ephraim <theozero@gmail.com> (http://theoephraim.com)",
   "name": "google-spreadsheet",
   "description": "Google Spreadsheet Data API -- simple interface to read/write rows + cells",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "keywords": [
     "google",
     "spreadsheet",

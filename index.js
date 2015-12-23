@@ -111,10 +111,11 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
           }
         }
 
-        headers['Gdata-version'] = '3.0';
+        headers['Gdata-Version'] = '3.0';
 
         if ( method == 'POST' || method == 'PUT' ){
           headers['content-type'] = 'application/atom+xml';
+          query_or_data = '<?xml version="1.0" encoding="UTF-8"?>'+"\n"+query_or_data;
         }
 
         if ( method == 'GET' && query_or_data ) {
@@ -223,7 +224,20 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
       }
 
       // gets the raw xml for each entry -- this is passed to the row object so we can do updates on it later
+
       var entries_xml = xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
+
+
+      // need to add the properties from the feed to the xml for the entries
+      var feed_props = _.clone(data.$);
+      delete feed_props['gd:etag'];
+      var feed_props_str = _.reduce(feed_props, function(str, val, key){
+        return str+key+'=\''+val+'\' ';
+      }, '');
+      entries_xml = _.map(entries_xml, function(xml){
+        return xml.replace('<entry ', '<entry '+feed_props_str);
+      });
+
       var rows = [];
       var entries = forceArray( data.entry );
       var i=0;
