@@ -84,7 +84,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
   // This method is used internally to make all requests
   this.makeFeedRequest = function( url_params, method, query_or_data, cb ){
     var url;
-    var headers = {"If-Match": "*"};
+    var headers = {};
     if (!cb ) cb = function(){};
     if ( typeof(url_params) == 'string' ) {
       // used for edit / delete requests
