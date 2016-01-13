@@ -66,7 +66,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
         value: token.access_token,
         expires: token.expiry_date
       });
-      cb()
+      cb(null, token)
     });
   }
 
@@ -470,6 +470,3 @@ var xmlSafeColumnName = function(val){
   return String(val).replace(/[\s_]+/g, '')
       .toLowerCase();
 }
-
-
-
