@@ -250,7 +250,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
   this.addRow = function( worksheet_id, data, cb ){
     var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">' + "\n";
     Object.keys(data).forEach(function(key) {
-      if (key != 'id' && key != 'title' && key != 'content' && key != '_links'){
+      if (key !== 'id' && key !== 'title' && key !== 'content' && key !== '_links'){
         data_xml += '<gsx:'+ xmlSafeColumnName(key) + '>' + xmlSafeValue(data[key]) + '</gsx:'+ xmlSafeColumnName(key) + '>' + "\n"
       }
     });
@@ -276,11 +276,8 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
         return cb(new Error('No response to getCells call'))
       }
 
-      var cells = [];
-      var entries = forceArray(data['entry']);
-      var i = 0;
-      entries.forEach(function( cell_data ){
-        cells.push( new SpreadsheetCell( self, worksheet_id, cell_data ) );
+      var cells = forceArray(data.entry).map(function( cell_data ){
+        return new SpreadsheetCell( self, worksheet_id, cell_data );
       });
 
       cb( null, cells );
@@ -312,7 +309,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
   // }
 
   this.bulkUpdateCells = function (worksheet_id, cells, cb) {
-    var entries = cells.map(function (cell, i) {
+    var entries = cells.map(function (cell) {
       cell._needsSave = false;
       return "<entry>\n        <batch:id>" + cell.id + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + cell.id + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell._links.edit + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.getValueForSave() + "\"/>\n      </entry>";
     });
