@@ -8,7 +8,7 @@ In order to allow other devs to test both read and write funcitonality, the doc 
 
 var async = require('async');
 
-var GoogleSpreadsheet = require("../index.js");
+var GoogleSpreadsheet = require("..");
 var doc = new GoogleSpreadsheet('148tpVrZgcc-ReSMRXiQaqf9hstgT8HTzyPeKx6f399Y');
 var creds = require('./test_creds');
 var sheet;
