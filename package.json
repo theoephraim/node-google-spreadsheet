@@ -25,6 +25,7 @@
     "inherits": "^2.0.1",
     "lodash": "^3.7.0",
     "request": "~2.29.0",
+    "unique-concat": "^0.2.2",
     "xml2js": "~0.4.0"
   },
   "devDependencies": {
