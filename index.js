@@ -113,6 +113,10 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
 
         headers['Gdata-Version'] = '3.0';
 
+        if ( url.indexOf('batch') > - 1) {
+          headers['If-Match'] = '*';
+        }
+
         if ( method == 'POST' || method == 'PUT' ){
           headers['content-type'] = 'application/atom+xml';
         }
@@ -190,11 +194,11 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
 
     var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gs="http://schemas.google.com/spreadsheets/2006"><title>' +
         opts.title +
-      '</title><gs:rowCount>' +
+        '</title><gs:rowCount>' +
         opts.rowCount +
-      '</gs:rowCount><gs:colCount>' +
+        '</gs:rowCount><gs:colCount>' +
         opts.colCount +
-      '</gs:colCount></entry>';
+        '</gs:colCount></entry>';
 
     self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, cb );
   }
@@ -380,18 +384,18 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 
   self.save = function( cb ){
     /*
-    API for edits is very strict with the XML it accepts
-    So we just do a find replace on the original XML.
-    It's dumb, but I couldnt get any JSON->XML conversion to work reliably
-    */
+     API for edits is very strict with the XML it accepts
+     So we just do a find replace on the original XML.
+     It's dumb, but I couldnt get any JSON->XML conversion to work reliably
+     */
 
     var data_xml = self['_xml'];
     // probably should make this part more robust?
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gsx='http://schemas.google.com/spreadsheets/2006/extended'>");
-      Object.keys( self ).forEach( function(key) {
-        if (key.substr(0,1) != '_' && typeof( self[key] == 'string') ){
-          data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+">([\\s\\S]*?)</gsx:"+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key)+'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
-        }
+    Object.keys( self ).forEach( function(key) {
+      if (key.substr(0,1) != '_' && typeof( self[key] == 'string') ){
+        data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+">([\\s\\S]*?)</gsx:"+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key)+'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
+      }
     });
     spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
   }
@@ -436,9 +440,9 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
 
     var edit_id = 'https://spreadsheets.google.com/feeds/cells/key/worksheetId/private/full/R'+self.row+'C'+self.col;
     var data_xml =
-    '<entry><id>'+edit_id+'</id>'+
-    '<link rel="edit" type="application/atom+xml" href="'+edit_id+'"/>'+
-    '<gs:cell row="'+self.row+'" col="'+self.col+'" inputValue="'+self.getValueForSave()+'"/></entry>'
+        '<entry><id>'+edit_id+'</id>'+
+        '<link rel="edit" type="application/atom+xml" href="'+edit_id+'"/>'+
+        '<gs:cell row="'+self.row+'" col="'+self.col+'" inputValue="'+self.getValueForSave()+'"/></entry>'
 
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
 
