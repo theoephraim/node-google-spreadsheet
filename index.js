@@ -88,6 +88,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
     if (!cb ) cb = function(){};
     if ( typeof(url_params) == 'string' ) {
       // used for edit / delete requests
+      headers['If-Match'] = '*';
       url = url_params;
     } else if ( Array.isArray( url_params )){
       //used for get and post requets
@@ -113,7 +114,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
 
         headers['Gdata-Version'] = '3.0';
 
-        if ( url.indexOf('batch') > - 1) {
+        if (url.indexOf('batch') > -1) {
           headers['If-Match'] = '*';
         }
 
@@ -262,6 +263,11 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
     self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
   }
 
+  this.deleteRow = function( worksheet_id, data, cb ){
+    var worksheetUrl = "https://spreadsheets.google.com/feeds/list/" + ss_key + "/" + worksheet_id + "/private/full/" + row_id + "/" + row_version;
+    self.makeFeedRequest(worksheetUrl, 'DELETE', null, cb);
+  }
+
   this.getCells = function (worksheet_id, opts, cb) {
     // opts is optional
     if (typeof( opts ) == 'function') {
@@ -324,17 +330,41 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
     var data_xml = "<feed xmlns=\"http://www.w3.org/2005/Atom\"\n      xmlns:batch=\"http://schemas.google.com/gdata/batch\"\n      xmlns:gs=\"http://schemas.google.com/spreadsheets/2006\">\n      <id>" + worksheetUrl + "</id>\n      " + entries.join("\n") + "\n    </feed>";
     self.makeFeedRequest("https://spreadsheets.google.com/feeds/cells/" + ss_key + "/" + worksheet_id + "/private/full/batch", 'POST', data_xml, cb);
   };
+
+  this.setSize = function(worksheet_id, edit_link, title, rows, cols, cb ){
+    var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gs="http://schemas.google.com/spreadsheets/2006">';
+    data_xml += '<id>';
+    data_xml += 'https://spreadsheets.google.com/feeds/worksheets/key/private/full/worksheetId';
+    data_xml += '</id>';
+    data_xml += '<category scheme="http://schemas.google.com/spreadsheets/2006" ';
+    data_xml += 'term="http://schemas.google.com/spreadsheets/2006#worksheet"/>';
+    data_xml += '    <title type="text">' + title + '</title>';
+    data_xml += '    <content type="text">' + title + '</content>';
+    data_xml += '    <link rel="http://schemas.google.com/spreadsheets/2006#listfeed" ';
+    data_xml += 'type="application/atom+xml" href="https://spreadsheets.google.com/feeds/list/key/worksheetId/private/full"/>';
+    data_xml += '    <link rel="http://schemas.google.com/spreadsheets/2006#cellsfeed" ';
+    data_xml += 'type="application/atom+xml" href="https://spreadsheets.google.com/feeds/cells/key/worksheetId/private/full"/>';
+    data_xml += '    <link rel="self" type="application/atom+xml" ';
+    data_xml += 'href="https://spreadsheets.google.com/feeds/worksheets/key/private/full/worksheetId"/>';
+    data_xml += '    <link rel="edit" type="application/atom+xml" ';
+    data_xml += 'href="https://spreadsheets.google.com/feeds/worksheets/key/private/full/worksheetId/version"/>';
+    data_xml += '<gs:rowCount>' + rows + '</gs:rowCount>';
+    data_xml += '<gs:colCount>' + cols + '</gs:colCount>';
+    data_xml += '</entry>';
+    self.makeFeedRequest(edit_link, 'PUT', data_xml, cb);
+  };
 };
 
 // Classes
 var SpreadsheetWorksheet = function( spreadsheet, data ){
   var self = this;
-
   self.url = data.id;
   self.id = data.id.substring( data.id.lastIndexOf("/") + 1 );
   self.title = data.title;
   self.rowCount = data['gs:rowCount'];
   self.colCount = data['gs:colCount'];
+  self.editLink = data.link ? _.get(_.find(data.link, function(o) { return o.$.rel === 'edit' }), '$.href') : '';
+
 
   this.getRows = function( opts, cb ){
     spreadsheet.getRows( self.id, opts, cb );
@@ -344,6 +374,9 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
   }
   this.addRow = function( data, cb ){
     spreadsheet.addRow( self.id, data, cb );
+  }
+  this.setSize = function( rows, cols, cb ){
+    spreadsheet.setSize( self.id, self.editLink, self.title, rows, cols, cb );
   }
   this.bulkUpdateCells = function( cells, cb ) {
     spreadsheet.bulkUpdateCells( self.id, cells, cb );

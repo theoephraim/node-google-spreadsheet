@@ -101,6 +101,27 @@ module.exports.node_google_spreadsheet = {
       if (err) console.log(err);
       test.done()
     });
+  },
+  check_set_size: function(test) {
+    doc.getInfo( function(err, sheet_info){
+      var sheet = sheet_info.worksheets[3];
+      var colCount = sheet.colCount;
+      var rowCount = sheet.rowCount;
+      test.ok( colCount > 4 );
+      test.ok( rowCount > 4 );
+
+      sheet.setSize(1,1, function(err, result) {
+        if (err) console.log(err);
+        test.equal( result['gs:colCount'], 1, 'col count should be 1');
+        test.equal( result['gs:rowCount'], 1, 'row count should be 1');
+        sheet.setSize(5,5, function(err, result) {
+          test.equal( result['gs:colCount'], 5, 'col count should be 5');
+          test.equal( result['gs:rowCount'], 5, 'row count should be 5');
+          test.done();
+        })
+      });
+
+    });
   }
   // TODO - test cell based feeds
 };
