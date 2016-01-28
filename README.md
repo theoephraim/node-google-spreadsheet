@@ -35,7 +35,7 @@ var creds = {
   private_key: 'your long private key stuff here'
 }
 
-my_sheet.useServiceAccountAuth(creds, function(err){
+my_sheet.useServiceAccountAuth(creds, function(err, token){
 	// getInfo returns info about the sheet and an array or "worksheet" objects
 	my_sheet.getInfo( function( err, sheet_info ){
 		console.log( sheet_info.title + ' is loaded' );
