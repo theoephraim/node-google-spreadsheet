@@ -210,8 +210,13 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
 
 
     var query  = {}
-    if ( opts.start ) query["start-index"] = opts.start;
-    if ( opts.num ) query["max-results"] = opts.num;
+
+    if ( opts.offset ) query["start-index"] = opts.offset;
+    else if ( opts.start ) query["start-index"] = opts.start;
+
+    if ( opts.limit ) query["max-results"] = opts.limit;
+    else if ( opts.num ) query["max-results"] = opts.num;
+
     if ( opts.orderby ) query["orderby"] = opts.orderby;
     if ( opts.reverse ) query["reverse"] = opts.reverse;
     if ( opts.query ) query['sq'] = opts.query;
