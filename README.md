@@ -171,8 +171,8 @@ Get an array of row objects from the sheet.
 
 - `worksheet_id` - the index of the sheet to read from (index starts at 1)
 - `options` (optional)
-  - `start-index` - start reading from row #
-  - `max-results` - max # of rows to read at once
+  - `start` - start reading from row #
+  - `num` - max # of rows to read at once
   - `orderby` - column key to order by
   - `reverse` - reverse results
   - `query` - send a structured query for rows ([more info](https://developers.google.com/google-apps/spreadsheets/#sending_a_structured_query_for_rows))
