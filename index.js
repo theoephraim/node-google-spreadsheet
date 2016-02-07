@@ -113,8 +113,12 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
 
         headers['Gdata-Version'] = '3.0';
 
-        if ( method == 'POST' || method == 'PUT' ){
+        if ( method == 'POST' || method == 'PUT' ) {
           headers['content-type'] = 'application/atom+xml';
+        }
+
+        if (method == 'PUT') {
+          headers['If-Match'] = '*';
         }
 
         if ( method == 'GET' && query_or_data ) {
