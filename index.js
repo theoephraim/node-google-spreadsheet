@@ -419,7 +419,7 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   self.numericValue = data['gs:cell']['$']['numericValue'];
   self.inputValue = data['gs:cell']['$']['inputValue'];
 
-  var _hasFormula = self.inputValue.substr(0,1) === '=';
+  var _hasFormula = typeof self.inputValue === 'string' && self.inputValue.substr(0,1) === '=';
 
   self['_links'] = [];
   links = forceArray( data.link );
