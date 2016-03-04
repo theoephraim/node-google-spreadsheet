@@ -117,7 +117,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
           headers['content-type'] = 'application/atom+xml';
         }
 
-        if (method == 'PUT') {
+        if (method == 'PUT' || method == 'POST' && query_or_data.includes('http://schemas.google.com/gdata/batch') ) {
           headers['If-Match'] = '*';
         }
 
