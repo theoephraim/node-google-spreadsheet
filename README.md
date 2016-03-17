@@ -2,10 +2,12 @@
 
 [![NPM version](https://badge.fury.io/js/google-spreadsheet.png)](http://badge.fury.io/js/google-spreadsheet)
 
-A simple Node.js library to read and manipulate data in Google Spreadsheets.
+A simple Node.js module for reading and manipulating data in Google Spreadsheets.
 
-Works without authentication for read-only sheets or with auth for adding/editing/deleting data.
-Supports both list-based and cell-based feeds.
+- with or without auth
+- cell-based API - read, write, bulk-updates
+- row-based API - read, update, delete
+- managing worksheets - add, remove, resize, change title
 
 ## Installation
 
@@ -13,54 +15,100 @@ Supports both list-based and cell-based feeds.
 
 ## Basic Usage
 
-``` javascript
+```
 var GoogleSpreadsheet = require("google-spreadsheet");
 
 // spreadsheet key is the long id in the sheets URL
-var my_sheet = new GoogleSpreadsheet('<spreadsheet key>');
+var doc = new GoogleSpreadsheet('<spreadsheet key>');
+var sheet;
 
-// Without auth -- read only
-// IMPORTANT: See note below on how to make a sheet public-readable!
-// # is worksheet id - IDs start at 1
-my_sheet.getRows( 1, function(err, row_data){
-	console.log( 'pulled in '+row_data.length + ' rows');
+async.series([
+  function setAuth(step) {
+    // see notes below for authentication instructions!
+    var creds = require('./google-generated-creds.json');
+    // OR, if you cannot save the file locally (like on heroku)
+    var creds_json = {
+      client_email: 'yourserviceaccountemailhere@google.com',
+      private_key: 'your long private key stuff here'
+    }
+
+    doc.useServiceAccountAuth(creds, step);
+  },
+  function getInfoAndWorksheets(step) {
+    doc.getInfo(function(err, info) {
+      console.log('Loaded doc: '+info.title+' by '+info.author.email);
+      sheet = info.worksheets[0];
+      console.log('sheet 1: '+sheet.title+' '+sheet.rowCount+'x'+sheet.colCount);
+      step();
+    });
+  },
+  function workingWithRows(step) {
+    // google provides some query options
+    sheet.getRows({
+      offset: 1,
+      limit: 20,
+      orderby: 'col2'
+    }, function( err, rows ){
+      console.log('Read '+rows.length+' rows');
+
+      // the row is an object with keys set by the column headers
+      rows[0].colname = 'new val';
+      rows[0].save(); // this is async
+
+      // deleting a row
+      rows[0].del();  // this is async
+
+      step();
+    });
+  },
+  function workingWithCells(step) {
+    sheet.getCells({
+      'min-row': 1,
+      'max-row': 5,
+      'return-empty': true
+    }, function(err, cells) {
+      var cell = cells[0];
+      console.log('Cell R'+cell.row+'C'+cell.col+' = '+cells.value);
+
+      // cells have a value, numericValue, and formula
+      cell.value == '1'
+      cell.numericValue == 1;
+      cell.formula == '=ROW()';
+
+      // updating `value` is "smart" and generally handles things for you
+      cell.value = 123;
+      cell.value = '=A1+B2'
+      cell.save(); //async
+
+      // bulk updates make it easy to update many cells at once
+      cells[0].value = 1;
+      cells[1].value = 2;
+      cells[2].formula = '=A1+B1';
+      sheet.bulkUpdateCells(cells); //async
+
+      step();
+    });
+  },
+  function managingSheets(step) {
+    doc.addWorksheet({
+      title: 'my new sheet'
+    }, function(err, sheet) {
+
+      // change a sheet's title
+      sheet.setTitle('new title'); //async
+
+      //resize a sheet
+      sheet.resize({rowCount: 50, colCount: 20}); //async
+
+      sheet.setHeaderRow(['name', 'age', 'phone']); //async
+
+      // removing a worksheet
+      sheet.del(); //async
+
+      step();
+    });
+  }
 });
-
-// With auth -- read + write
-// see below for authentication instructions
-var creds = require('./google-generated-creds.json');
-// OR, if you cannot save the file locally (like on heroku)
-var creds = {
-  client_email: 'yourserviceaccountemailhere@google.com',
-  private_key: 'your long private key stuff here'
-}
-
-my_sheet.useServiceAccountAuth(creds, function(err){
-	// getInfo returns info about the sheet and an array or "worksheet" objects
-	my_sheet.getInfo( function( err, sheet_info ){
-		console.log( sheet_info.title + ' is loaded' );
-		// use worksheet object if you want to stop using the # in your calls
-
-		var sheet1 = sheet_info.worksheets[0];
-		sheet1.getRows( function( err, rows ){
-			rows[0].colname = 'new val';
-			rows[0].save();	//async and takes a callback
-			rows[0].del();  //async and takes a callback
-		});
-	});
-
-	// column names are set by google and are based
-  // on the header row (first row) of your sheet
-	my_sheet.addRow( 2, { colname: 'col value'} );
-
-	my_sheet.getRows( 2, {
-		offset: 100,			 // start index
-		limit: 100,			   // number of rows to pull
-		orderby: 'name'  // column to order results by
-	}, function(err, row_data){
-		// do something...
-	});
-})
 ```
 
 ## Authentication
@@ -112,6 +160,20 @@ __Setup Instructions__
 5. Share the doc (or docs) with your service account using the email noted above
 
 
+## Google's API Limitations
+
+Google's API is somewhat limiting. Calls are made to two differently designed APIs, one made to deal with cells, and one to deal with rows. These APIs will let you manage the data in your sheets, but you cannot make any modifications to the formatting of the cells.
+
+### Row-Based API Limitations
+
+The row-based API assumes that the "header row" (first row) of your sheet is set. They have limitations on the column names they will accept - all lowercase with no symbols or spaces. If the values in your sheet do not follow their rules, their API will adapt the key it actually returns to you. I recommend just following their rules to avoid confusion.
+
+You _can_ set a formula value into a cell using the row-based API, but when reading rows, you cannot access the formula, or even be aware that there is one in the cell. Any cells with formulas will return the calculated value of the formula. If you try to update a row, the cell with a formula will be overwritten to its calculated value.
+
+**IMPORTANT** The row-based API also assumes there are no empty rows in your sheet. If any row is completely empty, you will not be able to access any rows after the empty row using the row-based API.
+
+-----------------------------------------
+
 ## API
 
 ### `GoogleSpreadsheet`
@@ -134,7 +196,7 @@ Create a new google spreadsheet object.
 #### `GoogleSpreadsheet.useServiceAccountAuth(account_info, callback)`
 
 Uses a service account email and public/private key to create a token to use to authenticated requests.
-Normally you would just pass in the require of the json file that google generates for you when you create a service account.
+Normally you would just pass in the result of requiring the json file that google generates for you when you create a service account.
 
 See the "Authentication" section for more info.
 
@@ -143,6 +205,13 @@ If you are using heroku or another environment where you cannot save a local fil
 - `private_key` -- the private key found in the JSON file
 
 Internally, this uses a JWT client to generate a new auth token for your service account that is valid for 1 hour. The token will be automatically regenerated when it expires.
+
+**SPECIAL NOTE FOR HEROKU USERS**
+1. Save your private key to a text file
+2. Replace `\n` with actual line breaks
+3. Replace `\u003d` with `=`
+4. heroku config:add GOOGLE_PRIVATE_KEY="$(cat yourfile.txt)"
+
 
 
 #### `GoogleSpreadsheet.setAuthToken(id)`
@@ -178,7 +247,7 @@ Get an array of row objects from the sheet.
   - `query` - send a structured query for rows ([more info](https://developers.google.com/google-apps/spreadsheets/#sending_a_structured_query_for_rows))
 - `callback(err, rows)` - will be called with an array of row objects (see below)
 
-
+*NOTE* The `reverse` option only works in conjunction with `orderby`. It will not work to reverse the default ordering. This is a known bug in Google's API.
 
 #### `GoogleSpreadsheet.addRow(worksheet_id, new_row, callback)`
 
@@ -202,23 +271,18 @@ Get an array of cell objects.
   - `max-col` - column range max
   - `return-empty` - include empty cells (boolean)
 
-#### `GoogleSpreadsheet.bulkUpdateCells(worksheet_id, cells, callback)`
-
-Do a bulk update on cells.
-
-- `worksheet_id` - the index of the sheet to add to (index starts at 1)
-- `cells` - an array of SpreadsheetCell objects to save
 
 #### `GoogleSpreadsheet.addWorksheet(options, callback)`
 
 Add a new worksheet to the doc.
 
 - `options` (optional)
-  - `title` - title for the new sheet (default = 'New Worksheet')
+  - `title` - title for the new sheet, must be unique in the doc (default = 'Worksheet {timestamp}')
   - `rowCount` - number of rows (default = 50)
-  - `colCount` - number of columns (default = 10)
+  - `colCount` - number of columns (default = 20)
+  - `headers` - array of string keys to put in the first row
 
-#### `GoogleSpreadsheet.deleteWorksheet(worksheet_id, callback)`
+#### `GoogleSpreadsheet.removeWorksheet(worksheet_id, callback)`
 
 Remove a worksheet from the doc.
 
@@ -230,7 +294,7 @@ Remove a worksheet from the doc.
 
 Represents a single "sheet" from the spreadsheet. These are the different tabs/pages visible at the bottom of the Google Sheets interface.
 
-This is a really just a wrapper to call the same functions on the spreadsheet without needing to include the worksheet id.
+These are the sheet objects returned as `worksheets` when calling `GoogleSpreadsheet.getInfo`. Many of the calls are accessible from the main Spreadsheet object by passing in a sheet ID (see above), but some functionality is only available on the Worksheet object because it requires various URLs only known after fetching the sheets for making requests.
 
 __Properties:__
 - `url` - the URL for the sheet
@@ -248,18 +312,46 @@ See above.
 ### `SpreadsheetWorksheet.addRow(new_row, callback)`
 See above.
 
-#### `SpreadsheetWorksheet.bulkUpdateCells(cells, callback)`
-See above.
+#### `GoogleSpreadsheet.bulkUpdateCells(cells, callback)`
+Do a bulk update on cells.
+
+- `cells` - an array of SpreadsheetCell objects to save
 
 ### `SpreadsheetWorksheet.del(callback)`
 Remove this sheet from the doc.
+
+#### `SpreadsheetWorksheet.setHeaderRow(values, callback)`
+Set the first row of the sheet
+
+- `values` - array of string values to put in the first row of the sheet
+
+#### `SpreadsheetWorksheet.clear(callback)`
+Clears the entire sheet's contents
+
+#### `SpreadsheetWorksheet.resize(options, callback)`
+Set the dimensions of the sheet
+
+- `options`
+  - `rowCount` - number of rows
+  - `colCount` - number of columns
+
+#### `SpreadsheetWorksheet.setTitle(title, callback)`
+Set the title of the sheet
+
+- `title` - new title for the worksheet
+
+
 
 ----------------------------------
 
 ### `SpreadsheetRow`
 Represents a single row from a sheet.
 
+These are returned from calling `GoogleSpreadsheet.getRows` and `SpreadsheetWorksheet.getRows`.
+
 You can treat the row as a normal javascript object. Object keys will be from the header row of your sheet, however the google API mangles the names a bit to make them simpler. It's easiest if you just use all lowercase keys to begin with.
+
+See limitations above for notes about Google's row-based API!
 
 #### `SpreadsheetRow.save( callback )`
 Saves any changes made to the row's values.
@@ -277,42 +369,33 @@ __Properties:__
 - `id` - the ID of the cell
 - `row` - the row this cell is in
 - `col` - the column this cell is in
-- `value` - the value of the cell
-- `numericValue` - the value of the cell as a number
-- `inputValue` - the "raw" value of the cell which can be a formula
+- `value` - the value of the cell as a string
+- `formula` - the formula present in the cell, for example `=SUM(A3:B3)` (if applicable)
+- `numericValue` - the value of the cell as a number (if applicable)
 
 __IMPORTANT__:
-- Cells with regular values can be modified by setting `value` and calling `save`
-- Cells with formulas in them can be modified by setting `inputValue` and calling `save`
-
-#### `SpreadsheetCell.setValue(val, callback)`
-Set the value of the cell and saves it.
+- You can modify `value`, `numericValue`, or `formula`, and things will work as expected
+- You can save a cell by either calling `save` or doing a bulk update.
+- Setting `value` or `numericValue` on a cell that contains a formula will clear the formula
+- Setting a `formula` value will clear the `value` and `numericValue` and after saving the values will be updated
 
 #### `SpreadsheetCell.save(callback)`
-Saves the current value/formula
+Saves the current value or formula
 
 #### `SpreadsheetCell.del(callback)`
 Clear the cell -- internally just calls `.setValue('', callback)`
 
+#### `SpreadsheetCell.setValue(val, callback)`
+Sets the value and saves it (Just for convenience)
 
 ----------------------------------
 
 ## Further possibilities & to-do
-
-- batch requests for cell based updates
-- modifying worksheet/spreadsheet properties
 - getting list of available spreadsheets for an authenticated user
+- more authentication options
 
 ## Links
-
 - <https://developers.google.com/google-apps/spreadsheets/>
-- <https://github.com/Ajnasz/GoogleClientLogin>
-
-
-## Thanks
-This is a fairly major rewrite of code by [samcday](https://github.com/samcday). original version [here](https://github.com/samcday/node-google-spreadsheets)
-Also big thanks fo GoogleClientLogin for dealing with authentication.
-
 
 ## License
 node-google-spreadsheets is free and unencumbered public domain software. For more information, see the accompanying UNLICENSE file.

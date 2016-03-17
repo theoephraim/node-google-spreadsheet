@@ -1,4 +1,3 @@
 node_modules/
 ignore/
 .env
-test.js

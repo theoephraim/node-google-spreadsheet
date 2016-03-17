@@ -9,6 +9,8 @@ var GoogleAuth = require("google-auth-library");
 var GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
 var GOOGLE_AUTH_SCOPE = ["https://spreadsheets.google.com/feeds"];
 
+var REQUIRE_AUTH_MESSAGE = 'You must authenticate to modify sheet data';
+
 // The main class that represents a single sheet
 // this is the main module.exports
 var GooogleSpreadsheet = function( ss_key, auth_id, options ){
@@ -52,7 +54,13 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
   }
 
   this.useServiceAccountAuth = function( creds, cb ){
-    if (typeof creds == 'string') creds = require(creds);
+    if (typeof creds == 'string') {
+      try {
+        creds = require(creds);
+      } catch (err) {
+        return cb(err);
+      }
+    }
     jwt_client = new auth_client.JWT(creds.client_email, null, creds.private_key, GOOGLE_AUTH_SCOPE, null);
     renewJwtAuth(cb);
   }
@@ -68,6 +76,10 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
       });
       cb()
     });
+  }
+
+  this.isAuthActive = function() {
+    return !!google_auth;
   }
 
 
@@ -117,12 +129,17 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
           headers['content-type'] = 'application/atom+xml';
         }
 
-        if (method == 'PUT') {
+        if (method == 'PUT' || method == 'POST' && url.indexOf('/batch') != -1) {
           headers['If-Match'] = '*';
         }
 
         if ( method == 'GET' && query_or_data ) {
-          url += "?" + querystring.stringify( query_or_data );
+          var query = "?" + querystring.stringify( query_or_data );
+          // replacements are needed for using structured queries on getRows
+          query = query.replace(/%3E/g,'>');
+          query = query.replace(/%3D/g,'=');
+          query = query.replace(/%3C/g,'<');
+          url += query;
         }
 
         request( {
@@ -136,7 +153,8 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
           } else if( response.statusCode === 401 ) {
             return cb( new Error("Invalid authorization key."));
           } else if ( response.statusCode >= 400 ) {
-            return cb( new Error("HTTP error " + response.statusCode + ": " + http.STATUS_CODES[response.statusCode]) + " "+JSON.stringify(body));
+            var message = _.isObject(body) ? JSON.stringify(body) : body.replace(/&quot;/g, '"');
+            return cb( new Error("HTTP error "+response.statusCode+" ("+http.STATUS_CODES[response.statusCode])+") - "+message);
           } else if ( response.statusCode === 200 && response.headers['content-type'].indexOf('text/html') >= 0 ) {
             return cb( new Error("Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)"));
           }
@@ -175,7 +193,9 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
       var worksheets = forceArray(data.entry);
       worksheets.forEach( function( ws_data ) {
         ss_data.worksheets.push( new SpreadsheetWorksheet( self, ws_data ) );
-      })
+      });
+      self.info = ss_data;
+      self.worksheets = ss_data.worksheets;
       cb( null, ss_data );
     });
   }
@@ -183,14 +203,28 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
   // NOTE: worksheet IDs start at 1
 
   this.addWorksheet = function( opts, cb ) {
-    var opts = opts || {};
+    // make opts optional
+    if (typeof opts == 'function'){
+      cb = opts;
+      opts = {};
+    }
+
+    cb = cb || _.noop;
+
+    if (!this.isAuthActive()) return cb(new Error(REQUIRE_AUTH_MESSAGE));
+
     var defaults = {
-      title: 'New Worksheet',
+      title: 'Worksheet '+(+new Date()),  // need a unique title
       rowCount: 50,
-      colCount: 10
+      colCount: 20
     };
 
-    var opts = _.extend(defaults, opts);
+    var opts = _.extend({}, defaults, opts);
+
+    // if column headers are set, make sure the sheet is big enough for them
+    if (opts.headers && opts.headers.length > opts.colCount) {
+      opts.colCount = opts.headers.length;
+    }
 
     var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gs="http://schemas.google.com/spreadsheets/2006"><title>' +
         opts.title +
@@ -200,7 +234,21 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
         opts.colCount +
       '</gs:colCount></entry>';
 
-    self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, cb );
+    self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, function(err, data, xml) {
+      if ( err ) return cb( err );
+
+      var sheet = new SpreadsheetWorksheet( self, data );
+      self.worksheets = self.worksheets || [];
+      self.worksheets.push(sheet);
+      sheet.setHeaderRow(opts.headers, function(err) {
+        cb(err, sheet);
+      })
+    });
+  }
+
+  this.removeWorksheet = function ( worksheet_id, cb ){
+    if (!this.isAuthActive()) return cb(new Error(REQUIRE_AUTH_MESSAGE));
+    self.makeFeedRequest( ["worksheets", ss_key, worksheet_id], 'DELETE', cb );
   }
 
   this.getRows = function( worksheet_id, opts, cb ){
@@ -222,7 +270,7 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
     else if ( opts.num ) query["max-results"] = opts.num;
 
     if ( opts.orderby ) query["orderby"] = opts.orderby;
-    if ( opts.reverse ) query["reverse"] = opts.reverse;
+    if ( opts.reverse ) query["reverse"] = 'true';
     if ( opts.query ) query['sq'] = opts.query;
 
     self.makeFeedRequest( ["list", ss_key, worksheet_id], 'GET', query, function(err, data, xml) {
@@ -295,40 +343,6 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
       cb( null, cells );
     });
   }
-
-  // this.bulkUpdateCells = function (worksheet_id, cells, cb) {
-  //   var entries = cells.map((cell, i) => {
-  //     cell._needsSave = false;
-  //     return `<entry>
-  //       <batch:id>${cell.id}</batch:id>
-  //       <batch:operation type="update"/>
-  //       <id>${cell.id}</id>
-  //       <link rel="edit" type="application/atom+xml"
-  //         href="${cell._links.edit}"/>
-  //       <gs:cell row="${cell.row}" col="${cell.col}" inputValue="${cell.getValueForSave()}"/>
-  //     </entry>`
-  //   });
-  //   var worksheetUrl = `https://spreadsheets.google.com/feeds/cells/${ss_key}/${worksheet_id}/private/full`;
-  //   var data_xml = `<feed xmlns="http://www.w3.org/2005/Atom"
-  //     xmlns:batch="http://schemas.google.com/gdata/batch"
-  //     xmlns:gs="http://schemas.google.com/spreadsheets/2006">
-  //     <id>${worksheetUrl}</id>
-  //     ${entries.join("\n")}
-  //   </feed>`
-  //   console.log(data_xml);
-  //   self.makeFeedRequest(`https://spreadsheets.google.com/feeds/cells/${ss_key}/${worksheet_id}/private/full/batch`,
-  //                        'POST', data_xml, cb)
-  // }
-
-  this.bulkUpdateCells = function (worksheet_id, cells, cb) {
-    var entries = cells.map(function (cell, i) {
-      cell._needsSave = false;
-      return "<entry>\n        <batch:id>" + cell.id + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + cell.id + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell._links.edit + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.getValueForSave() + "\"/>\n      </entry>";
-    });
-    var worksheetUrl = "https://spreadsheets.google.com/feeds/cells/" + ss_key + "/" + worksheet_id + "/private/full";
-    var data_xml = "<feed xmlns=\"http://www.w3.org/2005/Atom\"\n      xmlns:batch=\"http://schemas.google.com/gdata/batch\"\n      xmlns:gs=\"http://schemas.google.com/spreadsheets/2006\">\n      <id>" + worksheetUrl + "</id>\n      " + entries.join("\n") + "\n    </feed>";
-    self.makeFeedRequest("https://spreadsheets.google.com/feeds/cells/" + ss_key + "/" + worksheet_id + "/private/full/batch", 'POST', data_xml, cb);
-  };
 };
 
 // Classes
@@ -338,23 +352,105 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
   self.url = data.id;
   self.id = data.id.substring( data.id.lastIndexOf("/") + 1 );
   self.title = data.title;
-  self.rowCount = data['gs:rowCount'];
-  self.colCount = data['gs:colCount'];
+  self.rowCount = parseInt(data['gs:rowCount']);
+  self.colCount = parseInt(data['gs:colCount']);
 
-  this.getRows = function( opts, cb ){
-    spreadsheet.getRows( self.id, opts, cb );
+  self['_links'] = [];
+  links = forceArray( data.link );
+  links.forEach( function( link ){
+    self['_links'][ link['$']['rel'] ] = link['$']['href'];
+  });
+  self['_links']['cells'] = self['_links']['http://schemas.google.com/spreadsheets/2006#cellsfeed'];
+  self['_links']['bulkcells'] = self['_links']['cells']+'/batch';
+
+  function _setInfo(opts, cb) {
+    cb = cb || _.noop;
+    var xml = ''
+      + '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gs="http://schemas.google.com/spreadsheets/2006">'
+      + '<title>'+(opts.title || self.title)+'</title>'
+      + '<gs:rowCount>'+(opts.rowCount || self.rowCount)+'</gs:rowCount>'
+      + '<gs:colCount>'+(opts.colCount || self.colCount)+'</gs:colCount>'
+      + '</entry>';
+    spreadsheet.makeFeedRequest(self['_links']['edit'], 'PUT', xml, function(err, response) {
+      if (err) return cb(err);
+      self.title = response.title;
+      self.rowCount = parseInt(response['gs:rowCount']);
+      self.colCount = parseInt(response['gs:colCount']);
+      cb();
+    });
   }
-  this.getCells = function (opts, cb) {
-    spreadsheet.getCells( self.id, opts, cb );
+
+  this.resize = _setInfo;
+  this.setTitle = function(title, cb) {
+    _setInfo({title: title}, cb);
   }
-  this.addRow = function( data, cb ){
-    spreadsheet.addRow( self.id, data, cb );
+
+
+  // just a convenience method to clear the whole sheet
+  // resizes to 1 cell, clears the cell, and puts it back
+  this.clear = function(cb) {
+    var cols = self.colCount;
+    var rows = self.colCount;
+    self.resize({rowCount: 1, colCount: 1}, function(err) {
+      if (err) return cb(err);
+      self.getCells(function(err, cells) {
+        cells[0].setValue(null, function(err) {
+          if (err) return cb(err);
+          self.resize({rowCount: rows, colCount: cols}, cb);
+        });
+      })
+    });
   }
-  this.bulkUpdateCells = function( cells, cb ) {
-    spreadsheet.bulkUpdateCells( self.id, cells, cb );
+
+  this.getRows = function(opts, cb){
+    spreadsheet.getRows(self.id, opts, cb);
   }
-  this.del = function ( cb ){
-    spreadsheet.makeFeedRequest( self.url, 'DELETE', null, cb );
+  this.getCells = function(opts, cb) {
+    spreadsheet.getCells(self.id, opts, cb);
+  }
+  this.addRow = function(data, cb){
+    spreadsheet.addRow(self.id, data, cb);
+  }
+  this.bulkUpdateCells = function(cells, cb) {
+    var entries = cells.map(function (cell, i) {
+      cell._needsSave = false;
+      return "<entry>\n        <batch:id>" + cell.batchId + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + self['_links']['cells']+'/'+cell.batchId + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell._links.edit + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.valueForSave + "\"/>\n      </entry>";
+    });
+    var data_xml = "<feed xmlns=\"http://www.w3.org/2005/Atom\"\n      xmlns:batch=\"http://schemas.google.com/gdata/batch\"\n      xmlns:gs=\"http://schemas.google.com/spreadsheets/2006\">\n      <id>" + self['_links']['cells'] + "</id>\n      " + entries.join("\n") + "\n    </feed>";
+
+    spreadsheet.makeFeedRequest(self['_links']['bulkcells'], 'POST', data_xml, function(err, data) {
+      if (err) return cb(err);
+
+      // update all the cells
+      var cells_by_batch_id = _.indexBy(cells, 'batchId');
+      if (data.entry && data.entry.length) data.entry.forEach(function(cell_data) {
+        cells_by_batch_id[cell_data['batch:id']].updateValuesFromResponseData(cell_data);
+      });
+      cb();
+    });
+  }
+  this.del = function(cb){
+    spreadsheet.makeFeedRequest(self['_links']['edit'], 'DELETE', null, cb);
+  }
+
+  this.setHeaderRow = function(values, cb) {
+    if (!values) return cb();
+    if (values.length > self.colCount){
+      return cb(new Error('Sheet is not large enough to fit '+values.length+' columns. Resize the sheet first.'));
+    }
+    self.getCells({
+      'min-row': 1,
+      'max-row': 1,
+      'min-col': 1,
+      'max-col': self.colCount,
+      'return-empty': true
+    }, function(err, cells) {
+      if (err) return cb(err);
+      _.each(cells, function(cell) {
+        cell.value = values[cell.col-1] ? values[cell.col-1] : '';
+      });
+      self.bulkUpdateCells(cells, cb);
+    });
   }
 }
 
@@ -412,27 +508,39 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   var self = this;
 
-  self.id = data['id'];
-  self.row = parseInt(data['gs:cell']['$']['row']);
-  self.col = parseInt(data['gs:cell']['$']['col']);
-  self.value = data['gs:cell']['_'];
-  self.numericValue = data['gs:cell']['$']['numericValue'];
-  self.inputValue = data['gs:cell']['$']['inputValue'];
+  function init() {
+    self.id = data['id'];
+    self.row = parseInt(data['gs:cell']['$']['row']);
+    self.col = parseInt(data['gs:cell']['$']['col']);
+    self.batchId = 'R'+self.row+'C'+self.col;
 
-  var _hasFormula = self.inputValue.substr(0,1) === '=';
+    self['_links'] = [];
+    links = forceArray( data.link );
+    links.forEach( function( link ){
+      self['_links'][ link['$']['rel'] ] = link['$']['href'];
+    });
 
-  self['_links'] = [];
-  links = forceArray( data.link );
-  links.forEach( function( link ){
-    self['_links'][ link['$']['rel'] ] = link['$']['href'];
-  });
+    self.updateValuesFromResponseData(data);
+  }
 
-  self.getValueForSave = function(){
-    if (_hasFormula){
-      return self.inputValue;
+  self.updateValuesFromResponseData = function(_data) {
+    // formula value
+    var input_val = _data['gs:cell']['$']['inputValue'];
+    if (input_val.substr(0,1) === '='){
+      self._formula = input_val;
     } else {
-      return xmlSafeValue(self.value);
+      self._formula = undefined;
     }
+
+    // numeric values
+    if (_data['gs:cell']['$']['numericValue'] !== undefined) {
+      self._numericValue = parseFloat(_data['gs:cell']['$']['numericValue']);
+    } else {
+      self._numericValue = undefined;
+    }
+
+    // the main "value" - its always a string
+    self._value = _data['gs:cell']['_'] || '';
   }
 
   self.setValue = function(new_value, cb) {
@@ -440,23 +548,92 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
     self.save(cb);
   };
 
+  self._clearValue = function() {
+    self._formula = undefined;
+    self._numericValue = undefined;
+    self._value = '';
+  }
+
+  self.__defineGetter__('value', function(){
+    return self._value;
+  });
+  self.__defineSetter__('value', function(val){
+    if (!val) return self._clearValue();
+
+    var numeric_val = parseFloat(val);
+    if (!isNaN(numeric_val)){
+      self._numericValue = numeric_val;
+      self._value = val.toString();
+    } else {
+      self._numericValue = undefined;
+      self._value = val;
+    }
+
+    if (typeof val == 'string' && val.substr(0,1) === '=') {
+      // use the getter to clear the value
+      self.formula = val;
+    } else {
+      self._formula = undefined;
+    }
+  });
+
+  self.__defineGetter__('formula', function() {
+    return self._formula;
+  });
+  self.__defineSetter__('formula', function(val){
+    if (!val) return self._clearValue();
+
+    if (val.substr(0,1) !== '=') {
+      throw new Error('Formulas must start with "="');
+    }
+    self._numericValue = undefined;
+    self._value = '*SAVE TO GET NEW VALUE*';
+    self._formula = val;
+  });
+
+  self.__defineGetter__('numericValue', function() {
+    return self._numericValue;
+  });
+  self.__defineSetter__('numericValue', function(val) {
+    if (val === undefined || val === null) return self._clearValue();
+
+    if (isNaN(parseFloat(val)) || !isFinite(val)) {
+      throw new Error('Invalid numeric value assignment');
+    }
+
+    self._value = val.toString();
+    self._numericValue = parseFloat(val);
+    self._formula = undefined;
+  });
+
+  self.__defineGetter__('valueForSave', function() {
+    return xmlSafeValue(self._formula || self._value);
+  });
+
   self.save = function(cb) {
     self._needsSave = false;
 
     var edit_id = 'https://spreadsheets.google.com/feeds/cells/key/worksheetId/private/full/R'+self.row+'C'+self.col;
     var data_xml =
-    '<entry><id>'+edit_id+'</id>'+
-    '<link rel="edit" type="application/atom+xml" href="'+edit_id+'"/>'+
-    '<gs:cell row="'+self.row+'" col="'+self.col+'" inputValue="'+self.getValueForSave()+'"/></entry>'
+      '<entry><id>'+self.id+'</id>'+
+      '<link rel="edit" type="application/atom+xml" href="'+self.id+'"/>'+
+      '<gs:cell row="'+self.row+'" col="'+self.col+'" inputValue="'+self.valueForSave+'"/></entry>'
 
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
 
-    spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
+    spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, function(err, response) {
+      if (err) return cb(err);
+      self.updateValuesFromResponseData(response);
+      cb();
+    });
   }
 
   self.del = function(cb) {
     self.setValue('', cb);
   }
+
+  init();
+  return self;
 }
 
 module.exports = GooogleSpreadsheet;
