@@ -526,7 +526,7 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   self.updateValuesFromResponseData = function(_data) {
     // formula value
     var input_val = _data['gs:cell']['$']['inputValue'];
-    if (input_val.substr(0,1) === '='){
+    if (input_val !== undefined && input_val.substr(0,1) === '='){
       self._formula = input_val;
     } else {
       self._formula = undefined;
