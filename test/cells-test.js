@@ -98,6 +98,18 @@ describe('Cell-based feeds', function() {
         done(err);
       });
     });
+
+    it('handles requests outisde the bounds of the sheet', function(done) {
+      sheet.getCells({
+        'return-empty': true,
+        'max-row': 1,
+        'max-col': NUM_COLS+1
+      }, function(err, cells) {
+        err.should.be.an.error;
+        err.toString().indexOf('max-col').should.not.equal(-1);
+        done();
+      });
+    });
   });
 
   describe('manipulating cell data', function() {
