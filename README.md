@@ -15,7 +15,7 @@ A simple Node.js module for reading and manipulating data in Google Spreadsheets
 
 ## Basic Usage
 
-```
+```js
 var GoogleSpreadsheet = require("google-spreadsheet");
 
 // spreadsheet key is the long id in the sheets URL
