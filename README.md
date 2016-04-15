@@ -108,7 +108,7 @@ async.series([
       step();
     });
   }
-});
+]);
 ```
 
 ## Authentication
