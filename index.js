@@ -312,7 +312,16 @@ var GooogleSpreadsheet = function( ss_key, auth_id, options ){
       }
     });
     data_xml += '</entry>';
-    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
+    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, function(error, row_data, entry_xml) {
+        if (error) {
+            return cb(error);
+        }
+        
+        entry_xml = entry_xml.replace(/<\?xml[^\?]+\?>/, '').replace("<entry xmlns=\'http://www.w3.org/2005/Atom\'", "<entry xmlns=\'http://www.w3.org/2005/Atom\' xmlns:openSearch=\'http://a9.com/-/spec/opensearch/1.1/\'");
+        
+        var row = new SpreadsheetRow( self, row_data, entry_xml);
+        cb(null, row);
+    });
   }
 
   this.getCells = function (worksheet_id, opts, cb) {
