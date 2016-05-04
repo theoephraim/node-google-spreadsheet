@@ -218,6 +218,7 @@ If you are using heroku or another environment where you cannot save a local fil
 Internally, this uses a JWT client to generate a new auth token for your service account that is valid for 1 hour. The token will be automatically regenerated when it expires.
 
 **SPECIAL NOTE FOR HEROKU USERS**
+
 1. Save your private key to a text file
 2. Replace `\n` with actual line breaks
 3. Replace `\u003d` with `=`
