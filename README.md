@@ -15,8 +15,13 @@ A simple Node.js module for reading and manipulating data in Google Spreadsheets
 
 ## Basic Usage
 
-```
-var GoogleSpreadsheet = require("google-spreadsheet");
+_This example is simply meant to show some of the things you can do._
+
+Note (the comments) that many of the calls are actually asynchronous, but I skipped showing the callbacks to make the example shorter. You also don't have to use [async](https://github.com/caolan/async) for control flow, but I find it helpful.
+
+```javascript
+var GoogleSpreadsheet = require('google-spreadsheet');
+var async = require('async');
 
 // spreadsheet key is the long id in the sheets URL
 var doc = new GoogleSpreadsheet('<spreadsheet key>');
@@ -108,7 +113,7 @@ async.series([
       step();
     });
   }
-});
+]);
 ```
 
 ## Authentication
@@ -175,6 +180,12 @@ You _can_ set a formula value into a cell using the row-based API, but when read
 -----------------------------------------
 
 ## API
+
+This module follows "normal" node callback conventions:
+
+- Every method that takes a callback takes it as its last param
+- Every callback will be called with the error (or null) as first param
+- Some methods have optional params
 
 ### `GoogleSpreadsheet`
 
