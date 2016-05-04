@@ -171,15 +171,15 @@ describe('Cell-based feeds', function() {
     });
 
     it('supports setting `numericValue`', function(done) {
-      cell.numericValue = 123;
-      cell.value.should.equal('123');
-      cell.numericValue.should.equal(123);
+      cell.numericValue = 456;
+      cell.value.should.equal('456');
+      cell.numericValue.should.equal(456);
       (cell.formula === undefined).should.be.true;
 
       cell.save(function(err) {
         (!err).should.be.true;
-        cell.value.should.equal('123');
-        cell.numericValue.should.equal(123);
+        cell.value.should.equal('456');
+        cell.numericValue.should.equal(456);
         (cell.formula === undefined).should.be.true;
         done();
       });
