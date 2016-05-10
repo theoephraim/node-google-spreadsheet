@@ -42,7 +42,7 @@ describe('Managing doc info and sheets', function() {
     });
 
     it('should include author metadata', function() {
-      info.author.name.should.equal('THEOzero');
+      info.author.name.should.equal('theozero');
       info.author.email.should.equal('theozero@gmail.com');
     });
 
