@@ -113,7 +113,11 @@ async.series([
       step();
     });
   }
-]);
+], function(err){
+    if( err ) {
+      console.log('Error: '+err);
+    }
+});
 ```
 
 ## Authentication
