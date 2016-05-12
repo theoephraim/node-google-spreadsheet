@@ -394,10 +394,15 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
     self.resize({rowCount: 1, colCount: 1}, function(err) {
       if (err) return cb(err);
       self.getCells(function(err, cells) {
-        cells[0].setValue(null, function(err) {
-          if (err) return cb(err);
+        if(cells[0]){
+          cells[0].setValue(null, function(err) {
+            if (err) return cb(err);
+            self.resize({rowCount: rows, colCount: cols}, cb);
+          });
+        }else{
+          // Cell was already clear
           self.resize({rowCount: rows, colCount: cols}, cb);
-        });
+        }
       })
     });
   }
@@ -658,6 +663,3 @@ var xmlSafeColumnName = function(val){
   return String(val).replace(/[\s_]+/g, '')
       .toLowerCase();
 }
-
-
-
