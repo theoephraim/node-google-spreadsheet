@@ -412,6 +412,8 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
     spreadsheet.addRow(self.id, data, cb);
   }
   this.bulkUpdateCells = function(cells, cb) {
+    if ( !cb ) cb = function(){};
+
     var entries = cells.map(function (cell, i) {
       cell._needsSave = false;
       return "<entry>\n        <batch:id>" + cell.batchId + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + self['_links']['cells']+'/'+cell.batchId + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell._links.edit + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.valueForSave + "\"/>\n      </entry>";
@@ -434,6 +436,7 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
   }
 
   this.setHeaderRow = function(values, cb) {
+    if ( !cb ) cb = function(){};
     if (!values) return cb();
     if (values.length > self.colCount){
       return cb(new Error('Sheet is not large enough to fit '+values.length+' columns. Resize the sheet first.'));
@@ -613,6 +616,7 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   });
 
   self.save = function(cb) {
+    if ( !cb ) cb = function(){};
     self._needsSave = false;
 
     var edit_id = 'https://spreadsheets.google.com/feeds/cells/key/worksheetId/private/full/R'+self.row+'C'+self.col;
@@ -658,6 +662,3 @@ var xmlSafeColumnName = function(val){
   return String(val).replace(/[\s_]+/g, '')
       .toLowerCase();
 }
-
-
-
