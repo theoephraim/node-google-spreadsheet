@@ -348,6 +348,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 // Classes
 var SpreadsheetWorksheet = function( spreadsheet, data ){
   var self = this;
+  var links;
 
   self.url = data.id;
   self.id = data.id.substring( data.id.lastIndexOf("/") + 1 );
@@ -509,6 +510,7 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   var self = this;
 
   function init() {
+    var links;
     self.id = data['id'];
     self.row = parseInt(data['gs:cell']['$']['row']);
     self.col = parseInt(data['gs:cell']['$']['col']);
@@ -658,6 +660,3 @@ var xmlSafeColumnName = function(val){
   return String(val).replace(/[\s_]+/g, '')
       .toLowerCase();
 }
-
-
-
