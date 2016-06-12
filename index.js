@@ -312,7 +312,11 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
       }
     });
     data_xml += '</entry>';
-    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, cb );
+    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, , function(err, data, xml) {
+      var entries_xml = xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
+      var row = new SpreadsheetRow(self, data, entries_xml[0]);
+      cb(null, row);
+    });
   }
 
   this.getCells = function (worksheet_id, opts, cb) {
