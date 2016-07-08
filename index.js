@@ -651,7 +651,9 @@ var xmlSafeValue = function(val){
   return String(val).replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;')
+      .replace(/\n/g,'&#10;')
+      .replace(/\r/g,'&#13;');
 }
 var xmlSafeColumnName = function(val){
   if (!val) return '';
