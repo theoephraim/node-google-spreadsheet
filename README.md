@@ -138,6 +138,8 @@ the google spreadsheets GUI.
 Many seemingly "public" sheets have not also been "published" so this may
 cause some confusion.
 
+*Unauthenticated requests allow reading, but not writing to sheets. To write on a sheet, you must authenticate.*
+
 
 ### Service Account (recommended method)
 
