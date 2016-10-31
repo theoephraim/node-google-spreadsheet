@@ -37,7 +37,7 @@ async.series([
       private_key: 'your long private key stuff here'
     }
 
-    doc.useServiceAccountAuth(creds, step);
+    doc.useServiceAccountAuth(creds, null, step);
   },
   function getInfoAndWorksheets(step) {
     doc.getInfo(function(err, info) {
@@ -204,12 +204,14 @@ Create a new google spreadsheet object.
 
 
 
-#### `GoogleSpreadsheet.useServiceAccountAuth(account_info, callback)`
+#### `GoogleSpreadsheet.useServiceAccountAuth(account_info, impersonated_user, callback)`
 
 Uses a service account email and public/private key to create a token to use to authenticated requests.
 Normally you would just pass in the result of requiring the json file that google generates for you when you create a service account.
 
 See the "Authentication" section for more info.
+
+If you are not impersonating a user, set `impersonated_user` to null.
 
 If you are using heroku or another environment where you cannot save a local file, you may just pass in an object with
 - `client_email` -- your service account's email address

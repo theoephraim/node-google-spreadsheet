@@ -53,7 +53,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     return cb(new Error('Google has officially deprecated ClientLogin. Please upgrade this module and see the readme for more instrucations'))
   }
 
-  this.useServiceAccountAuth = function( creds, cb ){
+  this.useServiceAccountAuth = function( creds, impersonated_user, cb ){
     if (typeof creds == 'string') {
       try {
         creds = require(creds);
@@ -61,7 +61,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
         return cb(err);
       }
     }
-    jwt_client = new auth_client.JWT(creds.client_email, null, creds.private_key, GOOGLE_AUTH_SCOPE, null);
+    jwt_client = new auth_client.JWT(creds.client_email, null, creds.private_key, GOOGLE_AUTH_SCOPE, impersonated_user);
     renewJwtAuth(cb);
   }
 
