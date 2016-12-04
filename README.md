@@ -256,7 +256,7 @@ Get an array of row objects from the sheet.
   - `limit` - max # of rows to read at once
   - `orderby` - column key to order by
   - `reverse` - reverse results
-  - `query` - send a structured query for rows ([more info](https://developers.google.com/google-apps/spreadsheets/#sending_a_structured_query_for_rows))
+  - `query` - send a structured query for rows ([more info](https://developers.google.com/google-apps/spreadsheets/data#send_a_structured_query_for_rows))
 - `callback(err, rows)` - will be called with an array of row objects (see below)
 
 *NOTE* The `reverse` option only works in conjunction with `orderby`. It will not work to reverse the default ordering. This is a known bug in Google's API.
