@@ -111,7 +111,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
       auth: function(step) {
         if (auth_mode != 'jwt') return step();
         // check if jwt token is expired
-        if (google_auth.expires > +new Date()) return step();
+        if (google_auth && google_auth.expires > +new Date()) return step();
         renewJwtAuth(step);
       },
       request: function(result, step) {
