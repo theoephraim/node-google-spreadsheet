@@ -490,6 +490,12 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
     It's dumb, but I couldnt get any JSON->XML conversion to work reliably
     */
 
+    // try to populate the edit link if not already set,
+    // or else the request will fail
+    if (!self['_links']['edit'] && self['_links']['self']) {
+      self['_links']['edit'] = self['_links']['self'];
+    }
+
     var data_xml = self['_xml'];
     // probably should make this part more robust?
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gsx='http://schemas.google.com/spreadsheets/2006/extended'>");
@@ -658,6 +664,3 @@ var xmlSafeColumnName = function(val){
   return String(val).replace(/[\s_]+/g, '')
       .toLowerCase();
 }
-
-
-
