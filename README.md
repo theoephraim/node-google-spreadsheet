@@ -160,6 +160,7 @@ __Setup Instructions__
   - In the sidebar on the left, expand __APIs & auth__ > __Credentials__
   - Click blue "Add credentials" button
   - Select the "Service account" option
+  - Select "Furnish a new private key" checkbox
   - Select the "JSON" key type option
   - Click blue "Create" button
   - your JSON key file is generated and downloaded to your machine (__it is the only copy!__)
