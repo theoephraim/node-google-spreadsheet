@@ -73,7 +73,7 @@ async.series([
       'return-empty': true
     }, function(err, cells) {
       var cell = cells[0];
-      console.log('Cell R'+cell.row+'C'+cell.col+' = '+cells.value);
+      console.log('Cell R'+cell.row+'C'+cell.col+' = '+cell.value);
 
       // cells have a value, numericValue, and formula
       cell.value == '1'
