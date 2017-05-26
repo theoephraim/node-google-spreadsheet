@@ -155,17 +155,6 @@ describe('Cell-based feeds', function() {
       });
     });
 
-    it('can update a single cell with linefeed in value', function(done) {
-      cell.setValue('HELLO\nWORLD', function(err) {
-        (!err).should.be.true;
-        cell.value.should.equal('HELLO\nWORLD');
-        sheet.getCells({}, function(err, cells) {
-          cells[0].value.should.equal('HELLO\nWORLD');
-          done(err);
-        });
-      });
-    });
-
     it('supports `value` to numeric values', function(done) {
       cell.value = 123;
       cell.value.should.equal('123');
@@ -288,6 +277,17 @@ describe('Cell-based feeds', function() {
         (cell.numericValue === undefined).should.be.true;
         (cell.formula === undefined).should.be.true;
         done();
+      });
+    });
+
+    it('can update a single cell with linefeed in value', function(done) {
+      cell.setValue('HELLO\nWORLD', function(err) {
+        (!err).should.be.true;
+        cell.value.should.equal('HELLO\nWORLD');
+        sheet.getCells({}, function(err, cells) {
+          cells[0].value.should.equal('HELLO\nWORLD');
+          done(err);
+        });
       });
     });
   });
