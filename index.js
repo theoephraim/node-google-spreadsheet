@@ -248,7 +248,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   this.removeWorksheet = function ( worksheet_id, cb ){
     if (!this.isAuthActive()) return cb(new Error(REQUIRE_AUTH_MESSAGE));
-    self.makeFeedRequest( ["worksheets", ss_key, worksheet_id], 'DELETE', cb );
+    self.makeFeedRequest( GOOGLE_FEED_URL + "worksheets/" + ss_key + "/private/full/" + worksheet_id, 'DELETE', {}, cb );
   }
 
   this.getRows = function( worksheet_id, opts, cb ){
