@@ -53,17 +53,13 @@ describe('Row-based feeds', function() {
         col3: 'c3'
       };
 
-      sheet.addRow(new_data, function(err) {
+      sheet.addRow(new_data, function(err, _row) {
         (err == null).should.be.true;
-        sheet.getRows(function(err, rows) {
-          rows.length.should.equal(1);
-          row = rows[0];
-          row.col1.should.equal(new_data.col1);
-          row.col2.should.equal(new_data.col2);
-          row.col3.should.equal(new_data.col3);
-          done(err);
-        });
-
+        row = _row;
+        row.col1.should.equal(new_data.col1);
+        row.col2.should.equal(new_data.col2);
+        row.col3.should.equal(new_data.col3);
+        done();
       });
     });
 

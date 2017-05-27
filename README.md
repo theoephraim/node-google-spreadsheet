@@ -264,7 +264,7 @@ Get an array of row objects from the sheet.
   - `orderby` - column key to order by
   - `reverse` - reverse results
   - `query` - send a structured query for rows ([more info](https://developers.google.com/google-apps/spreadsheets/data#send_a_structured_query_for_rows))
-- `callback(err, rows)` - will be called with an array of row objects (see below)
+- `callback(err, rows)` - will be called with an array of SpreadsheetRow objects (see below)
 
 *NOTE* The `reverse` option only works in conjunction with `orderby`. It will not work to reverse the default ordering. This is a known bug in Google's API.
 
@@ -274,9 +274,7 @@ Add a single row to the sheet.
 
 - `worksheet_id` - the index of the sheet to add to (index starts at 1)
 - `new_row` - key-value object to add - keys must match the header row on your sheet
-- `callback(err)` - callback called after row is added
-
-
+- `callback(err, row)` - will be called with the new SpreadsheetRow (see below)
 
 #### `GoogleSpreadsheet.getCells(worksheet_id, options, callback)`
 
