@@ -246,9 +246,10 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     });
   }
 
-  this.removeWorksheet = function ( worksheet_id, cb ){
+  this.removeWorksheet = function ( sheet_id, cb ){
     if (!this.isAuthActive()) return cb(new Error(REQUIRE_AUTH_MESSAGE));
-    self.makeFeedRequest( ["worksheets", ss_key, worksheet_id], 'DELETE', cb );
+    if (sheet_id instanceof SpreadsheetWorksheet) return sheet_id.del(cb);
+    self.makeFeedRequest( GOOGLE_FEED_URL + "worksheets/" + ss_key + "/private/full/" + sheet_id, 'DELETE', null, cb );
   }
 
   this.getRows = function( worksheet_id, opts, cb ){

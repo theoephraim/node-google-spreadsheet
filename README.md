@@ -299,11 +299,11 @@ Add a new worksheet to the doc.
   - `colCount` - number of columns (default = 20)
   - `headers` - array of string keys to put in the first row
 
-#### `GoogleSpreadsheet.removeWorksheet(worksheet_id, callback)`
+#### `GoogleSpreadsheet.removeWorksheet(sheet, callback)`
 
-Remove a worksheet from the doc.
+Remove a worksheet from the doc - by id, index, or the SpreadsheetWorksheet object
 
-- `worksheet_id` - the index of the sheet to add to (index starts at 1)
+- `sheet` - can be a SpreadsheetWorksheet object, the id of the sheet, or the index (starts at 1)
 
 ----------------------------------
 

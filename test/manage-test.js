@@ -156,7 +156,7 @@ describe('Managing doc info and sheets', function() {
       });
     });
 
-    it('can delete a worksheet', function(done) {
+    it('can delete a worksheet with `SpreadsheetWorksheet.del()`', function(done) {
       sheet.del(function(err) {
         (!err).should.be.true;
         // check if the sheet is really gone
@@ -165,6 +165,66 @@ describe('Managing doc info and sheets', function() {
           var last_sheet = info.worksheets.pop();
           last_sheet.title.should.not.equal(sheet_title);
           done();
+        });
+      });
+    });
+
+    it('can delete a worksheet with `GoogleSpreadsheet.removeWorksheet()` passing the sheet object', function(done) {
+      doc.addWorksheet({
+        title: sheet_title,
+        colCount: 10
+      }, function(err, _sheet) {
+        (!err).should.be.true;
+        doc.removeWorksheet(_sheet, function(err) {
+          (!err).should.be.true;
+          doc.getInfo(function(err, info) {
+            (!err).should.be.true;
+            var last_sheet = info.worksheets.pop();
+            last_sheet.title.should.not.equal(sheet_title);
+            done();
+          });
+        });
+      });
+    });
+
+    it('can delete a worksheet with `GoogleSpreadsheet.removeWorksheet()` passing the sheet ID', function(done) {
+      doc.addWorksheet({
+        title: sheet_title,
+        colCount: 10
+      }, function(err, _sheet) {
+        (!err).should.be.true;
+        doc.removeWorksheet(_sheet.id, function(err) {
+          (!err).should.be.true;
+          doc.getInfo(function(err, info) {
+            (!err).should.be.true;
+            var last_sheet = info.worksheets.pop();
+            last_sheet.title.should.not.equal(sheet_title);
+            done();
+          });
+        });
+      });
+    });
+
+    it('can delete a worksheet with `GoogleSpreadsheet.removeWorksheet()` passing the index of the sheet', function(done) {
+      doc.addWorksheet({
+        title: sheet_title,
+        colCount: 10
+      }, function(err, _sheet) {
+        (!err).should.be.true;
+
+        doc.getInfo(function(err, info) {
+          (!err).should.be.true;
+          var sheet_index = info.worksheets.length;
+
+          doc.removeWorksheet(sheet_index, function(err) {
+            (!err).should.be.true;
+            doc.getInfo(function(err, info) {
+              (!err).should.be.true;
+              var last_sheet = info.worksheets.pop();
+              last_sheet.title.should.not.equal(sheet_title);
+              done();
+            });
+          });
         });
       });
     });
