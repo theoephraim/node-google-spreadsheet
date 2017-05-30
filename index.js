@@ -127,6 +127,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
         if ( method == 'POST' || method == 'PUT' ) {
           headers['content-type'] = 'application/atom+xml';
+          headers['If-Match'] = '*';
         }
 
         if (method == 'PUT' || method == 'POST' && url.indexOf('/batch') != -1) {
