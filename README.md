@@ -241,7 +241,7 @@ Use an already created auth token for all future requets.
 
 #### `GoogleSpreadsheet.getInfo(callback)`
 
-Get information about the spreadsheet. Calls callback passing an object that contains:
+Get information about the spreadsheet. Calls callback passing any error and a response object that contains:
 
 - `id` - the URL/id as returned from google
 - `title` - the title of the document
@@ -250,6 +250,7 @@ Get information about the spreadsheet. Calls callback passing an object that con
   - `name` - author name
   - `email` - author email
 - `worksheets` - an array of `SpreadsheetWorksheet` objects (see below)
+- `callback(err, response)`
 
 
 
