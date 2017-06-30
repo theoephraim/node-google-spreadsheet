@@ -317,7 +317,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
       if (err) return cb(err);
       var entries_xml = new_xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
       var row;
-      if (entries_xml.length > 0) {
+      if (entries_xml !== null) {
         row = new SpreadsheetRow(self, data, entries_xml[0]);
       } else {
         cb(new Error('Invalid response'));
