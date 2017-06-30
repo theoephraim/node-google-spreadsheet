@@ -316,7 +316,12 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, function(err, data, new_xml) {
       if (err) return cb(err);
       var entries_xml = new_xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
-      var row = new SpreadsheetRow(self, data, entries_xml[0]);
+      var row;
+      if (entries_xml.length > 0) {
+        row = new SpreadsheetRow(self, data, entries_xml[0]);
+      } else {
+        cb(new Error('Invalid response'));
+      }
       cb(null, row);
     });
   }
