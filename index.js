@@ -315,7 +315,10 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     data_xml += '</entry>';
     self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, function(err, data, new_xml) {
       if (err) return cb(err);
-      if (!new_xml) cb(new Error('Invalid response'));
+      if (!new_xml) {
+        cb(new Error('Invalid response'));
+        return;
+      }
 
       var entries_xml = new_xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
       var row;
