@@ -326,6 +326,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
         row = new SpreadsheetRow(self, data, entries_xml[0]);
       } else {
         cb(new Error('Invalid response'));
+        return;
       }
       cb(null, row);
     });
