@@ -14,10 +14,10 @@
     "api",
     "google sheets"
   ],
-  "homepage": "https://github.com/zemccartney/node-google-spreadsheet",
+  "homepage": "https://github.com/theoephraim/node-google-spreadsheet",
   "repository": {
     "type": "git",
-    "url": "git://github.com:zemccartney/node-google-spreadsheet.git" 
+    "url": "git://github.com/theoephraim/node-google-spreadsheet.git"
   },
   "main": "index.js",
   "engines": {
