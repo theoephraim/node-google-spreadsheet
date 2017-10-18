@@ -54,6 +54,9 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
   }
 
   this.useServiceAccountAuth = function( creds, cb ){
+    
+    var GOOGLE_IMPERSONATION = creds.impersonate_email ? creds.impersonate_email : null;
+    
     if (typeof creds == 'string') {
       try {
         creds = require(creds);
@@ -61,7 +64,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
         return cb(err);
       }
     }
-    jwt_client = new auth_client.JWT(creds.client_email, null, creds.private_key, GOOGLE_AUTH_SCOPE, null);
+    jwt_client = new auth_client.JWT(creds.client_email, null, creds.private_key, GOOGLE_AUTH_SCOPE, GOOGLE_IMPERSONATION);
     renewJwtAuth(cb);
   }
 
