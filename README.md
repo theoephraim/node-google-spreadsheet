@@ -233,6 +233,36 @@ Internally, this uses a JWT client to generate a new auth token for your service
 
 
 
+#### `GoogleSpreadsheet.useOAuthClient(oauth2Client, callback)`
+Uses OAuth2 origin `googleapis` client to get access.  
+
+```javascript
+var google = require('googleapis');
+var OAuth2 = google.auth.OAuth2;
+var oauth2Client = new OAuth2(
+    'client_id...here...',
+   'client_secret...here...',
+   '...redirect_uri....'
+);
+
+oauth2Client.setCredentials({
+    refresh_token: '.....refresh_token.....'
+});
+
+
+const doc = new GoogleSpreadsheet('...Bb3oHsOcF......your.spreadsheet.id.....');
+doc.useOAuthClient(oauth2Client, function (err) {
+    
+    // use your doc here....
+    doc.getInfo(function (err, res) {
+        console.log(err, res)
+    });
+});
+
+```
+
+
+
 #### `GoogleSpreadsheet.setAuthToken(id)`
 
 Use an already created auth token for all future requets.
