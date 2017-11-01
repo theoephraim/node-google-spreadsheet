@@ -162,8 +162,9 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
           if ( body ){
             xml_parser.parseString(body, function(err, result){
+              body = null;
               if ( err ) return cb( err );
-              cb( null, result, body );
+              cb( null, result );
             });
           } else {
             if ( err ) cb( err );
