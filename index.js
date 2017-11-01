@@ -424,7 +424,7 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
 
     var entries = cells.map(function (cell, i) {
       cell._needsSave = false;
-      return "<entry>\n        <batch:id>" + cell.batchId + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + self['_links']['cells']+'/'+cell.batchId + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell._links.edit + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.valueForSave + "\"/>\n      </entry>";
+      return "<entry>\n        <batch:id>" + cell.batchId + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + self['_links']['cells']+'/'+cell.batchId + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell.getEdit() + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.valueForSave + "\"/>\n      </entry>";
     });
     var data_xml = "<feed xmlns=\"http://www.w3.org/2005/Atom\"\n      xmlns:batch=\"http://schemas.google.com/gdata/batch\"\n      xmlns:gs=\"http://schemas.google.com/spreadsheets/2006\">\n      <id>" + self['_links']['cells'] + "</id>\n      " + entries.join("\n") + "\n    </feed>";
 
@@ -529,10 +529,33 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
     self['_links'] = [];
     links = forceArray( data.link );
     links.forEach( function( link ){
+      if(link['$']['rel'] == "self" && link['$']['href'] == self.getSelf()) return;
+      if(link['$']['rel'] == "edit" && link['$']['href'] == self.getEdit()) return;
       self['_links'][ link['$']['rel'] ] = link['$']['href'];
     });
+    if(self['_links'].length == 0) delete self['_links'];
 
     self.updateValuesFromResponseData(data);
+  }
+
+  self.getId = function() {
+      return self.id;
+  }
+
+  self.getEdit = function() {
+    if(!!self['_links'] && !!self['_links']['edit']) {
+      return self['_links']['edit'];
+    } else {
+      return self.getId().replace(self.batchId, "private/full/" + self.batchId);
+    }
+  }
+
+  self.getSelf = function() {
+    if(!!self['_links'] && !!self['_links']['edit']) {
+      return self['_links']['edit'];
+    } else {
+      return self.getId().replace(self.batchId, "private/full/" + self.batchId);
+    }
   }
 
   self.updateValuesFromResponseData = function(_data) {
@@ -630,13 +653,13 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
 
     var edit_id = 'https://spreadsheets.google.com/feeds/cells/key/worksheetId/private/full/R'+self.row+'C'+self.col;
     var data_xml =
-      '<entry><id>'+self.id+'</id>'+
-      '<link rel="edit" type="application/atom+xml" href="'+self.id+'"/>'+
+      '<entry><id>'+self.getId()+'</id>'+
+      '<link rel="edit" type="application/atom+xml" href="'+self.getId()+'"/>'+
       '<gs:cell row="'+self.row+'" col="'+self.col+'" inputValue="'+self.valueForSave+'"/></entry>'
 
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
 
-    spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, function(err, response) {
+    spreadsheet.makeFeedRequest( self.getEdit(), 'PUT', data_xml, function(err, response) {
       if (err) return cb(err);
       self.updateValuesFromResponseData(response);
       cb();
