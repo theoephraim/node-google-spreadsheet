@@ -344,7 +344,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
       var entries = forceArray(data['entry']);
       var i = 0;
       while(entries.length > 0) {
-        cells.push( new SpreadsheetCell( self, worksheet_id, entries.shift() ) );
+        cells.push( new SpreadsheetCell( self, ss_key, worksheet_id, entries.shift() ) );
       }
 
       cb( null, cells );
@@ -516,15 +516,20 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
   }
 }
 
-var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
+var SpreadsheetCell = function( spreadsheet, ss_key, worksheet_id, data ){
   var self = this;
 
   function init() {
     var links;
-    self.id = data['id'];
     self.row = parseInt(data['gs:cell']['$']['row']);
     self.col = parseInt(data['gs:cell']['$']['col']);
     self.batchId = 'R'+self.row+'C'+self.col;
+    if(data['id'] == "https://spreadsheets.google.com/feeds/cells/" + ss_key + "/" + worksheet_id + '/' + self.batchId) {
+      self.ws_id = worksheet_id;
+      self.ss = ss_key;
+    }else{
+      self.id = data['id'];
+    }
 
     self['_links'] = [];
     links = forceArray( data.link );
@@ -539,7 +544,11 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   }
 
   self.getId = function() {
+    if(!!self.id) {
       return self.id;
+    } else {
+      return "https://spreadsheets.google.com/feeds/cells/" + self.ss + "/" + self.ws_id + '/' + self.batchId;
+    }
   }
 
   self.getEdit = function() {
