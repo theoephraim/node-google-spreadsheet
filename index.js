@@ -343,9 +343,9 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
       var cells = [];
       var entries = forceArray(data['entry']);
       var i = 0;
-      entries.forEach(function( cell_data ){
-        cells.push( new SpreadsheetCell( self, worksheet_id, cell_data ) );
-      });
+      while(entries.length > 0) {
+        cells.push( new SpreadsheetCell( self, worksheet_id, entries.shift() ) );
+      }
 
       cb( null, cells );
     });
