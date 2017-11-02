@@ -163,9 +163,13 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
           if ( body ){
             xml_parser.parseString(body, function(err, result){
-              body = null;
               if ( err ) return cb( err );
-              cb( null, result );
+              if(cb.length == 3) {
+                cb( null, result, body );
+              }else{
+                body = null;
+                cb( null, result );
+              }
             });
           } else {
             if ( err ) cb( err );
@@ -180,7 +184,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   // public API methods
   this.getInfo = function( cb ){
-    self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data, xml) {
+    self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data) {
       if ( err ) return cb( err );
       if (data===true) {
         return cb(new Error('No response to getInfo call'))
@@ -236,7 +240,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
         opts.colCount +
       '</gs:colCount></entry>';
 
-    self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, function(err, data, xml) {
+    self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, function(err, data) {
       if ( err ) return cb( err );
 
       var sheet = new SpreadsheetWorksheet( self, data );
@@ -335,7 +339,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     var query = _.assign({}, opts);
 
 
-    self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data, xml) {
+    self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data) {
       if (err) return cb(err);
       if (data===true) {
         return cb(new Error('No response to getCells call'))
@@ -343,6 +347,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
       var cells = [];
       var entries = forceArray(data['entry']);
+      var data = null;
       var i = 0;
       while(entries.length > 0) {
         cells.push( new SpreadsheetCell( self, ss_key, worksheet_id, entries.shift() ) );
