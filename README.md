@@ -235,7 +235,7 @@ Internally, this uses a JWT client to generate a new auth token for your service
 
 #### `GoogleSpreadsheet.setAuthToken(id)`
 
-Use an already created auth token for all future requets.
+Use an already created auth token for all future requests.
 
 
 
