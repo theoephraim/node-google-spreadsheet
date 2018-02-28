@@ -430,10 +430,11 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
     spreadsheet.makeFeedRequest(self['_links']['bulkcells'], 'POST', data_xml, function(err, data) {
       if (err) return cb(err);
 
-      // update all the cells
+      // update all the cells with a title
       var cells_by_batch_id = _.indexBy(cells, 'batchId');
       if (data.entry && data.entry.length) data.entry.forEach(function(cell_data) {
-        cells_by_batch_id[cell_data['batch:id']].updateValuesFromResponseData(cell_data);
+        if (cell_data.title != "Error")
+          {cells_by_batch_id[cell_data['batch:id']].updateValuesFromResponseData(cell_data)};
       });
       cb();
     });
@@ -537,8 +538,6 @@ var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
   self.updateValuesFromResponseData = function(_data) {
     // formula value
     var input_val = _data['gs:cell']['$']['inputValue'];
-    // inputValue can be undefined so substr throws an error
-    // still unsure how this situation happens
     if (input_val && input_val.substr(0,1) === '='){
       self._formula = input_val;
     } else {
