@@ -562,13 +562,6 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
         }
       }
 
-  self.getSelf = function() {
-    if(!!self['_links'] && !!self['_links']['edit']) {
-      return self['_links']['edit'];
-    } else {
-      return self.getId().replace(self.batchId, "private/full/" + self.batchId);
-    }
-  }
     SpreadsheetCell.prototype.getEdit = function() {
         if(!!this['_links'] && !!this['_links']['edit']) {
           return this['_links']['edit'];
@@ -587,6 +580,13 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
     } else {
       self._formula = undefined;
     }
+    SpreadsheetCell.prototype.getSelf = function() {
+        if(!!this['_links'] && !!this['_links']['edit']) {
+          return this['_links']['edit'];
+        } else {
+          return this.getId().replace(this.batchId, "private/full/" + this.batchId);
+        }
+      }
 
     // numeric values
     if (_data['gs:cell']['$']['numericValue'] !== undefined) {
