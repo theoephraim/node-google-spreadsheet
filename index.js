@@ -605,33 +605,37 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
         this.save(cb);
       };
 
-  self.__defineGetter__('value', function(){
-    return self._value;
-  });
-  self.__defineSetter__('value', function(val){
-    if (!val) return self._clearValue();
     SpreadsheetCell.prototype._clearValue = function() {
         this._formula = undefined;
         this._numericValue = undefined;
         this._value = '';
       }
 
-    var numeric_val = parseFloat(val);
-    if (!isNaN(numeric_val)){
-      self._numericValue = numeric_val;
-      self._value = val.toString();
-    } else {
-      self._numericValue = undefined;
-      self._value = val;
-    }
+    Object.defineProperty(SpreadsheetCell.prototype, "value", {
+        get: function(){
+            return this._value;
+        },
+        set: function(val){
+            if (!val) return this._clearValue();
 
-    if (typeof val == 'string' && val.substr(0,1) === '=') {
-      // use the getter to clear the value
-      self.formula = val;
-    } else {
-      self._formula = undefined;
-    }
-  });
+            var numeric_val = parseFloat(val);
+            if (!isNaN(numeric_val)){
+                this._numericValue = numeric_val;
+                this._value = val.toString();
+            } else {
+                this._numericValue = undefined;
+                this._value = val;
+            }
+
+            if (typeof val == 'string' && val.substr(0,1) === '=') {
+                // use the getter to clear the value
+                this.formula = val;
+            } else {
+                this._formula = undefined;
+            }
+        }
+    });
+
 
   self.__defineGetter__('formula', function() {
     return self._formula;
