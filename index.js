@@ -604,17 +604,17 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
     self.save(cb);
   };
 
-  self._clearValue = function() {
-    self._formula = undefined;
-    self._numericValue = undefined;
-    self._value = '';
-  }
 
   self.__defineGetter__('value', function(){
     return self._value;
   });
   self.__defineSetter__('value', function(val){
     if (!val) return self._clearValue();
+    SpreadsheetCell.prototype._clearValue = function() {
+        this._formula = undefined;
+        this._numericValue = undefined;
+        this._value = '';
+      }
 
     var numeric_val = parseFloat(val);
     if (!isNaN(numeric_val)){
