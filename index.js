@@ -599,11 +599,11 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
     self._value = _data['gs:cell']['_'] || '';
   }
 
-  self.setValue = function(new_value, cb) {
-    self.value = new_value;
-    self.save(cb);
-  };
 
+    SpreadsheetCell.prototype.setValue = function(new_value, cb) {
+        this.value = new_value;
+        this.save(cb);
+      };
 
   self.__defineGetter__('value', function(){
     return self._value;
