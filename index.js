@@ -636,20 +636,22 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
         }
     });
 
+    Object.defineProperty(SpreadsheetCell.prototype, "formula", {
+        get: function() {
+            return this._formula;
+        },
+        set: function(val){
+            if (!val) return this._clearValue();
 
-  self.__defineGetter__('formula', function() {
-    return self._formula;
-  });
-  self.__defineSetter__('formula', function(val){
-    if (!val) return self._clearValue();
+            if (val.substr(0,1) !== '=') {
+              throw new Error('Formulas must start with "="');
+            }
+            this._numericValue = undefined;
+            this._value = '*SAVE TO GET NEW VALUE*';
+            this._formula = val;
+        }
+    });
 
-    if (val.substr(0,1) !== '=') {
-      throw new Error('Formulas must start with "="');
-    }
-    self._numericValue = undefined;
-    self._value = '*SAVE TO GET NEW VALUE*';
-    self._formula = val;
-  });
 
   self.__defineGetter__('numericValue', function() {
     return self._numericValue;
