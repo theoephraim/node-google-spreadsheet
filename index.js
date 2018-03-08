@@ -554,13 +554,6 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
     return this;
 };
 
-  self.getEdit = function() {
-    if(!!self['_links'] && !!self['_links']['edit']) {
-      return self['_links']['edit'];
-    } else {
-      return self.getId().replace(self.batchId, "private/full/" + self.batchId);
-    }
-  }
     SpreadsheetCell.prototype.getId = function() {
         if(!!this.id) {
           return this.id;
@@ -576,6 +569,13 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
       return self.getId().replace(self.batchId, "private/full/" + self.batchId);
     }
   }
+    SpreadsheetCell.prototype.getEdit = function() {
+        if(!!this['_links'] && !!this['_links']['edit']) {
+          return this['_links']['edit'];
+        } else {
+          return this.getId().replace(this.batchId, "private/full/" + this.batchId);
+        }
+      }
 
   self.updateValuesFromResponseData = function(_data) {
     // formula value
