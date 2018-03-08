@@ -551,13 +551,6 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
 
     this.updateValuesFromResponseData(data);
 
-  self.getId = function() {
-    if(!!self.id) {
-      return self.id;
-    } else {
-      return "https://spreadsheets.google.com/feeds/cells/" + self.ss + "/" + self.ws_id + '/' + self.batchId;
-    }
-  }
     return this;
 };
 
@@ -568,6 +561,13 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
       return self.getId().replace(self.batchId, "private/full/" + self.batchId);
     }
   }
+    SpreadsheetCell.prototype.getId = function() {
+        if(!!this.id) {
+          return this.id;
+        } else {
+          return "https://spreadsheets.google.com/feeds/cells/" + this.ss + "/" + this.ws_id + '/' + this.batchId;
+        }
+      }
 
   self.getSelf = function() {
     if(!!self['_links'] && !!self['_links']['edit']) {
