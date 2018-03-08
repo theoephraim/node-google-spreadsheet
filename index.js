@@ -652,21 +652,23 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
         }
     });
 
+    Object.defineProperty(SpreadsheetCell.prototype, "numericValue", {
+        get: function() {
+            return this._numericValue;
+        },
+        set: function(val) {
+            if (val === undefined || val === null) return this._clearValue();
 
-  self.__defineGetter__('numericValue', function() {
-    return self._numericValue;
-  });
-  self.__defineSetter__('numericValue', function(val) {
-    if (val === undefined || val === null) return self._clearValue();
+            if (isNaN(parseFloat(val)) || !isFinite(val)) {
+              throw new Error('Invalid numeric value assignment');
+            }
 
-    if (isNaN(parseFloat(val)) || !isFinite(val)) {
-      throw new Error('Invalid numeric value assignment');
-    }
+            this._value = val.toString();
+            this._numericValue = parseFloat(val);
+            this._formula = undefined;
+        }
+    });
 
-    self._value = val.toString();
-    self._numericValue = parseFloat(val);
-    self._formula = undefined;
-  });
 
   self.__defineGetter__('valueForSave', function() {
     return xmlSafeValue(self._formula || self._value);
