@@ -570,16 +570,6 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
         }
       }
 
-  self.updateValuesFromResponseData = function(_data) {
-    // formula value
-    var input_val = _data['gs:cell']['$']['inputValue'];
-    // inputValue can be undefined so substr throws an error
-    // still unsure how this situation happens
-    if (input_val && input_val.substr(0,1) === '='){
-      self._formula = input_val;
-    } else {
-      self._formula = undefined;
-    }
     SpreadsheetCell.prototype.getSelf = function() {
         if(!!this['_links'] && !!this['_links']['edit']) {
           return this['_links']['edit'];
@@ -588,17 +578,27 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
         }
       }
 
-    // numeric values
-    if (_data['gs:cell']['$']['numericValue'] !== undefined) {
-      self._numericValue = parseFloat(_data['gs:cell']['$']['numericValue']);
-    } else {
-      self._numericValue = undefined;
-    }
+    SpreadsheetCell.prototype.updateValuesFromResponseData = function(_data) {
+        // formula value
+        var input_val = _data['gs:cell']['$']['inputValue'];
+        // inputValue can be undefined so substr throws an error
+        // still unsure how this situation happens
+        if (input_val && input_val.substr(0,1) === '='){
+          this._formula = input_val;
+        } else {
+          this._formula = undefined;
+        }
 
-    // the main "value" - its always a string
-    self._value = _data['gs:cell']['_'] || '';
-  }
+        // numeric values
+        if (_data['gs:cell']['$']['numericValue'] !== undefined) {
+          this._numericValue = parseFloat(_data['gs:cell']['$']['numericValue']);
+        } else {
+          this._numericValue = undefined;
+        }
 
+        // the main "value" - its always a string
+        this._value = _data['gs:cell']['_'] || '';
+      }
 
     SpreadsheetCell.prototype.setValue = function(new_value, cb) {
         this.value = new_value;
