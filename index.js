@@ -701,10 +701,9 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
       }
 
 
+GoogleSpreadsheet.SpreadsheetCell = SpreadsheetCell;
 
-  init();
-  return self;
-}
+
 
 module.exports = GoogleSpreadsheet;
 
