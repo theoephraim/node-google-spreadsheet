@@ -527,32 +527,29 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
   }
 }
 
-var SpreadsheetCell = function( spreadsheet, ss_key, worksheet_id, data ){
-  var self = this;
-
-  function init() {
+function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
     var links;
-    self.row = parseInt(data['gs:cell']['$']['row']);
-    self.col = parseInt(data['gs:cell']['$']['col']);
-    self.batchId = 'R'+self.row+'C'+self.col;
-    if(data['id'] == "https://spreadsheets.google.com/feeds/cells/" + ss_key + "/" + worksheet_id + '/' + self.batchId) {
-      self.ws_id = worksheet_id;
-      self.ss = ss_key;
+    this.row = parseInt(data['gs:cell']['$']['row']);
+    this.col = parseInt(data['gs:cell']['$']['col']);
+    this.batchId = 'R'+this.row+'C'+this.col;
+    if(data['id'] == "https://spreadsheets.google.com/feeds/cells/" + ss_key + "/" + worksheet_id + '/' + this.batchId) {
+      this.ws_id = worksheet_id;
+      this.ss = ss_key;
     }else{
-      self.id = data['id'];
+      this.id = data['id'];
     }
 
-    self['_links'] = [];
+    this['_links'] = [];
     links = forceArray( data.link );
-    links.forEach( function( link ){
-      if(link['$']['rel'] == "self" && link['$']['href'] == self.getSelf()) return;
-      if(link['$']['rel'] == "edit" && link['$']['href'] == self.getEdit()) return;
-      self['_links'][ link['$']['rel'] ] = link['$']['href'];
-    });
-    if(self['_links'].length == 0) delete self['_links'];
+    for (var i = 0; i < links.length; i++) {
+      link = links[i];
+      if(link['$']['rel'] == "self" && link['$']['href'] == this.getSelf()) continue;
+      if(link['$']['rel'] == "edit" && link['$']['href'] == this.getEdit()) continue;
+      this['_links'][ link['$']['rel'] ] = link['$']['href'];
+    };
+    if(this['_links'].length == 0) delete this['_links'];
 
-    self.updateValuesFromResponseData(data);
-  }
+    this.updateValuesFromResponseData(data);
 
   self.getId = function() {
     if(!!self.id) {
@@ -561,6 +558,8 @@ var SpreadsheetCell = function( spreadsheet, ss_key, worksheet_id, data ){
       return "https://spreadsheets.google.com/feeds/cells/" + self.ss + "/" + self.ws_id + '/' + self.batchId;
     }
   }
+    return this;
+};
 
   self.getEdit = function() {
     if(!!self['_links'] && !!self['_links']['edit']) {
