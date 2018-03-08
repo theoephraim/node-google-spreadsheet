@@ -669,10 +669,12 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
         }
     });
 
+    Object.defineProperty(SpreadsheetCell.prototype, "valueForSave", {
+        get: function() {
+            return xmlSafeValue(this._formula || this._value);
+        }
+    });
 
-  self.__defineGetter__('valueForSave', function() {
-    return xmlSafeValue(self._formula || self._value);
-  });
 
   self.save = function(cb) {
     if ( !cb ) cb = function(){};
