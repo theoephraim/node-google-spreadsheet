@@ -26,12 +26,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   options = options || {};
 
-  var xml_parser = new xml2js.Parser({
-    // options carried over from older version of xml2js
-    // might want to update how the code works, but for now this is fine
-    explicitArray: false,
-    explicitRoot: false
-  });
+
 
   if ( !ss_key ) {
     throw new Error("Spreadsheet key not provided.");
@@ -162,8 +157,18 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
 
           if ( body ){
+            var xml_parser = new xml2js.Parser({
+              // options carried over from older version of xml2js
+              // might want to update how the code works, but for now this is fine
+              explicitArray: false,
+              explicitRoot: false
+            });
             xml_parser.parseString(body, function(err, result){
-              if ( err ) return cb( err );
+              if ( err ) {
+                xml_parser = null;
+                body = null;
+                return cb( err );
+              }
               if(cb.length == 3) {
                 cb( null, result, body );
               }else{
