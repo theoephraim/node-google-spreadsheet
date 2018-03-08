@@ -694,10 +694,11 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
       cb();
     });
   }
+    SpreadsheetCell.prototype.del = function(cb) {
+        this.setValue('', cb);
+      }
 
-  self.del = function(cb) {
-    self.setValue('', cb);
-  }
+
 
   init();
   return self;
