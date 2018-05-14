@@ -528,6 +528,7 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
 
 function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
   var links;
+  this.spreadsheet = spreadsheet;
   this.row = parseInt(data['gs:cell']['$']['row']);
   this.col = parseInt(data['gs:cell']['$']['col']);
   this.batchId = 'R'+this.row+'C'+this.col;
@@ -688,7 +689,7 @@ SpreadsheetCell.prototype.save = function(cb) {
 
   var self = this;
 
-  spreadsheet.makeFeedRequest( this.getEdit(), 'PUT', data_xml, function(err, response) {
+  this.spreadsheet.makeFeedRequest( this.getEdit(), 'PUT', data_xml, function(err, response) {
     if (err) return cb(err);
     self.updateValuesFromResponseData(response);
     cb();
