@@ -352,8 +352,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
       var cells = [];
       var entries = forceArray(data['entry']);
-      var data = null;
-      var i = 0;
+      data = null;
       while(entries.length > 0) {
         cells.push( new SpreadsheetCell( self, ss_key, worksheet_id, entries.shift() ) );
       }
