@@ -230,7 +230,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
       colCount: 20
     };
 
-    var opts = _.extend({}, defaults, opts);
+    opts = _.extend({}, defaults, opts);
 
     // if column headers are set, make sure the sheet is big enough for them
     if (opts.headers && opts.headers.length > opts.colCount) {
