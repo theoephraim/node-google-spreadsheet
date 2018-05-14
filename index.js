@@ -542,17 +542,17 @@ function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
   this['_links'] = [];
   links = forceArray( data.link );
   for (var i = 0; i < links.length; i++) {
-    link = links[i];
+    var link = links[i];
     if(link['$']['rel'] == "self" && link['$']['href'] == this.getSelf()) continue;
     if(link['$']['rel'] == "edit" && link['$']['href'] == this.getEdit()) continue;
     this['_links'][ link['$']['rel'] ] = link['$']['href'];
-  };
+  }
   if(this['_links'].length == 0) delete this['_links'];
 
   this.updateValuesFromResponseData(data);
 
   return this;
-};
+}
 
 SpreadsheetCell.prototype.getId = function() {
   if(!!this.id) {
@@ -679,7 +679,6 @@ SpreadsheetCell.prototype.save = function(cb) {
   if ( !cb ) cb = function(){};
   this._needsSave = false;
 
-  var edit_id = 'https://spreadsheets.google.com/feeds/cells/key/worksheetId/private/full/R'+this.row+'C'+this.col;
   var data_xml =
     '<entry><id>'+this.getId()+'</id>'+
     '<link rel="edit" type="application/atom+xml" href="'+this.getId()+'"/>'+
