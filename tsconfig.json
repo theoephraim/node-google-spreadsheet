@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "allowJs": true,
+    "declaration": true,
+    "noEmit": true,
+  },
+
+  "include": [
+    "./*.ts"
+  ],
+
+  "exclude": [
+    "node_modules"
+  ]
+}
