@@ -6,6 +6,6 @@
     "noEmit": true
   },
   "files": [
-    "./index.d.ts"
+    "index.d.ts"
   ]
 }
