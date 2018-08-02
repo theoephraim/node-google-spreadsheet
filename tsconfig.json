@@ -5,12 +5,7 @@
     "declaration": true,
     "noEmit": true,
   },
-
-  "include": [
-    "./*.ts"
-  ],
-
-  "exclude": [
-    "node_modules"
+  "files": [
+    "./index.d.ts"
   ]
 }
