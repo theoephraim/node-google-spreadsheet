@@ -26,13 +26,13 @@
   "dependencies": {
     "async": "^1.3.0",
     "google-auth-library": "^0.10.0",
-    "lodash": "^3.7.0",
+    "lodash": "^4.17.10",
     "request": "^2.69.0",
     "xml2js": "~0.4.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "mocha": "^2.4.5"
+    "mocha": "^5.2.0"
   },
   "scripts": {
     "test": "node_modules/.bin/mocha"
