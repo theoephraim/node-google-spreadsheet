@@ -431,7 +431,7 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
       if (err) return cb(err);
 
       // update all the cells
-      var cells_by_batch_id = _.indexBy(cells, 'batchId');
+      var cells_by_batch_id = _.keyBy(cells, 'batchId');
       if (data.entry && data.entry.length) data.entry.forEach(function(cell_data) {
         cells_by_batch_id[cell_data['batch:id']].updateValuesFromResponseData(cell_data);
       });
