@@ -64,7 +64,20 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     jwt_client = new auth_client.JWT(creds.client_email, null, creds.private_key, GOOGLE_AUTH_SCOPE, null);
     renewJwtAuth(cb);
   }
-
+  this.useOAuthClient = function (OAuthClient, cb) {
+    OAuthClient.refreshAccessToken(function (err, tokens) {
+      if (err) {
+        return cb(err);
+      }
+       auth_mode = 'OAuth2';
+       setAuthAndDependencies({
+        value: tokens.access_token,
+        type: tokens.token_type,
+        expires: tokens.expiry_date
+      });
+       cb();
+    });
+  }
   function renewJwtAuth(cb) {
     auth_mode = 'jwt';
     jwt_client.authorize(function (err, token) {
