@@ -23,6 +23,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   var auth_client = new GoogleAuth();
   var jwt_client;
+  var oauth_client;
 
   options = options || {};
 
@@ -69,18 +70,30 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
       if (err) {
         return cb(err);
       }
-       auth_mode = 'OAuth2';
-       setAuthAndDependencies({
+      auth_mode = 'OAuth2';
+      setAuthAndDependencies({
         value: tokens.access_token,
         type: tokens.token_type,
         expires: tokens.expiry_date
       });
-       cb();
+      cb();
     });
   }
   function renewJwtAuth(cb) {
     auth_mode = 'jwt';
     jwt_client.authorize(function (err, token) {
+      if (err) return cb(err);
+      self.setAuthToken({
+        type: token.token_type,
+        value: token.access_token,
+        expires: token.expiry_date
+      });
+      cb()
+    });
+  }
+  function renewOAuth(cb) {
+    auth_mode = 'OAuth2';
+    OAuthClient.refreshAccessToken(function (err, tokens) {
       if (err) return cb(err);
       self.setAuthToken({
         type: token.token_type,
@@ -122,10 +135,14 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
     async.series({
       auth: function(step) {
-        if (auth_mode != 'jwt') return step();
-        // check if jwt token is expired
-        if (google_auth && google_auth.expires > +new Date()) return step();
-        renewJwtAuth(step);
+        if (auth_mode == 'jwt') {
+          // check if jwt token is expired
+          if (google_auth && google_auth.expires > +new Date()) return step();
+          renewJwtAuth(step);
+        } else if (auth_mode == 'OAuth2') {
+          if (google_auth && google_auth.expires > +new Date()) return step();
+          renewOAuth(step);
+        }
       },
       request: function(result, step) {
         if ( google_auth ) {
