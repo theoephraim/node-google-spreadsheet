@@ -163,7 +163,7 @@ describe('Row-based feeds', function() {
     it('supports `orderby` option', function(done) {
       sheet.getRows({orderby: 'col2'}, function(err, rows) {
         rows.length.should.equal(5);
-        _.pluck(rows, 'col2').should.deep.equal(_.sortBy(LETTERS));
+        _.map(rows, 'col2').should.deep.equal(_.sortBy(LETTERS));
         done(err);
       });
     });
@@ -182,7 +182,7 @@ describe('Row-based feeds', function() {
     it('supports `query` option', function(done) {
       sheet.getRows({query: 'col1>=2 and col1<4'}, function(err, rows) {
         rows.length.should.equal(2);
-        _.pluck(rows, 'col1').should.include.members(['2', '3']);
+        _.map(rows, 'col1').should.include.members(['2', '3']);
         done(err);
       });
     });
@@ -190,7 +190,7 @@ describe('Row-based feeds', function() {
     it('supports `orderby`+`reverse` option', function(done) {
       sheet.getRows({orderby: 'col2', reverse: true}, function(err, rows) {
         rows.length.should.equal(5);
-        _.pluck(rows, 'col2').should.deep.equal(_.sortBy(LETTERS).reverse());
+        _.map(rows, 'col2').should.deep.equal(_.sortBy(LETTERS).reverse());
         done(err);
       });
     });
@@ -198,7 +198,7 @@ describe('Row-based feeds', function() {
     it('supports `orderby`+`limit` option', function(done) {
       sheet.getRows({orderby: 'col2', limit: 2}, function(err, rows) {
         rows.length.should.equal(2);
-        _.pluck(rows, 'col2').should.deep.equal(_.sortBy(LETTERS).slice(0,2));
+        _.map(rows, 'col2').should.deep.equal(_.sortBy(LETTERS).slice(0,2));
         done(err);
       });
     });
