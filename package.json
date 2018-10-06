@@ -20,6 +20,7 @@
     "url": "git://github.com/theoephraim/node-google-spreadsheet.git"
   },
   "main": "index.js",
+  "types": "index.d.ts",
   "engines": {
     "node": ">=0.8.0"
   },

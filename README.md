@@ -235,7 +235,7 @@ Internally, this uses a JWT client to generate a new auth token for your service
 
 #### `GoogleSpreadsheet.setAuthToken(id)`
 
-Use an already created auth token for all future requets.
+Use an already created auth token for all future requests.
 
 
 
@@ -287,6 +287,7 @@ Get an array of cell objects.
   - `min-col` - column range min (uses numbers, not letters!)
   - `max-col` - column range max
   - `return-empty` - include empty cells (boolean)
+- `callback(err, row)` - will be called with SpreadsheetCell (see below)
 
 
 #### `GoogleSpreadsheet.addWorksheet(options, callback)`
@@ -298,6 +299,7 @@ Add a new worksheet to the doc.
   - `rowCount` - number of rows (default = 50)
   - `colCount` - number of columns (default = 20)
   - `headers` - array of string keys to put in the first row
+- `callback(err, row)` - will be called with SpreadsheetWorksheet (see below)
 
 #### `GoogleSpreadsheet.removeWorksheet(sheet, callback)`
 
