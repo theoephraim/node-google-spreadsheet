@@ -26,12 +26,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   options = options || {};
 
-  var xml_parser = new xml2js.Parser({
-    // options carried over from older version of xml2js
-    // might want to update how the code works, but for now this is fine
-    explicitArray: false,
-    explicitRoot: false
-  });
+
 
   if ( !ss_key ) {
     throw new Error("Spreadsheet key not provided.");
@@ -146,6 +141,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
           url: url,
           method: method,
           headers: headers,
+          gzip: true,
           body: method == 'POST' || method == 'PUT' ? query_or_data : null
         }, function(err, response, body){
           if (err) {
@@ -161,9 +157,24 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
 
           if ( body ){
+            var xml_parser = new xml2js.Parser({
+              // options carried over from older version of xml2js
+              // might want to update how the code works, but for now this is fine
+              explicitArray: false,
+              explicitRoot: false
+            });
             xml_parser.parseString(body, function(err, result){
-              if ( err ) return cb( err );
-              cb( null, result, body );
+              if ( err ) {
+                xml_parser = null;
+                body = null;
+                return cb( err );
+              }
+              if(cb.length == 3) {
+                cb( null, result, body );
+              }else{
+                body = null;
+                cb( null, result );
+              }
             });
           } else {
             if ( err ) cb( err );
@@ -178,7 +189,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   // public API methods
   this.getInfo = function( cb ){
-    self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data, xml) {
+    self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data) {
       if ( err ) return cb( err );
       if (data===true) {
         return cb(new Error('No response to getInfo call'))
@@ -219,7 +230,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
       colCount: 20
     };
 
-    var opts = _.extend({}, defaults, opts);
+    opts = _.extend({}, defaults, opts);
 
     // if column headers are set, make sure the sheet is big enough for them
     if (opts.headers && opts.headers.length > opts.colCount) {
@@ -234,7 +245,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
         opts.colCount +
       '</gs:colCount></entry>';
 
-    self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, function(err, data, xml) {
+    self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, function(err, data) {
       if ( err ) return cb( err );
 
       var sheet = new SpreadsheetWorksheet( self, data );
@@ -333,7 +344,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     var query = _.assign({}, opts);
 
 
-    self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data, xml) {
+    self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data) {
       if (err) return cb(err);
       if (data===true) {
         return cb(new Error('No response to getCells call'))
@@ -341,10 +352,10 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
       var cells = [];
       var entries = forceArray(data['entry']);
-      var i = 0;
-      entries.forEach(function( cell_data ){
-        cells.push( new SpreadsheetCell( self, worksheet_id, cell_data ) );
-      });
+      data = null;
+      while(entries.length > 0) {
+        cells.push( new SpreadsheetCell( self, ss_key, worksheet_id, entries.shift() ) );
+      }
 
       cb( null, cells );
     });
@@ -423,7 +434,7 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
 
     var entries = cells.map(function (cell, i) {
       cell._needsSave = false;
-      return "<entry>\n        <batch:id>" + cell.batchId + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + self['_links']['cells']+'/'+cell.batchId + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell._links.edit + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.valueForSave + "\"/>\n      </entry>";
+      return "<entry>\n        <batch:id>" + cell.batchId + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + self['_links']['cells']+'/'+cell.batchId + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell.getEdit() + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.valueForSave + "\"/>\n      </entry>";
     });
     var data_xml = "<feed xmlns=\"http://www.w3.org/2005/Atom\"\n      xmlns:batch=\"http://schemas.google.com/gdata/batch\"\n      xmlns:gs=\"http://schemas.google.com/spreadsheets/2006\">\n      <id>" + self['_links']['cells'] + "</id>\n      " + entries.join("\n") + "\n    </feed>";
 
@@ -515,140 +526,180 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
   }
 }
 
-var SpreadsheetCell = function( spreadsheet, worksheet_id, data ){
-  var self = this;
-
-  function init() {
-    var links;
-    self.id = data['id'];
-    self.row = parseInt(data['gs:cell']['$']['row']);
-    self.col = parseInt(data['gs:cell']['$']['col']);
-    self.batchId = 'R'+self.row+'C'+self.col;
-
-    self['_links'] = [];
-    links = forceArray( data.link );
-    links.forEach( function( link ){
-      self['_links'][ link['$']['rel'] ] = link['$']['href'];
-    });
-
-    self.updateValuesFromResponseData(data);
+function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
+  var links;
+  this.spreadsheet = spreadsheet;
+  this.row = parseInt(data['gs:cell']['$']['row']);
+  this.col = parseInt(data['gs:cell']['$']['col']);
+  this.batchId = 'R'+this.row+'C'+this.col;
+  if(data['id'] == "https://spreadsheets.google.com/feeds/cells/" + ss_key + "/" + worksheet_id + '/' + this.batchId) {
+    this.ws_id = worksheet_id;
+    this.ss = ss_key;
+  }else{
+    this.id = data['id'];
   }
 
-  self.updateValuesFromResponseData = function(_data) {
-    // formula value
-    var input_val = _data['gs:cell']['$']['inputValue'];
-    // inputValue can be undefined so substr throws an error
-    // still unsure how this situation happens
-    if (input_val && input_val.substr(0,1) === '='){
-      self._formula = input_val;
-    } else {
-      self._formula = undefined;
-    }
+  this['_links'] = [];
+  links = forceArray( data.link );
+  for (var i = 0; i < links.length; i++) {
+    var link = links[i];
+    if(link['$']['rel'] == "self" && link['$']['href'] == this.getSelf()) continue;
+    if(link['$']['rel'] == "edit" && link['$']['href'] == this.getEdit()) continue;
+    this['_links'][ link['$']['rel'] ] = link['$']['href'];
+  }
+  if(this['_links'].length == 0) delete this['_links'];
 
-    // numeric values
-    if (_data['gs:cell']['$']['numericValue'] !== undefined) {
-      self._numericValue = parseFloat(_data['gs:cell']['$']['numericValue']);
-    } else {
-      self._numericValue = undefined;
-    }
+  this.updateValuesFromResponseData(data);
 
-    // the main "value" - its always a string
-    self._value = _data['gs:cell']['_'] || '';
+  return this;
+}
+
+SpreadsheetCell.prototype.getId = function() {
+  if(!!this.id) {
+    return this.id;
+  } else {
+    return "https://spreadsheets.google.com/feeds/cells/" + this.ss + "/" + this.ws_id + '/' + this.batchId;
+  }
+}
+
+SpreadsheetCell.prototype.getEdit = function() {
+  if(!!this['_links'] && !!this['_links']['edit']) {
+    return this['_links']['edit'];
+  } else {
+    return this.getId().replace(this.batchId, "private/full/" + this.batchId);
+  }
+}
+
+SpreadsheetCell.prototype.getSelf = function() {
+  if(!!this['_links'] && !!this['_links']['edit']) {
+    return this['_links']['edit'];
+  } else {
+    return this.getId().replace(this.batchId, "private/full/" + this.batchId);
+  }
+}
+
+SpreadsheetCell.prototype.updateValuesFromResponseData = function(_data) {
+  // formula value
+  var input_val = _data['gs:cell']['$']['inputValue'];
+  // inputValue can be undefined so substr throws an error
+  // still unsure how this situation happens
+  if (input_val && input_val.substr(0,1) === '='){
+    this._formula = input_val;
+  } else {
+    this._formula = undefined;
   }
 
-  self.setValue = function(new_value, cb) {
-    self.value = new_value;
-    self.save(cb);
-  };
-
-  self._clearValue = function() {
-    self._formula = undefined;
-    self._numericValue = undefined;
-    self._value = '';
+  // numeric values
+  if (_data['gs:cell']['$']['numericValue'] !== undefined) {
+    this._numericValue = parseFloat(_data['gs:cell']['$']['numericValue']);
+  } else {
+    this._numericValue = undefined;
   }
 
-  self.__defineGetter__('value', function(){
-    return self._value;
-  });
-  self.__defineSetter__('value', function(val){
-    if (!val) return self._clearValue();
+  // the main "value" - its always a string
+  this._value = _data['gs:cell']['_'] || '';
+}
+
+SpreadsheetCell.prototype.setValue = function(new_value, cb) {
+  this.value = new_value;
+  this.save(cb);
+};
+
+SpreadsheetCell.prototype._clearValue = function() {
+  this._formula = undefined;
+  this._numericValue = undefined;
+  this._value = '';
+}
+
+Object.defineProperty(SpreadsheetCell.prototype, "value", {
+  get: function(){
+    return this._value;
+  },
+  set: function(val){
+    if (!val) return this._clearValue();
 
     var numeric_val = parseFloat(val);
     if (!isNaN(numeric_val)){
-      self._numericValue = numeric_val;
-      self._value = val.toString();
+      this._numericValue = numeric_val;
+      this._value = val.toString();
     } else {
-      self._numericValue = undefined;
-      self._value = val;
+      this._numericValue = undefined;
+      this._value = val;
     }
 
     if (typeof val == 'string' && val.substr(0,1) === '=') {
       // use the getter to clear the value
-      self.formula = val;
+      this.formula = val;
     } else {
-      self._formula = undefined;
+      this._formula = undefined;
     }
-  });
+  }
+});
 
-  self.__defineGetter__('formula', function() {
-    return self._formula;
-  });
-  self.__defineSetter__('formula', function(val){
-    if (!val) return self._clearValue();
+Object.defineProperty(SpreadsheetCell.prototype, "formula", {
+  get: function() {
+    return this._formula;
+  },
+  set: function(val){
+    if (!val) return this._clearValue();
 
     if (val.substr(0,1) !== '=') {
       throw new Error('Formulas must start with "="');
     }
-    self._numericValue = undefined;
-    self._value = '*SAVE TO GET NEW VALUE*';
-    self._formula = val;
-  });
+    this._numericValue = undefined;
+    this._value = '*SAVE TO GET NEW VALUE*';
+    this._formula = val;
+  }
+});
 
-  self.__defineGetter__('numericValue', function() {
-    return self._numericValue;
-  });
-  self.__defineSetter__('numericValue', function(val) {
-    if (val === undefined || val === null) return self._clearValue();
+Object.defineProperty(SpreadsheetCell.prototype, "numericValue", {
+  get: function() {
+    return this._numericValue;
+  },
+  set: function(val) {
+    if (val === undefined || val === null) return this._clearValue();
 
     if (isNaN(parseFloat(val)) || !isFinite(val)) {
       throw new Error('Invalid numeric value assignment');
     }
 
-    self._value = val.toString();
-    self._numericValue = parseFloat(val);
-    self._formula = undefined;
-  });
-
-  self.__defineGetter__('valueForSave', function() {
-    return xmlSafeValue(self._formula || self._value);
-  });
-
-  self.save = function(cb) {
-    if ( !cb ) cb = function(){};
-    self._needsSave = false;
-
-    var edit_id = 'https://spreadsheets.google.com/feeds/cells/key/worksheetId/private/full/R'+self.row+'C'+self.col;
-    var data_xml =
-      '<entry><id>'+self.id+'</id>'+
-      '<link rel="edit" type="application/atom+xml" href="'+self.id+'"/>'+
-      '<gs:cell row="'+self.row+'" col="'+self.col+'" inputValue="'+self.valueForSave+'"/></entry>'
-
-    data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
-
-    spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, function(err, response) {
-      if (err) return cb(err);
-      self.updateValuesFromResponseData(response);
-      cb();
-    });
+    this._value = val.toString();
+    this._numericValue = parseFloat(val);
+    this._formula = undefined;
   }
+});
 
-  self.del = function(cb) {
-    self.setValue('', cb);
+Object.defineProperty(SpreadsheetCell.prototype, "valueForSave", {
+  get: function() {
+    return xmlSafeValue(this._formula || this._value);
   }
+});
 
-  init();
-  return self;
+SpreadsheetCell.prototype.save = function(cb) {
+  if ( !cb ) cb = function(){};
+  this._needsSave = false;
+
+  var data_xml =
+    '<entry><id>'+this.getId()+'</id>'+
+    '<link rel="edit" type="application/atom+xml" href="'+this.getId()+'"/>'+
+    '<gs:cell row="'+this.row+'" col="'+this.col+'" inputValue="'+this.valueForSave+'"/></entry>'
+
+  data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
+
+  var self = this;
+
+  this.spreadsheet.makeFeedRequest( this.getEdit(), 'PUT', data_xml, function(err, response) {
+    if (err) return cb(err);
+    self.updateValuesFromResponseData(response);
+    cb();
+  });
 }
+
+SpreadsheetCell.prototype.del = function(cb) {
+  this.setValue('', cb);
+}
+
+GoogleSpreadsheet.SpreadsheetCell = SpreadsheetCell;
 
 module.exports = GoogleSpreadsheet;
 
