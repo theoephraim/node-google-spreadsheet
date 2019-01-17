@@ -505,6 +505,7 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
   }, this);
 
   self.save = function( cb ){
+
     /*
     API for edits is very strict with the XML it accepts
     So we just do a find replace on the original XML.
@@ -514,11 +515,15 @@ var SpreadsheetRow = function( spreadsheet, data, xml ){
     var data_xml = self['_xml'];
     // probably should make this part more robust?
     data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gsx='http://schemas.google.com/spreadsheets/2006/extended'>");
-      Object.keys( self ).forEach( function(key) {
-        if (key.substr(0,1) != '_' && typeof( self[key] == 'string') ){
-          data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+">([\\s\\S]*?)</gsx:"+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key)+'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
-        }
-    });
+    _.chain(self)
+      .pickBy((value,key) => _(['string','number'/*,'boolean'*/]).includes(typeof(value)) && !_(key).startsWith('_'))
+      .each((value,key) => {
+        var old_tag = new RegExp('<gsx:' + xmlSafeColumnName(key) + '>([\\s\\S]*?)</gsx:' + xmlSafeColumnName(key) + '>');
+        var new_tag = '<gsx:' + xmlSafeColumnName(key) + '>' + xmlSafeValue(value) + '</gsx:' + xmlSafeColumnName(key) + '>';
+        new_tag = new_tag.replace(/\$/g, '$$$$'); // to escape "$" character which has special meaning in replacement string
+        data_xml = data_xml.replace(old_tag, new_tag);
+      })
+      .value();
     spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
   }
   self.del = function( cb ){

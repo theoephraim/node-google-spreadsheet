@@ -96,6 +96,24 @@ describe('Row-based feeds', function() {
       });
     });
 
+    it('can update a row with string containing "dollar" sign', function(done) {
+      row.col3 = 'Give me $10.';
+      row.save(function(err) {
+        (err == null).should.be.true;
+        done();
+      });
+    });
+
+    it('persisted the value with "dollar" sign', function(done) {
+      sheet.getRows(function(err, rows) {
+        rows.length.should.equal(1);
+        rows[0].col1.should.equal('1');
+        rows[0].col2.should.equal('2');
+        rows[0].col3.should.equal('Give me $10.');
+        done(err);
+      });
+    });
+
     _.each({
       'new lines': "new\n\nlines\n",
       'special chars': "∑πécial <> chårs = !\t"
