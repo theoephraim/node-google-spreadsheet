@@ -161,10 +161,11 @@ __Setup Instructions__
   - Click on "Drive API"
   - click the blue "Enable API" button
 4. Create a service account for your project
-  - In the sidebar on the left, expand __APIs & auth__ > __Credentials__
-  - Click blue "Add credentials" button
-  - Select the "Service account" option
-  - Select "Furnish a new private key" checkbox
+  - In the sidebar on the left, expand __APIs & auth__ > __Services__
+  - Click blue "Create credentials" button
+  - Select the "Service account key" option
+  - Select "New Service Account" option
+  - Choose your service account name
   - Select the "JSON" key type option
   - Click blue "Create" button
   - your JSON key file is generated and downloaded to your machine (__it is the only copy!__)
