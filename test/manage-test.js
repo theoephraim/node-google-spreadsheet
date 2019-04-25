@@ -119,6 +119,7 @@ describe('Managing doc info and sheets', function() {
     });
 
     it('can clear a worksheet', function(done) {
+      this.timeout(10000);
       sheet.clear(function(err) {
         (!err).should.be.true;
         sheet.getCells(function(err, cells) {

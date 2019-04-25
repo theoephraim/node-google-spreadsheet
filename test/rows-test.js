@@ -24,6 +24,7 @@ describe('Row-based feeds', function() {
   this.timeout(5000);
 
   before(function(done) {
+    this.timeout(10000);
     async.series({
       setupAuth: function(step) {
         doc.useServiceAccountAuth(creds, step);
@@ -127,7 +128,7 @@ describe('Row-based feeds', function() {
   describe('fetching rows', function() {
     // add 5 rows to use for read tests
     before(function(done) {
-      this.timeout(5000);
+      this.timeout(10000);
       async.eachSeries(NUMBERS, function(i, nextVal) {
         sheet.addRow({
           col1: i,
