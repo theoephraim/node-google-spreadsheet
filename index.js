@@ -411,7 +411,7 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
     var rows = self.colCount;
     self.resize({rowCount: 1, colCount: 1}, function(err) {
       if (err) return cb(err);
-      self.getCells(function(err, cells) {
+      self.getCells({ 'return-empty': true }, function(err, cells) {
         cells[0].setValue(null, function(err) {
           if (err) return cb(err);
           self.resize({rowCount: rows, colCount: cols}, cb);
