@@ -23,7 +23,6 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   var auth_client = new GoogleAuth();
   var jwt_client;
-  var oauth_client;
 
   options = options || {};
 
