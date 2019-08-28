@@ -442,9 +442,13 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
       if (err) return cb(err);
 
       // this looks for an error that in some cases is caused by a protected worksheet
-      if (data.entry && data.entry.length) data.entry.forEach(function(cell_data) {
-        if(cell_data['gs:cell'] === undefined) return cb(new Error('[\'gs:cell\'] is undefined in response data. This may be caused by a protected worksheet.'));
-      });
+      if (data.entry && data.entry.length) {
+        for (const cell_data of data.entry) {
+          if (cell_data['gs:cell'] === undefined) {
+            return cb(new Error('Bulk update failed. [\'gs:cell\'] is undefined in response data. This may be caused by a protected worksheet.'));
+          }
+        }
+      }
 
       // update all the cells
       var cells_by_batch_id = _.keyBy(cells, 'batchId');
