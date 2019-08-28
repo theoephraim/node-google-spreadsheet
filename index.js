@@ -441,7 +441,7 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
     spreadsheet.makeFeedRequest(self['_links']['bulkcells'], 'POST', data_xml, function(err, data) {
       if (err) return cb(err);
 
-      // looks for an error that in some cases is caused by a protected worksheet
+      // looks for an error that can be caused by a protected worksheet
       if (data.entry && data.entry.length) {
         for (const cell_data of data.entry) {
           if (cell_data['gs:cell'] === undefined) {
