@@ -23,6 +23,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   var auth_client = new GoogleAuth();
   var jwt_client;
+  var gzip = true;
 
   options = options || {};
 
@@ -86,6 +87,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     if (!options.projection){
       projection = google_auth ? 'full' : 'values';
     }
+    gzip = options.gzip !== undefined ? options.gzip : true
   }
 
   // This method is used internally to make all requests
@@ -141,7 +143,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
           url: url,
           method: method,
           headers: headers,
-          gzip: true,
+          gzip: gzip,
           body: method == 'POST' || method == 'PUT' ? query_or_data : null
         }, function(err, response, body){
           if (err) {
