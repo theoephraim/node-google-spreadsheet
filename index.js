@@ -141,7 +141,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
           url: url,
           method: method,
           headers: headers,
-          gzip: true,
+          gzip: options.gzip !== undefined ? options.gzip : true,
           body: method == 'POST' || method == 'PUT' ? query_or_data : null
         }, function(err, response, body){
           if (err) {

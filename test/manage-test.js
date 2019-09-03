@@ -33,6 +33,15 @@ describe('Managing doc info and sheets', function() {
       });
     });
 
+    it('can fetch info with gzip disabled', function(done) {
+      const docWithoutGzip = new GoogleSpreadsheet(sheet_ids['public'], null, { gzip: false });
+      docWithoutGzip.getInfo(function(err, _info) {
+        (!err).should.be.true;
+        _info.title.should.include('public');
+        done();
+      });
+    });
+
     it('should have the doc id', function() {
       info.id.should.equal('https://spreadsheets.google.com/feeds/worksheets/'+sheet_ids['private']+'/private/full')
     });
