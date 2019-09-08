@@ -24,7 +24,7 @@ var GoogleSpreadsheet = require('google-spreadsheet');
 var async = require('async');
 
 // spreadsheet key is the long id in the sheets URL
-var doc = new GoogleSpreadsheet('<spreadsheet key>');
+  var doc = new GoogleSpreadsheet('<spreadsheet key>', null, { gzip: false });
 var sheet;
 
 async.series([
