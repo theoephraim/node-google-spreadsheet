@@ -579,6 +579,9 @@ SpreadsheetCell.prototype.getSelf = function() {
 }
 
 SpreadsheetCell.prototype.updateValuesFromResponseData = function(_data) {
+  if(_data.title === "Error") {
+    throw _data.content;
+  }
   // formula value
   var input_val = _data['gs:cell']['$']['inputValue'];
   // inputValue can be undefined so substr throws an error
