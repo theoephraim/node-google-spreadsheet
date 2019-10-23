@@ -1,36 +1,30 @@
-var async = require("async");
-var request = require("request");
-var xml2js = require("xml2js");
-var http = require("http");
-var querystring = require("querystring");
-var _ = require('lodash');
-var GoogleAuth = require("google-auth-library");
+const async = require("async");
+const request = require("request");
+const xml2js = require("xml2js");
+const http = require("http");
+const querystring = require("querystring");
+const _ = require("lodash");
+const GoogleAuth = require("google-auth-library");
 
 var GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
 var GOOGLE_AUTH_SCOPE = ["https://spreadsheets.google.com/feeds"];
 
-var REQUIRE_AUTH_MESSAGE = 'You must authenticate to modify sheet data';
+var REQUIRE_AUTH_MESSAGE = "You must authenticate to modify sheet data";
 
 // The main class that represents a single sheet
 // this is the main module.exports
-var GoogleSpreadsheet = function( ss_key, auth_id, options ){
+const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
   var self = this;
   var google_auth = null;
-  var visibility = 'public';
-  var projection = 'values';
+  let visibility = "public";
+  var projection = "values";
 
-  var auth_mode = 'anonymous';
+  let auth_mode = "anonymous";
 
   var auth_client = new GoogleAuth();
-  var jwt_client;
+  let jwt_client;
 
-  options = options || {};
-
-
-
-  if ( !ss_key ) {
-    throw new Error("Spreadsheet key not provided.");
-  }
+  if ( !ss_key ) throw new Error("Spreadsheet key not provided.");
 
   // auth_id may be null
   setAuthAndDependencies(auth_id);
@@ -38,18 +32,18 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
   // Authentication Methods
 
   this.setAuthToken = function( auth_id ) {
-    if (auth_mode == 'anonymous') auth_mode = 'token';
+    if (auth_mode === "anonymous") auth_mode = "token";
     setAuthAndDependencies(auth_id);
   }
 
   // deprecated username/password login method
   // leaving it here to help notify users why it doesn't work
-  this.setAuth = function( username, password, cb ){
-    return cb(new Error('Google has officially deprecated ClientLogin. Please upgrade this module and see the readme for more instrucations'))
+  this.setAuth = function ( username, password, cb ) {
+    return cb(new Error("Google has officially deprecated ClientLogin. Please upgrade this module and see the readme for more instrucations"))
   }
 
   this.useServiceAccountAuth = function( creds, cb ){
-    if (typeof creds == 'string') {
+    if (typeof creds === "string") {
       try {
         creds = require(creds);
       } catch (err) {
@@ -61,7 +55,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
   }
 
   function renewJwtAuth(cb) {
-    auth_mode = 'jwt';
+    auth_mode = "jwt";
     jwt_client.authorize(function (err, token) {
       if (err) return cb(err);
       self.setAuthToken({
@@ -80,23 +74,19 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   function setAuthAndDependencies( auth ) {
     google_auth = auth;
-    if (!options.visibility){
-      visibility = google_auth ? 'private' : 'public';
-    }
-    if (!options.projection){
-      projection = google_auth ? 'full' : 'values';
-    }
+    if (!options.visibility) visibility = google_auth ? "private" : "public";
+    if (!options.projection) projection = google_auth ? "full" : "values";
   }
 
   // This method is used internally to make all requests
   this.makeFeedRequest = function( url_params, method, query_or_data, cb ){
-    var url;
-    var headers = {};
-    if (!cb ) cb = function(){};
-    if ( typeof(url_params) == 'string' ) {
+    let url;
+    let headers = {};
+    if (!cb ) cb = function() {};
+    if ( typeof(url_params) === "string" ) {
       // used for edit / delete requests
       url = url_params;
-    } else if ( Array.isArray( url_params )){
+    } else if ( Array.isArray( url_params )) {
       //used for get and post requets
       url_params.push( visibility, projection );
       url = GOOGLE_FEED_URL + url_params.join("/");
@@ -104,36 +94,36 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
     async.series({
       auth: function(step) {
-        if (auth_mode != 'jwt') return step();
+        if (auth_mode != "jwt") return step();
         // check if jwt token is expired
         if (google_auth && google_auth.expires > +new Date()) return step();
         renewJwtAuth(step);
       },
       request: function(result, step) {
         if ( google_auth ) {
-          if (google_auth.type === 'Bearer') {
-            headers['Authorization'] = 'Bearer ' + google_auth.value;
+          if (google_auth.type === "Bearer") {
+            headers["Authorization"] = "Bearer " + google_auth.value;
           } else {
-            headers['Authorization'] = "GoogleLogin auth=" + google_auth;
+            headers["Authorization"] = "GoogleLogin auth=" + google_auth;
           }
         }
 
-        headers['Gdata-Version'] = '3.0';
+        headers["Gdata-Version"] = "3.0";
 
-        if ( method == 'POST' || method == 'PUT' ) {
-          headers['content-type'] = 'application/atom+xml';
+        if ( method === "POST" || method === "PUT" ) {
+          headers["content-type"] = "application/atom+xml";
         }
 
-        if (method == 'PUT' || method == 'POST' && url.indexOf('/batch') != -1) {
-          headers['If-Match'] = '*';
+        if (method === "PUT" || method === "POST" && url.indexOf("/batch") !== -1) {
+          headers["If-Match"] = "*";
         }
 
-        if ( method == 'GET' && query_or_data ) {
-          var query = "?" + querystring.stringify( query_or_data );
+        if ( method === "GET" && query_or_data ) {
+          let query = "?" + querystring.stringify( query_or_data );
           // replacements are needed for using structured queries on getRows
-          query = query.replace(/%3E/g,'>');
-          query = query.replace(/%3D/g,'=');
-          query = query.replace(/%3C/g,'<');
+          query = query.replace(/%3E/g, ">");
+          query = query.replace(/%3D/g, "=");
+          query = query.replace(/%3C/g, "<");
           url += query;
         }
 
@@ -142,28 +132,28 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
           method: method,
           headers: headers,
           gzip: options.gzip !== undefined ? options.gzip : true,
-          body: method == 'POST' || method == 'PUT' ? query_or_data : null
-        }, function(err, response, body){
+          body: method === "POST" || method === "PUT" ? query_or_data : null
+        }, function ( err, response, body ) {
           if (err) {
             return cb( err );
           } else if( response.statusCode === 401 ) {
             return cb( new Error("Invalid authorization key."));
           } else if ( response.statusCode >= 400 ) {
-            var message = _.isObject(body) ? JSON.stringify(body) : body.replace(/&quot;/g, '"');
-            return cb( new Error("HTTP error "+response.statusCode+" ("+http.STATUS_CODES[response.statusCode])+") - "+message);
-          } else if ( response.statusCode === 200 && response.headers['content-type'].indexOf('text/html') >= 0 ) {
+            let message = _.isObject(body) ? JSON.stringify(body) : body.replace(/&quot;/g, '"');
+            return cb(new Error(`HTTP error ${response.statusCode} (${http.STATUS_CODES[response.statusCode]}`) + `) - ${message}`);
+          } else if ( response.statusCode === 200 && response.headers["content-type"].indexOf("text/html") >= 0 ) {
             return cb( new Error("Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)"));
           }
 
 
-          if ( body ){
+          if ( body ) {
             var xml_parser = new xml2js.Parser({
               // options carried over from older version of xml2js
               // might want to update how the code works, but for now this is fine
               explicitArray: false,
               explicitRoot: false
             });
-            xml_parser.parseString(body, function(err, result){
+            xml_parser.parseString(body, function(err, result) {
               if ( err ) {
                 xml_parser = null;
                 body = null;
@@ -189,19 +179,19 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   // public API methods
   this.getInfo = function( cb ){
-    self.makeFeedRequest( ["worksheets", ss_key], 'GET', null, function(err, data) {
+    self.makeFeedRequest( ["worksheets", ss_key], "GET", null, function(err, data) {
       if ( err ) return cb( err );
-      if (data===true) {
-        return cb(new Error('No response to getInfo call'))
+      if ( data === true ) {
+        return cb(new Error("No response to getInfo call"))
       }
-      var ss_data = {
+      let ss_data = {
         id: data.id,
         title: data.title,
         updated: data.updated,
         author: data.author,
-        worksheets: []
+        worksheets: [],
       }
-      var worksheets = forceArray(data.entry);
+      let worksheets = forceArray(data.entry);
       worksheets.forEach( function( ws_data ) {
         ss_data.worksheets.push( new SpreadsheetWorksheet( self, ws_data ) );
       });
@@ -215,7 +205,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
   this.addWorksheet = function( opts, cb ) {
     // make opts optional
-    if (typeof opts == 'function'){
+    if (typeof opts === "function") {
       cb = opts;
       opts = {};
     }
@@ -224,10 +214,10 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 
     if (!this.isAuthActive()) return cb(new Error(REQUIRE_AUTH_MESSAGE));
 
-    var defaults = {
-      title: 'Worksheet '+(+new Date()),  // need a unique title
+    let defaults = {
+      title: `Worksheet ${Date.now()}`, // need a unique title
       rowCount: 50,
-      colCount: 20
+      colCount: 20,
     };
 
     opts = _.extend({}, defaults, opts);
@@ -237,7 +227,7 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
       opts.colCount = opts.headers.length;
     }
 
-    var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gs="http://schemas.google.com/spreadsheets/2006"><title>' +
+    let data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gs="http://schemas.google.com/spreadsheets/2006"><title>' +
         opts.title +
       '</title><gs:rowCount>' +
         opts.rowCount +
@@ -245,10 +235,10 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
         opts.colCount +
       '</gs:colCount></entry>';
 
-    self.makeFeedRequest( ["worksheets", ss_key], 'POST', data_xml, function(err, data) {
+    self.makeFeedRequest( ["worksheets", ss_key], "POST", data_xml, function( err, data ) {
       if ( err ) return cb( err );
 
-      var sheet = new SpreadsheetWorksheet( self, data );
+      let sheet = new SpreadsheetWorksheet( self, data );
       self.worksheets = self.worksheets || [];
       self.worksheets.push(sheet);
       sheet.setHeaderRow(opts.headers, function(err) {
@@ -260,20 +250,20 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
   this.removeWorksheet = function ( sheet_id, cb ){
     if (!this.isAuthActive()) return cb(new Error(REQUIRE_AUTH_MESSAGE));
     if (sheet_id instanceof SpreadsheetWorksheet) return sheet_id.del(cb);
-    self.makeFeedRequest( GOOGLE_FEED_URL + "worksheets/" + ss_key + "/private/full/" + sheet_id, 'DELETE', null, cb );
+    self.makeFeedRequest(`${GOOGLE_FEED_URL}worksheets/${ss_key}/private/full/${sheet_id}`, "DELETE", null, cb);
   }
 
   this.getRows = function( worksheet_id, opts, cb ){
     // the first row is used as titles/keys and is not included
 
     // opts is optional
-    if ( typeof( opts ) == 'function' ){
+    if ( typeof( opts ) === "function" ) {
       cb = opts;
       opts = {};
     }
 
 
-    var query  = {}
+    let query  = {};
 
     if ( opts.offset ) query["start-index"] = opts.offset;
     else if ( opts.start ) query["start-index"] = opts.start;
@@ -282,33 +272,31 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     else if ( opts.num ) query["max-results"] = opts.num;
 
     if ( opts.orderby ) query["orderby"] = opts.orderby;
-    if ( opts.reverse ) query["reverse"] = 'true';
-    if ( opts.query ) query['sq'] = opts.query;
+    if ( opts.reverse ) query["reverse"] = "true";
+    if ( opts.query ) query["sq"] = opts.query;
 
-    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'GET', query, function(err, data, xml) {
+    self.makeFeedRequest( ["list", ss_key, worksheet_id], "GET", query, function(err, data, xml) {
       if ( err ) return cb( err );
-      if (data===true) {
-        return cb(new Error('No response to getRows call'))
-      }
+      if (data === true) return cb(new Error("No response to getRows call"))
 
       // gets the raw xml for each entry -- this is passed to the row object so we can do updates on it later
 
-      var entries_xml = xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
+      let entries_xml = xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
 
 
       // need to add the properties from the feed to the xml for the entries
-      var feed_props = _.clone(data.$);
-      delete feed_props['gd:etag'];
-      var feed_props_str = _.reduce(feed_props, function(str, val, key){
+      let feed_props = _.clone(data.$);
+      delete feed_props["gd:etag"];
+      let feed_props_str = _.reduce(feed_props, function(str, val, key) {
         return str+key+'=\''+val+'\' ';
-      }, '');
-      entries_xml = _.map(entries_xml, function(xml){
-        return xml.replace('<entry ', '<entry '+feed_props_str);
+      }, "");
+      entries_xml = _.map(entries_xml, function(xml) {
+        return xml.replace("<entry ", `<entry ${feed_props_str}`);
       });
 
-      var rows = [];
-      var entries = forceArray( data.entry );
-      var i=0;
+      let rows = [];
+      let entries = forceArray( data.entry );
+      let i = 0;
       entries.forEach( function( row_data ) {
         rows.push( new SpreadsheetRow( self, row_data, entries_xml[ i++ ] ) );
       });
@@ -316,42 +304,42 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
     });
   }
 
-  this.addRow = function( worksheet_id, data, cb ){
-    var data_xml = '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">' + "\n";
+  this.addRow = function( worksheet_id, data, cb ) {
+    let data_xml = `<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">\n`;
     Object.keys(data).forEach(function(key) {
-      if (key != 'id' && key != 'title' && key != 'content' && key != '_links'){
-        data_xml += '<gsx:'+ xmlSafeColumnName(key) + '>' + xmlSafeValue(data[key]) + '</gsx:'+ xmlSafeColumnName(key) + '>' + "\n"
+      if (key !== "id" && key !== "title" && key !== "content" && key !== "_links") {
+        data_xml += `<gsx:${xmlSafeColumnName(key)}>${xmlSafeValue(data[key])}</gsx:${xmlSafeColumnName(key)}>\n`
       }
     });
-    data_xml += '</entry>';
-    self.makeFeedRequest( ["list", ss_key, worksheet_id], 'POST', data_xml, function(err, data, new_xml) {
+    data_xml += "</entry>";
+    self.makeFeedRequest( ["list", ss_key, worksheet_id], "POST", data_xml, function(err, data, new_xml) {
       if (err) return cb(err);
-      var entries_xml = new_xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
-      var row = new SpreadsheetRow(self, data, entries_xml[0]);
+      let entries_xml = new_xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
+      let row = new SpreadsheetRow(self, data, entries_xml[0]);
       cb(null, row);
     });
   }
 
   this.getCells = function (worksheet_id, opts, cb) {
     // opts is optional
-    if (typeof( opts ) == 'function') {
+    if (typeof( opts ) === "function") {
       cb = opts;
       opts = {};
     }
 
     // Supported options are:
     // min-row, max-row, min-col, max-col, return-empty
-    var query = _.assign({}, opts);
+    let query = _.assign({}, opts);
 
 
-    self.makeFeedRequest(["cells", ss_key, worksheet_id], 'GET', query, function (err, data) {
+    self.makeFeedRequest(["cells", ss_key, worksheet_id], "GET", query, function (err, data) {
       if (err) return cb(err);
-      if (data===true) {
-        return cb(new Error('No response to getCells call'))
+      if (data === true) {
+        return cb(new Error("No response to getCells call"))
       }
 
-      var cells = [];
-      var entries = forceArray(data['entry']);
+      let cells = [];
+      let entries = forceArray(data["entry"]);
       data = null;
       while(entries.length > 0) {
         cells.push( new SpreadsheetCell( self, ss_key, worksheet_id, entries.shift() ) );
@@ -363,37 +351,37 @@ var GoogleSpreadsheet = function( ss_key, auth_id, options ){
 };
 
 // Classes
-var SpreadsheetWorksheet = function( spreadsheet, data ){
-  var self = this;
-  var links;
+const SpreadsheetWorksheet = function( spreadsheet, data ) {
+  let self = this;
+  let links;
 
   self.url = data.id;
   self.id = data.id.substring( data.id.lastIndexOf("/") + 1 );
   self.title = data.title;
-  self.rowCount = parseInt(data['gs:rowCount']);
-  self.colCount = parseInt(data['gs:colCount']);
+  self.rowCount = parseInt(data["gs:rowCount"]);
+  self.colCount = parseInt(data["gs:colCount"]);
 
-  self['_links'] = [];
+  self["_links"] = [];
   links = forceArray( data.link );
-  links.forEach( function( link ){
-    self['_links'][ link['$']['rel'] ] = link['$']['href'];
+  links.forEach( function( link ) {
+    self["_links"][ link["$"]["rel"] ] = link["$"]["href"];
   });
-  self['_links']['cells'] = self['_links']['http://schemas.google.com/spreadsheets/2006#cellsfeed'];
-  self['_links']['bulkcells'] = self['_links']['cells']+'/batch';
+  self["_links"]["cells"] = self["_links"]["http://schemas.google.com/spreadsheets/2006#cellsfeed"];
+  self["_links"]["bulkcells"] = `${self["_links"]["cells"]}/batch`;
 
   function _setInfo(opts, cb) {
     cb = cb || _.noop;
-    var xml = ''
+    let xml = ''
       + '<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gs="http://schemas.google.com/spreadsheets/2006">'
       + '<title>'+(opts.title || self.title)+'</title>'
       + '<gs:rowCount>'+(opts.rowCount || self.rowCount)+'</gs:rowCount>'
       + '<gs:colCount>'+(opts.colCount || self.colCount)+'</gs:colCount>'
       + '</entry>';
-    spreadsheet.makeFeedRequest(self['_links']['edit'], 'PUT', xml, function(err, response) {
+    spreadsheet.makeFeedRequest(self["_links"]["edit"], "PUT", xml, function(err, response) {
       if (err) return cb(err);
       self.title = response.title;
-      self.rowCount = parseInt(response['gs:rowCount']);
-      self.colCount = parseInt(response['gs:colCount']);
+      self.rowCount = parseInt(response["gs:rowCount"]);
+      self.colCount = parseInt(response["gs:colCount"]);
       cb();
     });
   }
@@ -407,8 +395,8 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
   // just a convenience method to clear the whole sheet
   // resizes to 1 cell, clears the cell, and puts it back
   this.clear = function(cb) {
-    var cols = self.colCount;
-    var rows = self.colCount;
+    let cols = self.colCount;
+    let rows = self.colCount;
     self.resize({rowCount: 1, colCount: 1}, function(err) {
       if (err) return cb(err);
       self.getCells(function(err, cells) {
@@ -426,45 +414,45 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
   this.getCells = function(opts, cb) {
     spreadsheet.getCells(self.id, opts, cb);
   }
-  this.addRow = function(data, cb){
+  this.addRow = function(data, cb) {
     spreadsheet.addRow(self.id, data, cb);
   }
   this.bulkUpdateCells = function(cells, cb) {
-    if ( !cb ) cb = function(){};
+    if ( !cb ) cb = function() {};
 
-    var entries = cells.map(function (cell, i) {
+    let entries = cells.map(function (cell, i) {
       cell._needsSave = false;
       return "<entry>\n        <batch:id>" + cell.batchId + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + self['_links']['cells']+'/'+cell.batchId + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell.getEdit() + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.valueForSave + "\"/>\n      </entry>";
     });
-    var data_xml = "<feed xmlns=\"http://www.w3.org/2005/Atom\"\n      xmlns:batch=\"http://schemas.google.com/gdata/batch\"\n      xmlns:gs=\"http://schemas.google.com/spreadsheets/2006\">\n      <id>" + self['_links']['cells'] + "</id>\n      " + entries.join("\n") + "\n    </feed>";
+    let data_xml = "<feed xmlns=\"http://www.w3.org/2005/Atom\"\n      xmlns:batch=\"http://schemas.google.com/gdata/batch\"\n      xmlns:gs=\"http://schemas.google.com/spreadsheets/2006\">\n      <id>" + self['_links']['cells'] + "</id>\n      " + entries.join("\n") + "\n    </feed>";
 
-    spreadsheet.makeFeedRequest(self['_links']['bulkcells'], 'POST', data_xml, function(err, data) {
+    spreadsheet.makeFeedRequest(self["_links"]["bulkcells"], "POST", data_xml, function(err, data) {
       if (err) return cb(err);
 
       // update all the cells
-      var cells_by_batch_id = _.keyBy(cells, 'batchId');
+      let cells_by_batch_id = _.keyBy(cells, "batchId");
       if (data.entry && data.entry.length) data.entry.forEach(function(cell_data) {
-        cells_by_batch_id[cell_data['batch:id']].updateValuesFromResponseData(cell_data);
+        cells_by_batch_id[cell_data["batch:id"]].updateValuesFromResponseData(cell_data);
       });
       cb();
     });
   }
-  this.del = function(cb){
-    spreadsheet.makeFeedRequest(self['_links']['edit'], 'DELETE', null, cb);
+  this.del = function(cb) {
+    spreadsheet.makeFeedRequest(self["_links"]["edit"], "DELETE", null, cb);
   }
 
   this.setHeaderRow = function(values, cb) {
-    if ( !cb ) cb = function(){};
+    if ( !cb ) cb = function() {};
     if (!values) return cb();
-    if (values.length > self.colCount){
-      return cb(new Error('Sheet is not large enough to fit '+values.length+' columns. Resize the sheet first.'));
+    if (values.length > self.colCount) {
+      return cb(new Error(`Sheet is not large enough to fit ${values.length} columns. Resize the sheet first.`));
     }
     self.getCells({
-      'min-row': 1,
-      'max-row': 1,
-      'min-col': 1,
-      'max-col': self.colCount,
-      'return-empty': true
+      "min-row": 1,
+      "max-row": 1,
+      "min-col": 1,
+      "max-col": self.colCount,
+      "return-empty": true
     }, function(err, cells) {
       if (err) return cb(err);
       _.each(cells, function(cell) {
@@ -475,36 +463,36 @@ var SpreadsheetWorksheet = function( spreadsheet, data ){
   }
 }
 
-var SpreadsheetRow = function( spreadsheet, data, xml ){
-  var self = this;
-  self['_xml'] = xml;
+const SpreadsheetRow = function( spreadsheet, data, xml ){
+  let self = this;
+  self["_xml"] = xml;
   Object.keys(data).forEach(function(key) {
     var val = data[key];
     if(key.substring(0, 4) === "gsx:") {
-      if(typeof val === 'object' && Object.keys(val).length === 0) {
+      if(typeof val === "object" && Object.keys(val).length === 0) {
         val = null;
       }
-      if (key == "gsx:") {
+      if (key === "gsx:") {
         self[key.substring(0, 3)] = val;
       } else {
         self[key.substring(4)] = val;
       }
     } else {
-      if (key == "id") {
+      if (key === "id") {
         self[key] = val;
-      } else if (val['_']) {
-        self[key] = val['_'];
-      } else if ( key == 'link' ){
-        self['_links'] = [];
+      } else if (val["_"]) {
+        self[key] = val["_"];
+      } else if ( key === "link" ) {
+        self["_links"] = [];
         val = forceArray( val );
         val.forEach( function( link ){
-          self['_links'][ link['$']['rel'] ] = link['$']['href'];
+          self["_links"][ link["$"]["rel"] ] = link["$"]["href"];
         });
       }
     }
   }, this);
 
-  self.save = function( cb ){
+  self.save = function( cb ) {
     /*
     API for edits is very strict with the XML it accepts
     So we just do a find replace on the original XML.
