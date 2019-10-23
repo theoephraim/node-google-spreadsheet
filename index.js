@@ -6,43 +6,43 @@ const querystring = require("querystring");
 const _ = require("lodash");
 const GoogleAuth = require("google-auth-library");
 
-var GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
-var GOOGLE_AUTH_SCOPE = ["https://spreadsheets.google.com/feeds"];
+const GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
+const GOOGLE_AUTH_SCOPE = ["https://spreadsheets.google.com/feeds"];
 
-var REQUIRE_AUTH_MESSAGE = "You must authenticate to modify sheet data";
+const REQUIRE_AUTH_MESSAGE = "You must authenticate to modify sheet data";
 
 // The main class that represents a single sheet
 // this is the main module.exports
-const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
-  var self = this;
-  var google_auth = null;
+const GoogleSpreadsheet = function(ss_key, auth_id, options = {}) {
+  let self = this;
+  let google_auth = null;
   let visibility = "public";
-  var projection = "values";
+  let projection = "values";
 
   let auth_mode = "anonymous";
 
-  var auth_client = new GoogleAuth();
+  let auth_client = new GoogleAuth();
   let jwt_client;
 
-  if ( !ss_key ) throw new Error("Spreadsheet key not provided.");
+  if (!ss_key) throw new Error("Spreadsheet key not provided.");
 
   // auth_id may be null
   setAuthAndDependencies(auth_id);
 
   // Authentication Methods
 
-  this.setAuthToken = function( auth_id ) {
+  this.setAuthToken = auth_id => {
     if (auth_mode === "anonymous") auth_mode = "token";
     setAuthAndDependencies(auth_id);
   }
 
   // deprecated username/password login method
   // leaving it here to help notify users why it doesn't work
-  this.setAuth = function ( username, password, cb ) {
+  this.setAuth = (username, password, cb) => {
     return cb(new Error("Google has officially deprecated ClientLogin. Please upgrade this module and see the readme for more instrucations"))
   }
 
-  this.useServiceAccountAuth = function( creds, cb ){
+  this.useServiceAccountAuth = (creds, cb) => {
     if (typeof creds === "string") {
       try {
         creds = require(creds);
@@ -56,55 +56,55 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
 
   function renewJwtAuth(cb) {
     auth_mode = "jwt";
-    jwt_client.authorize(function (err, token) {
+    jwt_client.authorize((err, token) => {
       if (err) return cb(err);
       self.setAuthToken({
         type: token.token_type,
         value: token.access_token,
-        expires: token.expiry_date
+        expires: token.expiry_date,
       });
       cb()
     });
   }
 
-  this.isAuthActive = function() {
+  this.isAuthActive = () => {
     return !!google_auth;
   }
 
 
-  function setAuthAndDependencies( auth ) {
+  function setAuthAndDependencies(auth) {
     google_auth = auth;
     if (!options.visibility) visibility = google_auth ? "private" : "public";
     if (!options.projection) projection = google_auth ? "full" : "values";
   }
 
   // This method is used internally to make all requests
-  this.makeFeedRequest = function( url_params, method, query_or_data, cb ){
+  this.makeFeedRequest = (url_params, method, query_or_data, cb) => {
     let url;
     let headers = {};
-    if (!cb ) cb = function() {};
-    if ( typeof(url_params) === "string" ) {
+    if (!cb) cb = () => {};
+    if (typeof(url_params) === "string") {
       // used for edit / delete requests
       url = url_params;
-    } else if ( Array.isArray( url_params )) {
-      //used for get and post requets
+    } else if (Array.isArray( url_params)) {
+      // used for get and post requets
       url_params.push( visibility, projection );
       url = GOOGLE_FEED_URL + url_params.join("/");
     }
 
     async.series({
-      auth: function(step) {
-        if (auth_mode != "jwt") return step();
+      auth: (step) => {
+        if (auth_mode !== "jwt") return step();
         // check if jwt token is expired
-        if (google_auth && google_auth.expires > +new Date()) return step();
+        if (google_auth && google_auth.expires > Date.now()) return step();
         renewJwtAuth(step);
       },
-      request: function(result, step) {
+      request: (result, step) => {
         if ( google_auth ) {
           if (google_auth.type === "Bearer") {
-            headers["Authorization"] = "Bearer " + google_auth.value;
+            headers["Authorization"] = `Bearer ${google_auth.value}`;
           } else {
-            headers["Authorization"] = "GoogleLogin auth=" + google_auth;
+            headers["Authorization"] = `GoogleLogin auth=${google_auth}`;
           }
         }
 
@@ -127,16 +127,16 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
           url += query;
         }
 
-        request( {
+        request({
           url: url,
           method: method,
           headers: headers,
           gzip: options.gzip !== undefined ? options.gzip : true,
-          body: method === "POST" || method === "PUT" ? query_or_data : null
-        }, function ( err, response, body ) {
+          body: method === "POST" || method === "PUT" ? query_or_data : null,
+        }, (err, response, body) => {
           if (err) {
-            return cb( err );
-          } else if( response.statusCode === 401 ) {
+            return cb(err);
+          } else if(response.statusCode === 401) {
             return cb( new Error("Invalid authorization key."));
           } else if ( response.statusCode >= 400 ) {
             let message = _.isObject(body) ? JSON.stringify(body) : body.replace(/&quot;/g, '"');
@@ -146,42 +146,39 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
           }
 
 
-          if ( body ) {
-            var xml_parser = new xml2js.Parser({
+          if (body) {
+            let xml_parser = new xml2js.Parser({
               // options carried over from older version of xml2js
               // might want to update how the code works, but for now this is fine
               explicitArray: false,
-              explicitRoot: false
+              explicitRoot: false,
             });
-            xml_parser.parseString(body, function(err, result) {
+            xml_parser.parseString(body, (err, result) => {
               if ( err ) {
                 xml_parser = null;
                 body = null;
                 return cb( err );
               }
-              if(cb.length == 3) {
-                cb( null, result, body );
-              }else{
+              if (cb.length === 3) {
+                cb(null, result, body);
+              } else {
                 body = null;
                 cb( null, result );
               }
             });
           } else {
-            if ( err ) cb( err );
-            else cb( null, true );
+            err ? cb(err) : cb(null, true);
           }
         })
       }
     });
   }
 
-
-
   // public API methods
-  this.getInfo = function( cb ){
-    self.makeFeedRequest( ["worksheets", ss_key], "GET", null, function(err, data) {
-      if ( err ) return cb( err );
-      if ( data === true ) {
+  this.getInfo = (cb) => {
+    self.makeFeedRequest( ["worksheets", ss_key], "GET", null, (err, data) => {
+      if (err) return cb(err);
+      if (data === true) {
         return cb(new Error("No response to getInfo call"))
       }
       let ss_data = {
@@ -192,9 +189,9 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
         worksheets: [],
       }
       let worksheets = forceArray(data.entry);
-      worksheets.forEach( function( ws_data ) {
-        ss_data.worksheets.push( new SpreadsheetWorksheet( self, ws_data ) );
-      });
+      for (const ws_data of worksheets) {
+        ss_data.worksheets.push(new SpreadsheetWorksheet(self, ws_data));
+      };
       self.info = ss_data;
       self.worksheets = ss_data.worksheets;
       cb( null, ss_data );
@@ -203,7 +200,7 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
 
   // NOTE: worksheet IDs start at 1
 
-  this.addWorksheet = function( opts, cb ) {
+  this.addWorksheet = (opts, cb) => {
     // make opts optional
     if (typeof opts === "function") {
       cb = opts;
@@ -235,29 +232,29 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
         opts.colCount +
       '</gs:colCount></entry>';
 
-    self.makeFeedRequest( ["worksheets", ss_key], "POST", data_xml, function( err, data ) {
-      if ( err ) return cb( err );
+    self.makeFeedRequest( ["worksheets", ss_key], "POST", data_xml, (err, data) => {
+      if (err) return cb( err );
 
       let sheet = new SpreadsheetWorksheet( self, data );
       self.worksheets = self.worksheets || [];
       self.worksheets.push(sheet);
-      sheet.setHeaderRow(opts.headers, function(err) {
+      sheet.setHeaderRow(opts.headers, (err) => {
         cb(err, sheet);
       })
     });
   }
 
-  this.removeWorksheet = function ( sheet_id, cb ){
+  this.removeWorksheet = (sheet_id, cb) => {
     if (!this.isAuthActive()) return cb(new Error(REQUIRE_AUTH_MESSAGE));
     if (sheet_id instanceof SpreadsheetWorksheet) return sheet_id.del(cb);
     self.makeFeedRequest(`${GOOGLE_FEED_URL}worksheets/${ss_key}/private/full/${sheet_id}`, "DELETE", null, cb);
   }
 
-  this.getRows = function( worksheet_id, opts, cb ){
+  this.getRows = (worksheet_id, opts, cb) => {
     // the first row is used as titles/keys and is not included
 
     // opts is optional
-    if ( typeof( opts ) === "function" ) {
+    if (typeof( opts ) === "function") {
       cb = opts;
       opts = {};
     }
@@ -265,18 +262,18 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
 
     let query  = {};
 
-    if ( opts.offset ) query["start-index"] = opts.offset;
-    else if ( opts.start ) query["start-index"] = opts.start;
+    if (opts.offset) query["start-index"] = opts.offset;
+    else if (opts.start) query["start-index"] = opts.start;
 
-    if ( opts.limit ) query["max-results"] = opts.limit;
-    else if ( opts.num ) query["max-results"] = opts.num;
+    if (opts.limit) query["max-results"] = opts.limit;
+    else if (opts.num) query["max-results"] = opts.num;
 
-    if ( opts.orderby ) query["orderby"] = opts.orderby;
-    if ( opts.reverse ) query["reverse"] = "true";
-    if ( opts.query ) query["sq"] = opts.query;
+    if (opts.orderby) query["orderby"] = opts.orderby;
+    if (opts.reverse) query["reverse"] = "true";
+    if (opts.query) query["sq"] = opts.query;
 
-    self.makeFeedRequest( ["list", ss_key, worksheet_id], "GET", query, function(err, data, xml) {
-      if ( err ) return cb( err );
+    self.makeFeedRequest( ["list", ss_key, worksheet_id], "GET", query, (err, data, xml) => {
+      if (err) return cb( err );
       if (data === true) return cb(new Error("No response to getRows call"))
 
       // gets the raw xml for each entry -- this is passed to the row object so we can do updates on it later
@@ -287,32 +284,32 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
       // need to add the properties from the feed to the xml for the entries
       let feed_props = _.clone(data.$);
       delete feed_props["gd:etag"];
-      let feed_props_str = _.reduce(feed_props, function(str, val, key) {
+      let feed_props_str = _.reduce(feed_props, (str, val, key) => {
         return str+key+'=\''+val+'\' ';
       }, "");
-      entries_xml = _.map(entries_xml, function(xml) {
+      entries_xml = _.map(entries_xml, (xml) => {
         return xml.replace("<entry ", `<entry ${feed_props_str}`);
       });
 
       let rows = [];
       let entries = forceArray( data.entry );
       let i = 0;
-      entries.forEach( function( row_data ) {
-        rows.push( new SpreadsheetRow( self, row_data, entries_xml[ i++ ] ) );
-      });
+      for (const row_data of entries) {
+        rows.push(new SpreadsheetRow(self, row_data, entries_xml[ i++ ]));
+      };
       cb(null, rows);
     });
   }
 
-  this.addRow = function( worksheet_id, data, cb ) {
+  this.addRow = (worksheet_id, data, cb) => {
     let data_xml = `<entry xmlns="http://www.w3.org/2005/Atom" xmlns:gsx="http://schemas.google.com/spreadsheets/2006/extended">\n`;
-    Object.keys(data).forEach(function(key) {
+    for (const key of Object.keys(data)) {
       if (key !== "id" && key !== "title" && key !== "content" && key !== "_links") {
         data_xml += `<gsx:${xmlSafeColumnName(key)}>${xmlSafeValue(data[key])}</gsx:${xmlSafeColumnName(key)}>\n`
       }
-    });
+    }
     data_xml += "</entry>";
-    self.makeFeedRequest( ["list", ss_key, worksheet_id], "POST", data_xml, function(err, data, new_xml) {
+    self.makeFeedRequest( ["list", ss_key, worksheet_id], "POST", data_xml, (err, data, new_xml) => {
       if (err) return cb(err);
       let entries_xml = new_xml.match(/<entry[^>]*>([\s\S]*?)<\/entry>/g);
       let row = new SpreadsheetRow(self, data, entries_xml[0]);
@@ -320,7 +317,7 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
     });
   }
 
-  this.getCells = function (worksheet_id, opts, cb) {
+  this.getCells = (worksheet_id, opts, cb) => {
     // opts is optional
     if (typeof( opts ) === "function") {
       cb = opts;
@@ -342,7 +339,7 @@ const GoogleSpreadsheet = function( ss_key, auth_id, options = {}) {
       let entries = forceArray(data["entry"]);
       data = null;
       while(entries.length > 0) {
-        cells.push( new SpreadsheetCell( self, ss_key, worksheet_id, entries.shift() ) );
+        cells.push(new SpreadsheetCell( self, ss_key, worksheet_id, entries.shift()));
       }
 
       cb( null, cells );
@@ -362,10 +359,10 @@ const SpreadsheetWorksheet = function( spreadsheet, data ) {
   self.colCount = parseInt(data["gs:colCount"]);
 
   self["_links"] = [];
-  links = forceArray( data.link );
-  links.forEach( function( link ) {
+  links = forceArray(data.link);
+  for (const link of links) {
     self["_links"][ link["$"]["rel"] ] = link["$"]["href"];
-  });
+  };
   self["_links"]["cells"] = self["_links"]["http://schemas.google.com/spreadsheets/2006#cellsfeed"];
   self["_links"]["bulkcells"] = `${self["_links"]["cells"]}/batch`;
 
@@ -377,7 +374,7 @@ const SpreadsheetWorksheet = function( spreadsheet, data ) {
       + '<gs:rowCount>'+(opts.rowCount || self.rowCount)+'</gs:rowCount>'
       + '<gs:colCount>'+(opts.colCount || self.colCount)+'</gs:colCount>'
       + '</entry>';
-    spreadsheet.makeFeedRequest(self["_links"]["edit"], "PUT", xml, function(err, response) {
+    spreadsheet.makeFeedRequest(self["_links"]["edit"], "PUT", xml, (err, response) => {
       if (err) return cb(err);
       self.title = response.title;
       self.rowCount = parseInt(response["gs:rowCount"]);
@@ -387,62 +384,64 @@ const SpreadsheetWorksheet = function( spreadsheet, data ) {
   }
 
   this.resize = _setInfo;
-  this.setTitle = function(title, cb) {
+  this.setTitle = (title, cb) => {
     _setInfo({title: title}, cb);
   }
 
 
   // just a convenience method to clear the whole sheet
   // resizes to 1 cell, clears the cell, and puts it back
-  this.clear = function(cb) {
+  this.clear = (cb) => {
     let cols = self.colCount;
     let rows = self.colCount;
-    self.resize({rowCount: 1, colCount: 1}, function(err) {
+    self.resize({ rowCount: 1, colCount: 1 }, (err) => {
       if (err) return cb(err);
-      self.getCells(function(err, cells) {
-        cells[0].setValue(null, function(err) {
+      self.getCells((err, cells) => {
+        cells[0].setValue(null, (err) => {
           if (err) return cb(err);
-          self.resize({rowCount: rows, colCount: cols}, cb);
+          self.resize({ rowCount: rows, colCount: cols }, cb);
         });
       })
     });
   }
 
-  this.getRows = function(opts, cb){
+  this.getRows = (opts, cb) => {
     spreadsheet.getRows(self.id, opts, cb);
   }
-  this.getCells = function(opts, cb) {
+  this.getCells = (opts, cb) => {
     spreadsheet.getCells(self.id, opts, cb);
   }
-  this.addRow = function(data, cb) {
+  this.addRow = (data, cb) => {
     spreadsheet.addRow(self.id, data, cb);
   }
-  this.bulkUpdateCells = function(cells, cb) {
-    if ( !cb ) cb = function() {};
+  this.bulkUpdateCells = (cells, cb) => {
+    if (!cb) cb = () => {};
 
-    let entries = cells.map(function (cell, i) {
+    let entries = cells.map((cell, i) => {
       cell._needsSave = false;
       return "<entry>\n        <batch:id>" + cell.batchId + "</batch:id>\n        <batch:operation type=\"update\"/>\n        <id>" + self['_links']['cells']+'/'+cell.batchId + "</id>\n        <link rel=\"edit\" type=\"application/atom+xml\"\n          href=\"" + cell.getEdit() + "\"/>\n        <gs:cell row=\"" + cell.row + "\" col=\"" + cell.col + "\" inputValue=\"" + cell.valueForSave + "\"/>\n      </entry>";
     });
     let data_xml = "<feed xmlns=\"http://www.w3.org/2005/Atom\"\n      xmlns:batch=\"http://schemas.google.com/gdata/batch\"\n      xmlns:gs=\"http://schemas.google.com/spreadsheets/2006\">\n      <id>" + self['_links']['cells'] + "</id>\n      " + entries.join("\n") + "\n    </feed>";
 
-    spreadsheet.makeFeedRequest(self["_links"]["bulkcells"], "POST", data_xml, function(err, data) {
+    spreadsheet.makeFeedRequest(self["_links"]["bulkcells"], "POST", data_xml, (err, data) => {
       if (err) return cb(err);
 
       // update all the cells
       let cells_by_batch_id = _.keyBy(cells, "batchId");
-      if (data.entry && data.entry.length) data.entry.forEach(function(cell_data) {
-        cells_by_batch_id[cell_data["batch:id"]].updateValuesFromResponseData(cell_data);
-      });
+      if (data.entry && data.entry.length) {
+        for (const cell_data of data.entry) {
+          cells_by_batch_id[cell_data["batch:id"]].updateValuesFromResponseData(cell_data);
+        }
+      };
       cb();
     });
   }
-  this.del = function(cb) {
+  this.del = (cb) => {
     spreadsheet.makeFeedRequest(self["_links"]["edit"], "DELETE", null, cb);
   }
 
-  this.setHeaderRow = function(values, cb) {
-    if ( !cb ) cb = function() {};
+  this.setHeaderRow = (values, cb) => {
+    if (!cb) cb = () => {};
     if (!values) return cb();
     if (values.length > self.colCount) {
       return cb(new Error(`Sheet is not large enough to fit ${values.length} columns. Resize the sheet first.`));
@@ -453,30 +452,24 @@ const SpreadsheetWorksheet = function( spreadsheet, data ) {
       "min-col": 1,
       "max-col": self.colCount,
       "return-empty": true
-    }, function(err, cells) {
+    }, (err, cells) => {
       if (err) return cb(err);
-      _.each(cells, function(cell) {
-        cell.value = values[cell.col-1] ? values[cell.col-1] : '';
+      _.each(cells, (cell) => {
+        cell.value = values[cell.col-1] ? values[cell.col-1] : "";
       });
       self.bulkUpdateCells(cells, cb);
     });
   }
 }
 
-const SpreadsheetRow = function( spreadsheet, data, xml ){
+const SpreadsheetRow = function(spreadsheet, data, xml) {
   let self = this;
   self["_xml"] = xml;
   Object.keys(data).forEach(function(key) {
-    var val = data[key];
+    let val = data[key];
     if(key.substring(0, 4) === "gsx:") {
-      if(typeof val === "object" && Object.keys(val).length === 0) {
-        val = null;
-      }
-      if (key === "gsx:") {
-        self[key.substring(0, 3)] = val;
-      } else {
-        self[key.substring(4)] = val;
-      }
+      if(typeof val === "object" && Object.keys(val).length === 0) val = null;
+      key === "gsx:" ? self[key.substring(0, 3)] = val : self[key.substring(4)] = val;
     } else {
       if (key === "id") {
         self[key] = val;
@@ -484,58 +477,59 @@ const SpreadsheetRow = function( spreadsheet, data, xml ){
         self[key] = val["_"];
       } else if ( key === "link" ) {
         self["_links"] = [];
-        val = forceArray( val );
-        val.forEach( function( link ){
+        val = forceArray(val);
+        for (const link of val) {
           self["_links"][ link["$"]["rel"] ] = link["$"]["href"];
-        });
+        };
       }
     }
   }, this);
 
-  self.save = function( cb ) {
+  self.save = (cb) => {
     /*
     API for edits is very strict with the XML it accepts
     So we just do a find replace on the original XML.
     It's dumb, but I couldnt get any JSON->XML conversion to work reliably
     */
 
-    var data_xml = self['_xml'];
+    let data_xml = self["_xml"];
     // probably should make this part more robust?
-    data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gsx='http://schemas.google.com/spreadsheets/2006/extended'>");
-      Object.keys( self ).forEach( function(key) {
-        if (key.substr(0,1) != '_' && typeof( self[key] == 'string') ){
-          data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+">([\\s\\S]*?)</gsx:"+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key)+'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
-        }
-    });
-    spreadsheet.makeFeedRequest( self['_links']['edit'], 'PUT', data_xml, cb );
+    data_xml = data_xml.replace("<entry>", "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gsx='http://schemas.google.com/spreadsheets/2006/extended'>");
+    for (const key of Object.keys(self)) {
+      if (key.substr(0,1) !== "_" && typeof( self[key] === "string") ) {
+        data_xml = data_xml.replace( new RegExp('<gsx:'+xmlSafeColumnName(key)+">([\\s\\S]*?)</gsx:"+xmlSafeColumnName(key)+'>'), '<gsx:'+xmlSafeColumnName(key)+'>'+ xmlSafeValue(self[key]) +'</gsx:'+xmlSafeColumnName(key)+'>');
+      }
+    };
+    spreadsheet.makeFeedRequest(self["_links"]["edit"], "PUT", data_xml, cb);
   }
-  self.del = function( cb ){
-    spreadsheet.makeFeedRequest( self['_links']['edit'], 'DELETE', null, cb );
+  self.del = (cb) => {
+    spreadsheet.makeFeedRequest(self["_links"]["edit"], "DELETE", null, cb);
   }
 }
 
-function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data){
-  var links;
+function SpreadsheetCell(spreadsheet, ss_key, worksheet_id, data) {
+  let links;
   this.spreadsheet = spreadsheet;
-  this.row = parseInt(data['gs:cell']['$']['row']);
-  this.col = parseInt(data['gs:cell']['$']['col']);
-  this.batchId = 'R'+this.row+'C'+this.col;
-  if(data['id'] == "https://spreadsheets.google.com/feeds/cells/" + ss_key + "/" + worksheet_id + '/' + this.batchId) {
+  this.row = parseInt(data["gs:cell"]["$"]["row"]);
+  this.col = parseInt(data["gs:cell"]["$"]["col"]);
+  this.batchId = `R${this.row}C${this.col}`;
+  if (data["id"] === `https://spreadsheets.google.com/feeds/cells/${ss_key}/${worksheet_id}/${this.batchId}`) {
     this.ws_id = worksheet_id;
     this.ss = ss_key;
-  }else{
-    this.id = data['id'];
+  } else {
+    this.id = data["id"];
   }
 
-  this['_links'] = [];
-  links = forceArray( data.link );
-  for (var i = 0; i < links.length; i++) {
-    var link = links[i];
-    if(link['$']['rel'] == "self" && link['$']['href'] == this.getSelf()) continue;
-    if(link['$']['rel'] == "edit" && link['$']['href'] == this.getEdit()) continue;
-    this['_links'][ link['$']['rel'] ] = link['$']['href'];
+  this["_links"] = [];
+  links = forceArray(data.link);
+  for (let i = 0; i < links.length; i++) {
+    let link = links[i];
+    if(link["$"]["rel"] === "self" && link["$"]["href"] === this.getSelf()) continue;
+    if(link["$"]["rel"] === "edit" && link["$"]["href"] === this.getEdit()) continue;
+    this["_links"][ link["$"]["rel"] ] = link["$"]["href"];
   }
-  if(this['_links'].length == 0) delete this['_links'];
+
+  if(this["_links"].length === 0) delete this["_links"];
 
   this.updateValuesFromResponseData(data);
 
@@ -546,46 +540,46 @@ SpreadsheetCell.prototype.getId = function() {
   if(!!this.id) {
     return this.id;
   } else {
-    return "https://spreadsheets.google.com/feeds/cells/" + this.ss + "/" + this.ws_id + '/' + this.batchId;
+    return `https://spreadsheets.google.com/feeds/cells/${this.ss}/${this.ws_id}/${this.batchId}`;
   }
 }
 
 SpreadsheetCell.prototype.getEdit = function() {
-  if(!!this['_links'] && !!this['_links']['edit']) {
-    return this['_links']['edit'];
+  if(!!this["_links"] && !!this["_links"]["edit"]) {
+    return this["_links"]["edit"];
   } else {
-    return this.getId().replace(this.batchId, "private/full/" + this.batchId);
+    return this.getId().replace(this.batchId, `private/full/${this.batchId}`);
   }
 }
 
 SpreadsheetCell.prototype.getSelf = function() {
-  if(!!this['_links'] && !!this['_links']['edit']) {
-    return this['_links']['edit'];
+  if(!!this["_links"] && !!this["_links"]["edit"]) {
+    return this["_links"]["edit"];
   } else {
-    return this.getId().replace(this.batchId, "private/full/" + this.batchId);
+    return this.getId().replace(this.batchId, `private/full/${this.batchId}`);
   }
 }
 
 SpreadsheetCell.prototype.updateValuesFromResponseData = function(_data) {
   // formula value
-  var input_val = _data['gs:cell']['$']['inputValue'];
+  let input_val = _data["gs:cell"]["$"]["inputValue"];
   // inputValue can be undefined so substr throws an error
   // still unsure how this situation happens
-  if (input_val && input_val.substr(0,1) === '='){
+  if (input_val && input_val.substr(0,1) === "=") {
     this._formula = input_val;
   } else {
     this._formula = undefined;
   }
 
   // numeric values
-  if (_data['gs:cell']['$']['numericValue'] !== undefined) {
-    this._numericValue = parseFloat(_data['gs:cell']['$']['numericValue']);
+  if (_data["gs:cell"]["$"]["numericValue"] !== undefined) {
+    this._numericValue = parseFloat(_data["gs:cell"]["$"]["numericValue"]);
   } else {
     this._numericValue = undefined;
   }
 
   // the main "value" - its always a string
-  this._value = _data['gs:cell']['_'] || '';
+  this._value = _data["gs:cell"]["_"] || "";
 }
 
 SpreadsheetCell.prototype.setValue = function(new_value, cb) {
@@ -596,17 +590,17 @@ SpreadsheetCell.prototype.setValue = function(new_value, cb) {
 SpreadsheetCell.prototype._clearValue = function() {
   this._formula = undefined;
   this._numericValue = undefined;
-  this._value = '';
+  this._value = "";
 }
 
 Object.defineProperty(SpreadsheetCell.prototype, "value", {
-  get: function(){
+  get: function() {
     return this._value;
   },
-  set: function(val){
+  set: function(val) {
     if (!val) return this._clearValue();
 
-    var numeric_val = parseFloat(val);
+    let numeric_val = parseFloat(val);
     if (!isNaN(numeric_val)){
       this._numericValue = numeric_val;
       this._value = val.toString();
@@ -615,12 +609,8 @@ Object.defineProperty(SpreadsheetCell.prototype, "value", {
       this._value = val;
     }
 
-    if (typeof val == 'string' && val.substr(0,1) === '=') {
-      // use the getter to clear the value
-      this.formula = val;
-    } else {
-      this._formula = undefined;
-    }
+    // use the getter to clear the value
+    typeof val === "string" && val.substr(0,1) === "=" ? this.formula = val : this._formula = undefined;
   }
 });
 
@@ -628,14 +618,14 @@ Object.defineProperty(SpreadsheetCell.prototype, "formula", {
   get: function() {
     return this._formula;
   },
-  set: function(val){
+  set: function(val) {
     if (!val) return this._clearValue();
 
-    if (val.substr(0,1) !== '=') {
+    if (val.substr(0,1) !== "=") {
       throw new Error('Formulas must start with "="');
     }
     this._numericValue = undefined;
-    this._value = '*SAVE TO GET NEW VALUE*';
+    this._value = "*SAVE TO GET NEW VALUE*";
     this._formula = val;
   }
 });
@@ -648,7 +638,7 @@ Object.defineProperty(SpreadsheetCell.prototype, "numericValue", {
     if (val === undefined || val === null) return this._clearValue();
 
     if (isNaN(parseFloat(val)) || !isFinite(val)) {
-      throw new Error('Invalid numeric value assignment');
+      throw new Error("Invalid numeric value assignment");
     }
 
     this._value = val.toString();
@@ -664,19 +654,19 @@ Object.defineProperty(SpreadsheetCell.prototype, "valueForSave", {
 });
 
 SpreadsheetCell.prototype.save = function(cb) {
-  if ( !cb ) cb = function(){};
+  if (!cb) cb = () => {};
   this._needsSave = false;
 
-  var data_xml =
+  let data_xml =
     '<entry><id>'+this.getId()+'</id>'+
     '<link rel="edit" type="application/atom+xml" href="'+this.getId()+'"/>'+
     '<gs:cell row="'+this.row+'" col="'+this.col+'" inputValue="'+this.valueForSave+'"/></entry>'
 
-  data_xml = data_xml.replace('<entry>', "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
+  data_xml = data_xml.replace("<entry>", "<entry xmlns='http://www.w3.org/2005/Atom' xmlns:gs='http://schemas.google.com/spreadsheets/2006'>");
 
-  var self = this;
+  let self = this;
 
-  this.spreadsheet.makeFeedRequest( this.getEdit(), 'PUT', data_xml, function(err, response) {
+  this.spreadsheet.makeFeedRequest(this.getEdit(), "PUT", data_xml, function(err, response) {
     if (err) return cb(err);
     self.updateValuesFromResponseData(response);
     cb();
@@ -684,14 +674,14 @@ SpreadsheetCell.prototype.save = function(cb) {
 }
 
 SpreadsheetCell.prototype.del = function(cb) {
-  this.setValue('', cb);
+  this.setValue("", cb);
 }
 
 GoogleSpreadsheet.SpreadsheetCell = SpreadsheetCell;
 
 module.exports = GoogleSpreadsheet;
 
-//utils
+// utils
 var forceArray = function(val) {
   if ( Array.isArray( val ) ) return val;
   if ( !val ) return [];
