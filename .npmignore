@@ -1,5 +1,5 @@
-.gitignore
-test/
-examples/
-.npmignore
-.env
+examples
+docs
+test
+.circleci
+.github
