@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>google-spreadsheet - Google Spreadsheets API -- simple interface to read/write data and manage sheets</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="Google Spreadsheets API -- simple interface to read/write data and manage sheets">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <!-- <link rel="stylesheet" href="//unpkg.com/docsify-themeable/dist/css/theme-simple.css"> -->
+  <style>
+
+    table th { text-align: left; }
+
+    h3 code { font-size: inherit !important; }
+    h4 code { font-size: inherit !important; color: unset; }
+
+    h4[id^="fn-"] {
+      margin-top: 2em;
+      margin-left: -.3em;
+      margin-bottom: -.6em;
+    }
+    h4[id^="fn-"] a code {
+      /* color: unset; */
+    }
+    h4[id^="fn-"] code::before {
+      display: inline-block;
+      /* content: '🔌'; */
+      content: '🔮';
+      padding-right: .3em;
+    }
+
+    h4[id^="fn-"] + blockquote {
+      margin: 0;
+      border-left-color: #e96900;
+      border-left: none;
+      /* font-style: italic; */
+      padding: 0;
+    }
+    /* h4[id^="fn-"] + blockquote > p::before {
+      padding: 0;
+      content: '🤔';
+      display: inline-block;
+    } */
+
+    /* h4 { margin-bottom: -.6em; } */
+
+  </style>
+</head>
+<body>
+  <div id="app"></div>
+  <script>
+    window.$docsify = {
+      name: 'google-spreadsheet',
+      repo: 'git://github.com/theoephraim/node-google-spreadsheet',
+      loadSidebar: true,
+      subMaxLevel: 3,
+    }
+  </script>
+  <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
+  <script src="//unpkg.com/docsify/lib/plugins/search.min.js"></script>
+  <script src="//unpkg.com/docsify/lib/plugins/emoji.min.js"></script>
+</body>
+</html>
