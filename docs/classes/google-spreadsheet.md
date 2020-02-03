@@ -77,6 +77,11 @@ Param|Type|Required|Description
 
 ### Basic info
 
+#### `loadInfo()` (async) :id=fn-loadInfo
+> Load basic document props and child sheets
+
+- :sparkles: **Side Effects -** props are populated, sheets are populated
+
 #### `updateProperties(props)` (async) :id=fn-updateProperties
 > Update basic document properties
 
@@ -92,7 +97,7 @@ See [basic document properties](#basic-document-properties) above for props docu
 #### `resetLocalCache()` :id=fn-resetLocalCache
 > Clear local cache of properties and sheets
 
-You must call `getInfo()` again to re-load the properties and sheets
+You must call `loadInfo()` again to re-load the properties and sheets
 
 - :sparkles: **Side Effects -** basic props and sheets are gone
 

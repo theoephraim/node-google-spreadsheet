@@ -11,7 +11,7 @@ function checkDocAccess(docType, spec) {
   describe(`Doc type = ${docType}`, () => {
     if (spec.canRead) {
       it('reading info should succeed', async () => {
-        await doc.getInfo();
+        await doc.loadInfo();
         expect(doc.title).toBeTruthy();
         sheet = doc.sheetsByIndex[0];
       });
@@ -21,7 +21,7 @@ function checkDocAccess(docType, spec) {
       });
     } else {
       it('reading info should fail', async () => {
-        await expect(doc.getInfo()).rejects.toThrow(spec.readError);
+        await expect(doc.loadInfo()).rejects.toThrow(spec.readError);
       });
     }
 
@@ -41,8 +41,8 @@ function checkDocAccess(docType, spec) {
 
 describe('Authentication', () => {
   describe('without setting auth', () => {
-    it('getInfo should fail on any doc', async () => {
-      await expect(docs.public.getInfo()).rejects.toThrow(
+    it('loadInfo should fail on any doc', async () => {
+      await expect(docs.public.loadInfo()).rejects.toThrow(
         'initialize some kind of auth',
       );
     });

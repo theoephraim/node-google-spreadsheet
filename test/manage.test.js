@@ -16,7 +16,7 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('can load the doc info', async () => {
-      await doc.getInfo();
+      await doc.loadInfo();
     });
 
     it('should include the document title', async () => {
@@ -44,7 +44,7 @@ describe('Managing doc info and sheets', () => {
 
       // make sure the update actually stuck
       doc.resetLocalCache();
-      await doc.getInfo();
+      await doc.loadInfo();
       expect(doc.title).toBe(newTitle);
 
       // set the title back
@@ -77,7 +77,7 @@ describe('Managing doc info and sheets', () => {
 
     it('check the sheet is actually there', async () => {
       doc.resetLocalCache();
-      await doc.getInfo(); // re-fetch
+      await doc.loadInfo(); // re-fetch
       const newSheet = doc.sheetsByIndex.pop();
       expect(newSheet.title).toBe(sheet.title);
       expect(newSheet.rowCount).toBe(sheet.rowCount);
@@ -118,7 +118,7 @@ describe('Managing doc info and sheets', () => {
 
       // make sure the update actually stuck
       sheet.resetLocalCache();
-      await doc.getInfo();
+      await doc.loadInfo();
       expect(sheet.title).toBe(newTitle);
     });
 
@@ -128,7 +128,7 @@ describe('Managing doc info and sheets', () => {
       await sheet.resize({ rowCount: 77, columnCount: 44 });
       expect(sheet.rowCount).toBe(77);
       sheet.resetLocalCache();
-      await doc.getInfo();
+      await doc.loadInfo();
       expect(sheet.rowCount).toBe(77);
     });
 
@@ -147,7 +147,7 @@ describe('Managing doc info and sheets', () => {
     let numSheets;
 
     it('can remove a sheet', async () => {
-      await doc.getInfo();
+      await doc.loadInfo();
       numSheets = doc.sheetsByIndex.length;
 
       sheet = await doc.addWorksheet({
@@ -161,7 +161,7 @@ describe('Managing doc info and sheets', () => {
 
     it('check the sheet is really gone', async () => {
       doc.resetLocalCache();
-      await doc.getInfo();
+      await doc.loadInfo();
       expect(doc.sheetsByIndex.length).toBe(numSheets);
     });
   });
@@ -188,7 +188,7 @@ describe('Managing doc info and sheets', () => {
       await sheet.copyToSpreadsheet(docs.public.spreadsheetId);
 
       await docs.public.useServiceAccountAuth(creds);
-      await docs.public.getInfo();
+      await docs.public.loadInfo();
 
       // check title and content (header row)
       const copiedSheet = docs.public.sheetsByIndex.splice(-1)[0];
