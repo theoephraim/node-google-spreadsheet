@@ -19,7 +19,7 @@ _the following examples are meant to give you an idea of just some of the things
 
 ### The Basics
 ```javascript
-const GoogleSpreadsheet = require('google-spreadsheet');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
 
 // spreadsheet key is the long id in the sheets URL
 const doc = new GoogleSpreadsheet('<the sheet ID from the url>');
