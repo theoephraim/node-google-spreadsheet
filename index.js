@@ -5,11 +5,20 @@ var http = require("http");
 var querystring = require("querystring");
 var _ = require('lodash');
 var GoogleAuth = require("google-auth-library");
+var chalk = require('chalk');
 
 var GOOGLE_FEED_URL = "https://spreadsheets.google.com/feeds/";
 var GOOGLE_AUTH_SCOPE = ["https://spreadsheets.google.com/feeds"];
 
 var REQUIRE_AUTH_MESSAGE = 'You must authenticate to modify sheet data';
+
+// SHOW DEPRECATION WARNING
+console.log(chalk.red.bold("WARNING! You must upgrade to the latest version of google-spreadsheet!"));
+console.log(chalk.red("Google's deprecation date for the v3 sheets API is March 3rd 2020"));
+console.log(chalk.red("Bad news - this version of this module will stop working on that date :("));
+console.log(chalk.red("Good news - the new version of the module uses the newer v4 api :)"));
+console.log(chalk.red("However, there are breaking changes, so please see the docs site"));
+console.log(chalk.green("https://theoephraim.github.io/node-google-spreadsheet"));
 
 // The main class that represents a single sheet
 // this is the main module.exports

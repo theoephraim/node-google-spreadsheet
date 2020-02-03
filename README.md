@@ -9,6 +9,14 @@ A simple Node.js module for reading and manipulating data in Google Spreadsheets
 - row-based API - read, update, delete
 - managing worksheets - add, remove, resize, change title
 
+⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️
+
+## WARNING!
+**Google is deprecating their v3 sheets API on March 3, 2020**<br>
+This 2.x version of this module uses that, so you must upgrade to the latest version (v3.x)
+
+⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️🚨⚠️
+
 ## Installation
 
 [![NPM Info](https://nodei.co/npm/google-spreadsheet.png?downloads=true&downloadRank=true&stars=true)](https://www.npmjs.org/package/google-spreadsheet)
