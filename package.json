@@ -1,18 +1,20 @@
 {
-  "author": "Theo Ephraim <theozero@gmail.com> (http://theoephraim.com)",
+  "author": "Theo Ephraim <theozero@gmail.com> (https://theoephraim.com)",
   "name": "google-spreadsheet",
-  "description": "Google Spreadsheets Data API -- simple interface to read/write rows/cells, manage sheets",
-  "version": "2.0.9",
+  "description": "Google Sheets API (v4) -- simple interface to read/write data and manage sheets",
+  "version": "3.0.0",
   "license": "Unlicense",
   "keywords": [
     "google spreadsheets",
+    "google sheets",
+    "google docs",
     "google",
     "spreadsheet",
     "spreadsheets",
     "sheets",
     "gdata",
     "api",
-    "google sheets"
+    "googleapis"
   ],
   "homepage": "https://github.com/theoephraim/node-google-spreadsheet",
   "repository": {
@@ -24,18 +26,39 @@
     "node": ">=0.8.0"
   },
   "dependencies": {
-    "async": "^1.3.0",
-    "chalk": "^3.0.0",
-    "google-auth-library": "^0.10.0",
-    "lodash": "^4.17.15",
-    "request": "^2.69.0",
-    "xml2js": "~0.4.0"
+    "axios": "^0.19.1",
+    "google-auth-library": "^5.9.1",
+    "lodash": "^4.17.15"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^5.2.0"
+    "docsify-cli": "^4.4.0",
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.0.0",
+    "eslint-plugin-async-await": "0.0.0",
+    "eslint-plugin-import": "^2.20.0",
+    "eslint-plugin-jest": "^23.6.0",
+    "husky": "^4.2.0",
+    "jest": "^24.9.0",
+    "jest-junit": "^10.0.0"
   },
   "scripts": {
-    "test": "node_modules/.bin/mocha"
+    "test": "jest --runInBand",
+    "lint": "eslint ./",
+    "lint:fix": "eslint ./ --fix",
+    "docs:preview": "docsify serve docs"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint",
+      "pre-push": "npm run test"
+    }
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/examples/",
+      "/test/"
+    ]
   }
 }

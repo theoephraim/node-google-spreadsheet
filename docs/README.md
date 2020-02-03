@@ -1,3 +1,4 @@
+_Welcome to the docs site for_
 # google-spreadsheet
 > The most popular [Google Sheets API](https://developers.google.com/sheets/api/reference/rest) wrapper for javascript
 
@@ -11,12 +12,7 @@
 - row-based API - read, update, delete (based on the old v3 row-based calls)
 - managing worksheets - add, remove, resize, change title, formatting
 
-## Documentation
-Full docs are available at [https://theoephraim.github.io/node-google-spreadsheet](https://theoephraim.github.io/node-google-spreadsheet)
-
--------------
-
-> 🌈 **Installation** - `npm i google-spreadsheet --save` OR `yarn add google-spreadsheet`
+?> 🌈 **Installation** - `npm i google-spreadsheet --save` OR `yarn add google-spreadsheet`
 
 ## Examples
 _the following examples are meant to give you an idea of just some of the things you can do_
@@ -51,9 +47,9 @@ const newSheet = await doc.addSheet({ title: 'hot new sheet!' });
 await newSheet.delete();
 ```
 More info:
-- [GoogleSpreadsheet](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet)
-- [GoogleSpreadsheetWorksheet](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet)
-- [Authentication](https://theoephraim.github.io/node-google-spreadsheet/#/getting-started/authentication)
+- [GoogleSpreadsheet](classes/google-spreadsheet)
+- [GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet)
+- [Authentication](getting-started/authentication)
 
 
 
@@ -76,8 +72,8 @@ await rows[1].save(); // save updates
 await rows[1].delete(); // delete a row
 ```
 More info:
-- [GoogleSpreadsheetWorksheet > Working With Rows](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet?working-with-rows)
-- [GoogleSpreadsheetRow](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-row)
+- [GoogleSpreadsheetWorksheet > Working With Rows](classes/google-spreadsheet-worksheet?working-with-rows)
+- [GoogleSpreadsheetRow](classes/google-spreadsheet-row)
 
 
 
@@ -99,13 +95,13 @@ c6.note = 'This is a note!';
 await sheet.saveUpdatedCells(); // save all updates in one call
 ```
 More info:
-- [GoogleSpreadsheetWorksheet > Working With Cells](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet?working-with-cells)
-- [GoogleSpreadsheetCell](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-row)
+- [GoogleSpreadsheetWorksheet > Working With Cells](classes/google-spreadsheet-worksheet?working-with-cells)
+- [GoogleSpreadsheetCell](classes/google-spreadsheet-row)
 
 
 
 ## Why?
-> **This module provides an intuitive wrapper around Google's API to simplify common interactions**
+?> **This module provides an intuitive wrapper around Google's API to simplify common interactions**
 
 While Google's v4 sheets api is much easier to use than v3 was, the official [googleapis npm module](https://www.npmjs.com/package/googleapis) is a giant meta-tool that handles _every Google product_. The module and the API itself are awkward and the docs are pretty terrible, at least to get started.
 
