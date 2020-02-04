@@ -194,7 +194,7 @@ describe('Managing doc info and sheets', () => {
       const copiedSheet = docs.public.sheetsByIndex.splice(-1)[0];
       expect(copiedSheet.title).toBe(`Copy of ${sheet.title}`);
       await copiedSheet.loadHeaderRow();
-      expect(copiedSheet.headers).toEqual(sheet.headers);
+      expect(copiedSheet.headerValues).toEqual(sheet.headerValues);
       await copiedSheet.delete();
     });
   });

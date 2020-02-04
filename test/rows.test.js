@@ -165,4 +165,38 @@ describe('Row-based operations', () => {
       );
     });
   });
+
+  describe('header validation and cleanup', () => {
+    beforeAll(async () => {
+      sheet.loadCells('A1:E1');
+    });
+
+    it('allows empty headers', async () => {
+      await sheet.setHeaderRow(['', 'col1', '', 'col2']);
+      rows = await sheet.getRows();
+      expect(rows[0]['']).toBeUndefined();
+      expect(rows[0].col1).not.toBeUndefined();
+    });
+
+    it('trims each header', async () => {
+      await sheet.setHeaderRow([' col1 ', ' something with spaces ']);
+      rows = await sheet.getRows();
+      expect(rows[0].col1).not.toBeUndefined();
+      expect(rows[0]['something with spaces']).not.toBeUndefined();
+    });
+
+    it('throws an error if setting duplicate headers', async () => {
+      await expect(sheet.setHeaderRow(['col1', 'col1'])).rejects.toThrow();
+    });
+
+    it('throws an error if duplicate headers already exist', async () => {
+      await sheet.loadCells('A1:C1');
+      sheet.getCellByA1('A1').value = 'col1';
+      sheet.getCellByA1('B1').value = 'col1';
+      sheet.getCellByA1('C1').value = 'col2';
+      await sheet.saveUpdatedCells();
+      sheet.resetLocalCache(true); // forget the header values
+      await expect(sheet.getRows()).rejects.toThrow();
+    });
+  });
 });

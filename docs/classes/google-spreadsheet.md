@@ -111,7 +111,7 @@ Param|Type|Required|Description
 ---|---|---|---
 `props`|Object|-|Object of all sheet properties
 `props.sheetId`|Number<br>_positive int_|-|Sheet ID, cannot be chagned after setting<br>_easiest to just let google handle it_
-`props.headers`|[String]|-|Sets the contents of the first row, to be used in row-based interactions
+`props.headerValues`|[String]|-|Sets the contents of the first row, to be used in row-based interactions
 `props.[more]`|...|-|_See [GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet#basic-document-properties) for more props_
 
 

@@ -24,6 +24,7 @@ module.exports = {
     'prefer-destructuring': 0,
     'no-param-reassign': 0, // sometimes it's just much easier
     'lines-between-class-members': 0, // grouping related one-liners can be nice
+    'no-continue': 0,
   },
   overrides: [
     { // extra jest related rules for tests
