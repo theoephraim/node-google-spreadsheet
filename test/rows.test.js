@@ -199,4 +199,22 @@ describe('Row-based operations', () => {
       await expect(sheet.getRows()).rejects.toThrow();
     });
   });
+
+  // These api calls include the range in the URL, which includes the sheet name
+  // so it's possible to have encoding issues where you wouldn't otherwise
+  describe('special character support', () => {
+    let specialCharSheet;
+    beforeAll(async () => {
+      specialCharSheet = await doc.addSheet({ title: `Активные - ${+new Date()}` });
+    });
+    afterAll(async () => {
+      await specialCharSheet.delete();
+    });
+
+    it('can handle sheets with special characters', async () => {
+      await specialCharSheet.setHeaderRow(['Ак', 'тив', 'ные']);
+      await specialCharSheet.addRow([1, 2, 3]);
+      await specialCharSheet.getRows();
+    });
+  });
 });

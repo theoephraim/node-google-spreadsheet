@@ -55,6 +55,7 @@
   },
   "jest": {
     "testEnvironment": "node",
+    "testTimeout": 10000,
     "coveragePathIgnorePatterns": [
       "/node_modules/",
       "/examples/",
