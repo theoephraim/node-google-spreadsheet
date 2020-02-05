@@ -63,6 +63,7 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('can add a sheet', async () => {
+      const numSheets = doc.sheetCount;
       sheet = await doc.addWorksheet({
         title: newSheetTitle,
         gridProperties: {
@@ -71,6 +72,7 @@ describe('Managing doc info and sheets', () => {
         },
         headers: ['col1', 'col2', 'col3', 'col4', 'col5'],
       });
+      expect(doc.sheetCount).toBe(numSheets + 1);
 
       expect(sheet.title).toBe(newSheetTitle);
     });

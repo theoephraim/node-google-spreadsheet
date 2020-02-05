@@ -174,15 +174,15 @@ describe('Row-based operations', () => {
     it('allows empty headers', async () => {
       await sheet.setHeaderRow(['', 'col1', '', 'col2']);
       rows = await sheet.getRows();
-      expect(rows[0]['']).toBeUndefined();
-      expect(rows[0].col1).not.toBeUndefined();
+      expect(rows[0]).not.toHaveProperty('');
+      expect(rows[0]).toHaveProperty('col1');
     });
 
     it('trims each header', async () => {
       await sheet.setHeaderRow([' col1 ', ' something with spaces ']);
       rows = await sheet.getRows();
-      expect(rows[0].col1).not.toBeUndefined();
-      expect(rows[0]['something with spaces']).not.toBeUndefined();
+      expect(rows[0]).toHaveProperty('col1');
+      expect(rows[0]).toHaveProperty(['something with spaces']);
     });
 
     it('throws an error if setting duplicate headers', async () => {
