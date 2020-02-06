@@ -16,7 +16,7 @@ Full docs are available at [https://theoephraim.github.io/node-google-spreadshee
 
 -------------
 
-> 🌈 **Installation** - `npm i google-spreadsheet --save` OR `yarn add google-spreadsheet`
+> 🌈 **Installation** - `npm i google-spreadsheet --save`
 
 ## Examples
 _the following examples are meant to give you an idea of just some of the things you can do_
@@ -76,7 +76,7 @@ await rows[1].save(); // save updates
 await rows[1].delete(); // delete a row
 ```
 More info:
-- [GoogleSpreadsheetWorksheet > Working With Rows](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet?working-with-rows)
+- [GoogleSpreadsheetWorksheet > Working With Rows](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet#working-with-rows)
 - [GoogleSpreadsheetRow](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-row)
 
 
@@ -99,7 +99,7 @@ c6.note = 'This is a note!';
 await sheet.saveUpdatedCells(); // save all updates in one call
 ```
 More info:
-- [GoogleSpreadsheetWorksheet > Working With Cells](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet?working-with-cells)
+- [GoogleSpreadsheetWorksheet > Working With Cells](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet#working-with-cells)
 - [GoogleSpreadsheetCell](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-row)
 
 

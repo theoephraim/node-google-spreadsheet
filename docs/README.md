@@ -12,7 +12,7 @@ _Welcome to the docs site for_
 - row-based API - read, update, delete (based on the old v3 row-based calls)
 - managing worksheets - add, remove, resize, change title, formatting
 
-?> 🌈 **Installation** - `npm i google-spreadsheet --save` OR `yarn add google-spreadsheet`
+?> 🌈 **Installation** - `npm i google-spreadsheet --save`
 
 ## Examples
 _the following examples are meant to give you an idea of just some of the things you can do_
@@ -72,7 +72,7 @@ await rows[1].save(); // save updates
 await rows[1].delete(); // delete a row
 ```
 More info:
-- [GoogleSpreadsheetWorksheet > Working With Rows](classes/google-spreadsheet-worksheet?working-with-rows)
+- [GoogleSpreadsheetWorksheet > Working With Rows](classes/google-spreadsheet-worksheet#working-with-rows)
 - [GoogleSpreadsheetRow](classes/google-spreadsheet-row)
 
 
@@ -95,7 +95,7 @@ c6.note = 'This is a note!';
 await sheet.saveUpdatedCells(); // save all updates in one call
 ```
 More info:
-- [GoogleSpreadsheetWorksheet > Working With Cells](classes/google-spreadsheet-worksheet?working-with-cells)
+- [GoogleSpreadsheetWorksheet > Working With Cells](classes/google-spreadsheet-worksheet#working-with-cells)
 - [GoogleSpreadsheetCell](classes/google-spreadsheet-row)
 
 

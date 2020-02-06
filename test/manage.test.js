@@ -103,7 +103,7 @@ describe('Managing doc info and sheets', () => {
     let sheet;
 
     beforeAll(async () => {
-      sheet = await doc.addSheet({});
+      sheet = await doc.addSheet({ title: `Spécial CнArs - ${+new Date()}` });
     });
     afterAll(async () => {
       await sheet.delete();

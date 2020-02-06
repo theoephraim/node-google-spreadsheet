@@ -21,7 +21,10 @@ const INITIAL_DATA = [
 describe('Row-based operations', () => {
   beforeAll(async () => {
     await doc.useServiceAccountAuth(creds);
-    sheet = await doc.addSheet({ headers: HEADERS });
+    sheet = await doc.addSheet({
+      headers: HEADERS,
+      title: `Spécial CнArs - ${+new Date()}`, // some urls have sheet title in them
+    });
     for (let i = 0; i < INITIAL_DATA.length; i++) {
       await sheet.addRow(INITIAL_DATA[i]);
     }
@@ -171,6 +174,14 @@ describe('Row-based operations', () => {
       sheet.loadCells('A1:E1');
     });
 
+    it('clears the entire header row when setting new values', async () => {
+      await sheet.setHeaderRow(['col1', 'col2', 'col3', 'col4', 'col5', 'col6', 'col7', 'col8']);
+      await sheet.setHeaderRow(['new1', 'new2']);
+      sheet.resetLocalCache(true);
+      await sheet.loadHeaderRow();
+      expect(sheet.headerValues.length).toBe(2);
+    });
+
     it('allows empty headers', async () => {
       await sheet.setHeaderRow(['', 'col1', '', 'col2']);
       rows = await sheet.getRows();
@@ -188,6 +199,12 @@ describe('Row-based operations', () => {
     it('throws an error if setting duplicate headers', async () => {
       await expect(sheet.setHeaderRow(['col1', 'col1'])).rejects.toThrow();
     });
+    it('throws an error if setting empty headers', async () => {
+      await expect(sheet.setHeaderRow([])).rejects.toThrow();
+    });
+    it('throws an error if setting empty headers after trimming', async () => {
+      await expect(sheet.setHeaderRow(['  '])).rejects.toThrow();
+    });
 
     it('throws an error if duplicate headers already exist', async () => {
       await sheet.loadCells('A1:C1');
@@ -198,23 +215,25 @@ describe('Row-based operations', () => {
       sheet.resetLocalCache(true); // forget the header values
       await expect(sheet.getRows()).rejects.toThrow();
     });
-  });
 
-  // These api calls include the range in the URL, which includes the sheet name
-  // so it's possible to have encoding issues where you wouldn't otherwise
-  describe('special character support', () => {
-    let specialCharSheet;
-    beforeAll(async () => {
-      specialCharSheet = await doc.addSheet({ title: `Активные - ${+new Date()}` });
-    });
-    afterAll(async () => {
-      await specialCharSheet.delete();
+    it('throws if headers are all blank', async () => {
+      await sheet.loadCells('A1:C1');
+      sheet.getCellByA1('A1').value = '';
+      sheet.getCellByA1('B1').value = '';
+      sheet.getCellByA1('C1').value = '';
+      await sheet.saveUpdatedCells();
+      sheet.resetLocalCache(true); // forget the header values
+      await expect(sheet.getRows()).rejects.toThrow();
     });
 
-    it('can handle sheets with special characters', async () => {
-      await specialCharSheet.setHeaderRow(['Ак', 'тив', 'ные']);
-      await specialCharSheet.addRow([1, 2, 3]);
-      await specialCharSheet.getRows();
+    it('throws if headers are all blank after trimming spaces', async () => {
+      await sheet.loadCells('A1:C1');
+      sheet.getCellByA1('A1').value = '';
+      sheet.getCellByA1('B1').value = '  ';
+      sheet.getCellByA1('C1').value = '';
+      await sheet.saveUpdatedCells();
+      sheet.resetLocalCache(true); // forget the header values
+      await expect(sheet.getRows()).rejects.toThrow();
     });
   });
 });
