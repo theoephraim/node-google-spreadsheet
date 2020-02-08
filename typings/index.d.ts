@@ -188,7 +188,7 @@ declare module 'google-spreadsheet' {
     // Basic info
     loadInfo(): Promise<void>
     updateProperties(props: GoogleSpreadsheetBase): Promise<void>
-    resetLocalCache(): Promise<void>
+    resetLocalCache(): void
 
     // Managing Sheets
     addSheet(props?: {
@@ -199,7 +199,21 @@ declare module 'google-spreadsheet' {
     deleteSheet(sheetId: string): Promise<void>
 
     // Named Ranges
-    addNamedRange(name: string, range: string | GridRange, rangeId?: string): Promise<unknown>
-    deleteNamedRange(rangeId: string): Promise<unknown>
+    addNamedRange(name: string, range: string | GridRange, rangeId?: string): Promise<any>
+    deleteNamedRange(rangeId: string): Promise<any>
+
+    // "Private" methods (not documented)
+    private renewJwtAuth(): Promise<void>
+    private _setAxiosRequestAuth<T>(config: T): Promise<T>
+    private _handleAxiosResponse<T>(response: T): Promise<T>
+    private _handleAxiosErrors(error): Promise<void>
+    private _makeSingleUpdateRequest(requestType, requestParams): Promise<any>
+    private _makeBatchUpdateRequest(requests, responseRanges): Promise<void>
+    private _ensureInfoLoaded(): void
+    private _updateRawProperties(newProperties): void
+    private _updateOrCreateSheet({ properties, data }): void
+    private _getProp(param)
+    private _setProp(param, newVal): never
+    private loadCells(filters): Promise<void>
   }
 }
