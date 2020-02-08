@@ -1,3 +1,45 @@
+/**
+ * EDITING GUIDE
+ *
+ * separated into
+ * - exports at the top, anything exported will have autocomplete when importing the module
+ *  - actual exports determined by index.js module.exports
+ *  - autocompleting of exports controlled by index.d.ts export
+ * - enums
+ * - options/configs (objects)
+ *  - objects that are used tangentially (not a top-level class)
+ * - class type defs written as interfaces
+ *  - XBasicProperties interface (contains properties used in update methods related to X class)
+ *  - X interface (contains non-basic / readonly properties and method typings of X class)
+ *   - extends the related XBasicProperties to inherit them
+ *
+ * when adding new properties to a class interface [X]:
+ * - add JSDoc descriptions using @description
+ * - if it is a "basic property" (meaning it can be updated through a related update() method)
+ *  - it goes in the XBasicProperties interface
+ * - if it is a "non-basic property" (meaning it should not be an option in a related update() method)
+ *  - it gooes in the X interface
+ *  - add the readonly modifier before, readonly thisPropIsReadOnly: PropType
+ *
+ * when adding new methods
+ * - add JSDoc tags for description and params:
+ *  - @description description here (- can be used for bullet points)
+ *  - @param name description of param here
+ *  - @example if needed
+ * - ALL PARAMS AND RETURNS MUST BE TYPED
+ *  - (paramName: ParamType, ...), if optional (paramName?: ParamType, ...)
+ *  - return type after closing paren, method(): ReturnType
+ * - if it is synchronous put it in the synchronous section
+ *  - if it doesnt return anyting use void as ReturnType, methodName(): void;
+ * - if it is asychronous put it in the asynchronous section
+ *  - return types must use Promise<T> to indicate async, methodName(): Promise<ReturnTypeName>
+ *  - if it doesnt return anything use Promise<void> as ReturnType
+ *
+ * TODO:
+ * - would be helpful to include official google sheets API doc links for unintuitive objects / enums
+ *  - use the "@see URL" JSDoc tag
+ */
+
 /* ---- EXPORTS ---- */
 
 // only export the GoogleSpreadsheet and GoogleSpreadsheetFormulaError
@@ -336,7 +378,6 @@ interface CellProperties extends CellFormat {
    * cell full A1 address format
    */
   a1Address: string;
-
   /**
    * @description
    * this is the full value in the cell
@@ -394,6 +435,8 @@ interface CellProperties extends CellFormat {
 }
 
 interface GoogleSpreadsheetCell extends CellProperties {
+  /* ---- SYNCHRONOUS METHODS ---- */
+
   /**
    * @description
    * reset all cell formatting to default / none
@@ -407,6 +450,9 @@ interface GoogleSpreadsheetCell extends CellProperties {
    * - LOCAL CHANGE (must be saved to persist)
    */
   discardUnsavedChanges(): void;
+
+  /* ---- ASYNCHRONOUS METHODS ---- */
+
   /**
    * @description
    * save this individual cell
@@ -450,7 +496,13 @@ interface GoogleSpreadsheetRow extends RowProperties {
 
 /* ---- GOOGLE SPREADSHEET WORKSHEET ---- */
 
-interface WorksheetProperties {
+interface WorksheetBasicProperties {
+  /**
+   * ---- BASIC PROPERTIES ----
+   * separates basic (editable) properties as they are used as inputs to various methods
+   * non-basic properties should be added to the extending interface below
+   */
+
   /**
    * @description
    * name of the worksheet tab
@@ -481,6 +533,21 @@ interface WorksheetProperties {
    * true if the worksheet is an RTL sheet instead of an LTR sheet
    */
   rightToLeft: boolean;
+}
+
+interface GoogleSpreadsheetWorksheet extends WorksheetBasicProperties {
+  /* ---- NON-BASIC PROPERTIES ADDED HERE ---- */
+
+  /**
+   * @description
+   * set during creation, not editable
+   */
+  readonly sheetId: string;
+  /**
+   * @description
+   * set during creation, not editable
+   */
+  readonly sheetType: WorksheetType;
   /**
    * @description
    * number of rows in the worksheet
@@ -506,23 +573,6 @@ interface WorksheetProperties {
    * stats about the cells in the worksheet
    */
   cellStats: CellStats;
-}
-
-// workaround to not repeat interface props in implementing class
-// https://github.com/Microsoft/TypeScript/issues/340#issuecomment-184964440
-
-interface GoogleSpreadsheetWorksheet extends WorksheetProperties {
-  /**
-   * @description
-   * set during creation, not editable
-   */
-  readonly sheetId: string;
-
-  /**
-   * @description
-   * set during creation, not editable
-   */
-  readonly sheetType: WorksheetType;
 
   /* ---- SYNCHRONOUS METHODS ---- */
 
@@ -606,7 +656,7 @@ interface GoogleSpreadsheetWorksheet extends WorksheetProperties {
    *
    * @param properties
    */
-  updateProperties(properties: WorksheetProperties): Promise<void>;
+  updateProperties(properties: WorksheetBasicProperties): Promise<void>;
   /**
    * @description
    * update worksheet grid properties / dimensions
@@ -649,13 +699,13 @@ interface GoogleSpreadsheetWorksheet extends WorksheetProperties {
 
 /* ---- GOOGLE SPREADSHEET ---- */
 
-interface SpreadsheetProperties {
+interface SpreadsheetBasicProperties {
   /**
-   * @description
-   * document ID
-   * - from the Spreadsheet document URL
+   * ---- BASIC PROPERTIES ----
+   * separates basic (editable) properties as they are used as inputs to various methods
+   * non-basic properties should be added to the extending interface below
    */
-  readonly spreadsheetId;
+
   /**
    * @description
    * document title
@@ -695,7 +745,19 @@ interface SpreadsheetProperties {
    * how circular dependencies are resolved with iterative calculations
    */
   iterativeCalculationSettings: IterativeCalculationSetting;
+}
 
+interface GoogleSpreadsheet extends SpreadsheetBasicProperties {
+  /* ---- NON-BASIC PROPERTIES added here ---- */
+
+  /**
+   * @description
+   * document ID
+   * - from the Spreadsheet document URL
+   */
+  // in docs as "basic property" but can not be updated
+  // moved here so it does not appear as an option in methods that use basic properties
+  readonly spreadsheetId;
   /**
    * @description
    * object of child worksheets
@@ -714,9 +776,27 @@ interface SpreadsheetProperties {
    * - shorthand for spreadsheetDoc.sheetsByIndex.length
    */
   readonly sheetCount: number;
-}
 
-interface GoogleSpreadsheet extends SpreadsheetProperties {
+  /* ---- SYNCHRONOUS METHODS ---- */
+
+  /**
+   * @description
+   * API key authentication
+   * - used for all future requests made through the Spreadsheet document and its related objects
+   * - only allows READ-ONLY access to PUBLIC Spreadsheet documents
+   *
+   * @param key API key for your Google project
+   */
+  useApiKey(key: string): void;
+  /**
+   * @description
+   * clear local cache of properties and child worksheets
+   * - note: you must call loadInfo() again to re-load the cache
+   */
+  resetLocalCache(): void;
+
+  /* ---- ASYNCHRONOUS METHODS ---- */
+
   /**
    * @description
    * JWT-style authentication with service account credentials
@@ -741,34 +821,16 @@ interface GoogleSpreadsheet extends SpreadsheetProperties {
   useServiceAccountAuth(credentials: ServiceAccountCredentials): Promise<void>;
   /**
    * @description
-   * API key authentication
-   * - used for all future requests made through the Spreadsheet document and its related objects
-   * - only allows READ-ONLY access to PUBLIC Spreadsheet documents
-   *
-   * @param key API key for your Google project
-   */
-  useApiKey(key: string): void;
-
-  /**
-   * @description
    * load basic Spreadsheet document properties and child worksheets
    */
   loadInfo(): Promise<void>;
-
   /**
    * @description
    * update basic Spreadsheet document properties
    *
    * @param properties basic Spreadsheet document properties to update
    */
-  updateProperties(properties: SpreadsheetProperties): Promise<void>;
-  /**
-   * @description
-   * clear local cache of properties and child worksheets
-   * - note: you must call loadInfo() again to re-load the cache
-   */
-  resetLocalCache(): void;
-
+  updateProperties(properties: SpreadsheetBasicProperties): Promise<void>;
   /**
    * @description
    * add a new worksheet to the Spreadsheet document
@@ -777,7 +839,7 @@ interface GoogleSpreadsheet extends SpreadsheetProperties {
    * @param worksheetProperties all worksheet properties to set
    */
   addSheet(
-    worksheetProperties?: WorksheetProperties,
+    worksheetProperties?: WorksheetBasicProperties,
   ): Promise<GoogleSpreadsheetWorksheet>;
   /**
    * @description
@@ -787,7 +849,7 @@ interface GoogleSpreadsheet extends SpreadsheetProperties {
    * @param worksheetProperties all worksheet properties to set
    */
   addWorksheet(
-    worksheetProperties?: WorksheetProperties,
+    worksheetProperties?: WorksheetBasicProperties,
   ): Promise<GoogleSpreadsheetWorksheet>;
   /**
    * @description
@@ -797,7 +859,6 @@ interface GoogleSpreadsheet extends SpreadsheetProperties {
    * @param sheetId ID of the worksheet to delete
    */
   deleteSheet(sheetId: string): Promise<void>;
-
   /**
    * @description
    * add a new named range to the Spreadsheet Document
@@ -814,14 +875,14 @@ interface GoogleSpreadsheet extends SpreadsheetProperties {
     name: string,
     range: string | WorksheetGridRange,
     rangeId?: string,
-  );
+  ): Promise<void>;
   /**
    * @description
    * delete a named range from the Spreadsheet document
    *
    * @param rangeId unique ID of the range to delete
    */
-  deleteNamedRange(rangeId: string);
+  deleteNamedRange(rangeId: string): Promise<void>;
 }
 
 interface GoogleSpreadsheetFormulaError extends CellError {}
