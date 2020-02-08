@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "lib": [
+      "es2015",
+      "es2017",
+      "es6",
+      "es2015",
+      "dom"
+    ],
+    "types": [
+      "node"
+    ],
+    "allowJs": true,
+    "removeComments": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "preserveSymlinks": true,
+    "outDir": "./build/",
+    "sourceRoot": "./lib/",
+    "rootDir": "./lib/",
+    "sourceMap": true
+  },
+  "exclude": [
+    "build",
+    "test",
+    "index.js",
+    "docs",
+    "scripts"
+  ]
+}
