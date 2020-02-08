@@ -1,4 +1,3 @@
-declare module 'google-spreadsheet' {
   // #region API definitions
   interface Border {
     style: Style
@@ -32,7 +31,66 @@ declare module 'google-spreadsheet' {
     themeColor: ThemeColorType
   }
 
+  interface DeveloperMetadata {
+    metadataId: number
+    metadataKey: string
+    metadataValue: string
+    location: DeveloperMetadataLocation
+    visibility: DeveloperMetadataVisibility
+  }
+
+  interface DeveloperMetadataLocation {
+    locationType: DeveloperMetadataLocationType
+    spreadsheet: boolean
+    sheetId: number
+    dimensionRange: DimensionRange
+  }
+
+  enum DeveloperMetadataLocationType {
+    DEVELOPER_METADATA_LOCATION_TYPE_UNSPECIFIED,
+    ROW,
+    COLUMN,
+    SHEET,
+    SPREADSHEET
+  }
+
+  enum DeveloperMetadataVisibility {
+    DEVELOPER_METADATA_VISIBILITY_UNSPECIFIED,
+    DOCUMENT,
+    PROJECT
+  }
+
+  enum Dimension {
+    DIMENSION_UNSPECIFIED,
+    ROWS,
+    COLUMNS
+  }
+
+  interface DimensionProperties {
+    hiddenByFilter: boolean
+    hiddenByUser: boolean
+    pixelSize: number
+    developerMetadata: DeveloperMetadata[]
+  }
+
+  interface DimensionRange {
+    sheetId: number
+    dimension: Dimension
+    startIndex: number
+    endIndex: number
+  }
+
   type direction = 'top' | 'bottom' | 'left' | 'right'
+
+  interface GridProperties {
+    rowCount: number
+    columnCount: number
+    frozenRowCount: number
+    frozenColumnCount: number
+    hideGridlines: boolean
+    rowGroupControlAfter: boolean
+    columnGroupControlAfter: boolean
+  }
 
   interface GridRange extends Record<'sheetId' | 'startRowIndex' | 'endRowIndex' | 'startColumnIndex' |'endColumnIndex', number> {}
 
@@ -78,6 +136,12 @@ declare module 'google-spreadsheet' {
     ON_CHANGE,
     MINUTE,
     HOUR
+  }
+
+  enum SheetType {
+    SHEET_TYPE_UNSPECIFIED,
+    GRID,
+    OBJECT
   }
 
   interface SpreadsheetTheme {
@@ -162,8 +226,8 @@ declare module 'google-spreadsheet' {
   }
   export class GoogleSpreadsheet implements GoogleSpreadsheetBase {
     // Basic Document Properties
-    spreadsheetId: string
-    title: string
+    readonly spreadsheetId: string
+    readonly title: string
     locale: string
     timeZone: string
     autoRecalc: RecalculationInterval
@@ -215,5 +279,128 @@ declare module 'google-spreadsheet' {
     private _getProp(param)
     private _setProp(param, newVal): never
     private loadCells(filters): Promise<void>
+  }
+
+  interface GoogleSpreadsheetWorksheetBase {
+    title?: string
+    index?: number
+    gridProperties?: GridProperties
+    hidden?: boolean
+    tabColor?: Color
+    rightToLeft?: boolean
+  }
+  export class GoogleSpreadsheetWorksheet implements GoogleSpreadsheetWorksheetBase {
+    // Basic sheet properties
+    readonly sheetId: string
+    readonly sheetType: SheetType
+    title: string
+    index: number
+    gridProperties: GridProperties
+    hidden: boolean
+    tabColor: Color
+    rightToLeft: boolean
+
+    // Sheet Dimensions & Stats
+    rowCount: number
+    columnCount: number
+    cellStats: {
+      total: number
+      nonEmpty: number
+      loaded: number
+    }
+
+    // Working With Rows
+    loadHeaderRow(): Promise<void>
+    setHeaderRow(headerValues: string[]): Promise<void>
+    addRow(values: object): Promise<GoogleSpreadsheetRow>
+    getRows(options?: {
+      offset?: number
+      limit?: number
+    }): Promise<GoogleSpreadsheetRow>
+
+    // Working With Cells
+    loadCells(filters?: any): Promise<any>
+    getCells(rowIndex: number, columnIndex: number): GoogleSpreadsheetCell
+    getCellByA1(a1Address: string): GoogleSpreadsheetCell
+    saveUpdatedCells(): Promise<void>
+    saveCells(cells: GoogleSpreadsheetCell[]): Promise<void>
+    resetLocalCache(dataOnly?: boolean): void
+
+    // Updating Sheet Properties
+    updateProperties(props: GoogleSpreadsheetWorksheetBase): Promise<any>
+    resize(props: GoogleSpreadsheetWorksheetBase['gridProperties']): Promise<any>
+    updateGridProperties(props: GoogleSpreadsheetWorksheetBase['gridProperties']): Promise<any>
+    updateDimensionProperties(columnsOrRows: 'COLUMNS'|'ROWS', props: DimensionProperties, bounds?: {
+      startIndex?: number
+      endIndex?: number
+    }): Promise<any>
+
+    // Other
+    clear(): Promise<void>
+    delete(): Promise<void>
+    del(): Promise<void>
+    copyToSpreadsheet(destinationSpreadsheetId: string): Promise<any>
+
+    // "Private" methods (undocumented)
+    private _makeSingleUpdateRequest(requestType, requestParams): Promise<any>
+    private _ensureInfoLoaded(): void
+    private _fillCellData(dataRanges): void
+    private _getProp(param)
+    private _setProp(param, newVal): never
+    private getCellsInRange(a1Range, options): Promise<any>
+    private updateNamedRange(): Promise<void>
+    private addNamedRange(): Promise<void>
+    private deleteNamedRange(): Promise<void>
+    private repeatCell(): Promise<void>
+    private autoFill(): Promise<void>
+    private cutPaste(): Promise<void>
+    private copyPaste(): Promise<void>
+    private mergeCells(): Promise<void>
+    private unmergeCells(): Promise<void>
+    private updateBorders(): Promise<void>
+    private addFilterView(): Promise<void>
+    private appendCells(): Promise<void>
+    private clearBasicFilter(): Promise<void>
+    private deleteDimension(): Promise<void>
+    private deleteEmbeddedObject(): Promise<void>
+    private deleteFilterView(): Promise<void>
+    private duplicateFilterView(): Promise<void>
+    private duplicateSheet(): Promise<void>
+    private findReplace(): Promise<void>
+    private insertDimension(): Promise<void>
+    private insertRange(): Promise<void>
+    private moveDimension(): Promise<void>
+    private updateEmbeddedObjectPosition(): Promise<void>
+    private pasteData(): Promise<void>
+    private textToColumns(): Promise<void>
+    private updateFilterView(): Promise<void>
+    private deleteRange(): Promise<void>
+    private appendDimension(): Promise<void>
+    private addConditionalFormatRule(): Promise<void>
+    private updateConditionalFormatRule(): Promise<void>
+    private deleteConditionalFormatRule(): Promise<void>
+    private sortRange(): Promise<void>
+    private setDataValidation(): Promise<void>
+    private setBasicFilter(): Promise<void>
+    private addProtectedRange(): Promise<void>
+    private updateProtectedRange(): Promise<void>
+    private deleteProtectedRange(): Promise<void>
+    private autoResizeDimensions(): Promise<void>
+    private addChart(): Promise<void>
+    private updateChartSpec(): Promise<void>
+    private updateBanding(): Promise<void>
+    private addBanding(): Promise<void>
+    private deleteBanding(): Promise<void>
+    private createDeveloperMetadata(): Promise<void>
+    private updateDeveloperMetadata(): Promise<void>
+    private deleteDeveloperMetadata(): Promise<void>
+    private randomizeRange(): Promise<void>
+    private addDimensionGroup(): Promise<void>
+    private deleteDimensionGroup(): Promise<void>
+    private updateDimensionGroup(): Promise<void>
+    private trimWhitespace(): Promise<void>
+    private deleteDuplicates(): Promise<void>
+    private addSlicer(): Promise<void>
+    private updateSlicerSpec(): Promise<void>
   }
 }
