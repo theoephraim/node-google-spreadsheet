@@ -48,4 +48,5 @@ module.exports = {
       },
     },
   ],
+  ignorePatterns: ['typings']
 }
