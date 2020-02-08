@@ -87,6 +87,12 @@ interface TextRotation {
 
 type RecalculationInterval = "ON_CHANGE" | "MINUTE" | "HOUR";
 
+type Dimension = "ROWS" | "COLUMNS";
+
+type DeveloperMetadataVisibility = "DOCUMENT" | "PROJECT";
+
+type DeveloperMetadataLocationType = "ROW" | "COLUMN" | "SHEET" | "SPREADSHEET";
+
 /* ---- OPTIONS / CONFIG ---- */
 
 interface PaginationOptions {
@@ -111,19 +117,36 @@ interface WorksheetGridProperties {
   columnGroupControlAfter: boolean;
 }
 
-// TODO: this one is really heavily nested: https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata
-interface DeveloperMetadata {}
+interface DimensionRange {
+  sheetId: number;
+  endIndex: number;
+  startIndex: number;
+  dimension: Dimension;
+}
+
+interface DeveloperMetadataLocation {
+  sheetId: number;
+  spreadsheet: boolean;
+  dimensionRange: DimensionRange;
+  locationType: DeveloperMetadataLocationType;
+}
+
+interface DeveloperMetadata {
+  metadataId: number;
+  metadataKey: string;
+  metadataValue: string;
+  location: DeveloperMetadataLocation;
+  visibility: DeveloperMetadataVisibility;
+}
 
 interface WorksheetDimensionProperties {
-  hiddenByFilter: boolean;
-  hiddenByUser: boolean;
   pixelSize: number;
+  hiddenByUser: boolean;
+  hiddenByFilter: boolean;
   /**
-   * see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata
    */
-  // TODO: replace when DeveloperMetadata is defined
-  // developerMetadata: [DeveloperMetadata];
-  developerMetadata: [{ [prop: string]: any }];
+  developerMetadata: [DeveloperMetadata];
 }
 
 interface WorksheetDimensionBounds {
