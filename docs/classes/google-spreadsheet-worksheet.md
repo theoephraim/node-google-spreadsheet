@@ -50,7 +50,7 @@ Property|Type|Description
 `rowCount`|Number<br>_int > 1_|Number of rows in the sheet
 `columnCount`|Number<br>_int > 1_|Number of columns in the sheet
 `cellStats`|Object|Stats about cells in the sheet
-`cellStats.loaded`|Number<br>_int >= 0_|Total number of cells in the sheet<br>_should equal rowCount * columnCount_
+`cellStats.total`|Number<br>_int >= 0_|Total number of cells in the sheet<br>_should equal rowCount * columnCount_
 `cellStats.loaded`|Number<br>_int >= 0_|Number of cells that are loaded locally
 `cellStats.nonEmpty`|Number<br>_int >= 0_|Number of loaded cells that are not empty
 
