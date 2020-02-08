@@ -11,11 +11,11 @@ export class GoogleSpreadsheet {
    *
    * @param sheetId document ID from the URL of the Spreadsheet
    */
-  constructor(sheetId: string): GoogleSpreadsheet;
+  constructor(sheetId: string);
 }
 
 export class GoogleSpreadsheetFormulaError {
-  constructor(errorInfo: CellError): GoogleSpreadsheetFormulaError;
+  constructor(errorInfo: CellError);
 }
 
 /* ---- ENUMS ---- */
@@ -489,11 +489,6 @@ interface WorksheetProperties {
 // https://github.com/Microsoft/TypeScript/issues/340#issuecomment-184964440
 
 interface GoogleSpreadsheetWorksheet extends WorksheetProperties {
-  constructor(
-    parentSpreadsheet: GoogleSpreadsheet,
-    config: { data: any; properties: WorksheetProperties },
-  );
-
   /**
    * @description
    * set during creation, not editable
