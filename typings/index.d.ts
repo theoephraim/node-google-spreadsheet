@@ -1,4 +1,4 @@
-  declare module 'google-spreadsheet' {
+declare module 'google-spreadsheet' {
   // #region API definitions
   interface Border {
     style: Style
@@ -7,8 +7,8 @@
     colorStyle: ColorStyle
   }
 
-  interface Borders extends Record<direction, Border> {}
-  
+  interface Borders extends Record<direction, Border> { }
+
   interface CellFormat {
     numberFormat: numberFormat
     backgroundColor: Color
@@ -24,7 +24,7 @@
     textRotation: TextRotation
   }
 
-  interface Color extends Record<'red' | 'green' | 'blue' | 'alpha', number> {}
+  interface Color extends Record<'red' | 'green' | 'blue' | 'alpha', number> { }
 
 
   interface ColorStyle {
@@ -93,7 +93,7 @@
     columnGroupControlAfter: boolean
   }
 
-  interface GridRange extends Record<'sheetId' | 'startRowIndex' | 'endRowIndex' | 'startColumnIndex' |'endColumnIndex', number> {}
+  interface GridRange extends Record<'sheetId' | 'startRowIndex' | 'endRowIndex' | 'startColumnIndex' | 'endColumnIndex', number> { }
 
   enum HorizontalAlign {
     HORIZONTAL_ALIGN_UNSPECIFIED,
@@ -130,7 +130,7 @@
     SCIENTIFIC
   }
 
-  interface Padding extends Record<direction, number> {}
+  interface Padding extends Record<direction, number> { }
 
   enum RecalculationInterval {
     RECALCULATION_INTERVAL_UNSPECIFIED,
@@ -333,7 +333,7 @@
     updateProperties(props: GoogleSpreadsheetWorksheetBase): Promise<any>
     resize(props: GoogleSpreadsheetWorksheetBase['gridProperties']): Promise<any>
     updateGridProperties(props: GoogleSpreadsheetWorksheetBase['gridProperties']): Promise<any>
-    updateDimensionProperties(columnsOrRows: 'COLUMNS'|'ROWS', props: DimensionProperties, bounds?: {
+    updateDimensionProperties(columnsOrRows: 'COLUMNS' | 'ROWS', props: DimensionProperties, bounds?: {
       startIndex?: number
       endIndex?: number
     }): Promise<any>
@@ -463,5 +463,15 @@
     save(): Promise<void>
     delete(): Promise<any>
     del(): Promise<any>
+  }
+
+  export class GoogleSpreadsheetFormulaError {
+    type: string
+    message: string
+
+    constructor(errorInfo: {
+      type?: string
+      message?: string
+    })
   }
 }
