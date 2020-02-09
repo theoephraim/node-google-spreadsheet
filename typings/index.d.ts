@@ -1,3 +1,4 @@
+  declare module 'google-spreadsheet' {
   // #region API definitions
   interface Border {
     style: Style
