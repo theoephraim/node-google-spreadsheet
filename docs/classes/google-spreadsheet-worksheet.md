@@ -112,13 +112,13 @@ You can filter the cells you want to fetch in several ways.
 See [Data Filters](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter) for more info. Strings are treated as A1 ranges, objects are detected to be a [GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange) with sheetId not required.
 
 ```javascript
-await sheet.getCells(); // no filter - will load ALL cells in the sheet
-await sheet.getCells('B2:D5'); // A1 range
-await sheet.getCells({ // GridRange object
+await sheet.loadCells(); // no filter - will load ALL cells in the sheet
+await sheet.loadCells('B2:D5'); // A1 range
+await sheet.loadCells({ // GridRange object
   startRowIndex: 5, endRowIndex: 100, startColumnIndex:0, endColumnIndex: 200
 });
-await sheet.getCells({ startRowIndex: 50 }); // not all props required
-await sheet.getCells(['B2:D5', 'B50:D55']); // can pass an array of filters
+await sheet.loadCells({ startRowIndex: 50 }); // not all props required
+await sheet.loadCells(['B2:D5', 'B50:D55']); // can pass an array of filters
 ```
 
 Param|Type|Required|Description
