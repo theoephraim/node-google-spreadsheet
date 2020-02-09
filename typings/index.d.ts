@@ -228,17 +228,17 @@
     // Basic Document Properties
     readonly spreadsheetId: string
     readonly title: string
-    locale: string
-    timeZone: string
-    autoRecalc: RecalculationInterval
-    defaultFormat: CellFormat
-    spreadsheetTheme: SpreadsheetTheme
-    iterativeCalculationSettings: IterativeCalculationSettings
+    readonly locale: string
+    readonly timeZone: string
+    readonly autoRecalc: RecalculationInterval
+    readonly defaultFormat: CellFormat
+    readonly spreadsheetTheme: SpreadsheetTheme
+    readonly iterativeCalculationSettings: IterativeCalculationSettings
 
     // Worksheets
-    sheetsById: Record<string, GoogleSpreadsheetWorksheet>
-    sheetsByIndex: GoogleSpreadsheetWorksheet[]
-    sheetCount: number
+    readonly sheetsById: Record<string, GoogleSpreadsheetWorksheet>
+    readonly sheetsByIndex: GoogleSpreadsheetWorksheet[]
+    readonly sheetCount: number
 
     constructor(spreadsheetId: string)
 
@@ -293,21 +293,23 @@
     // Basic sheet properties
     readonly sheetId: string
     readonly sheetType: SheetType
-    title: string
-    index: number
-    gridProperties: GridProperties
-    hidden: boolean
-    tabColor: Color
-    rightToLeft: boolean
+    readonly title: string
+    readonly index: number
+    readonly gridProperties: GridProperties
+    readonly hidden: boolean
+    readonly tabColor: Color
+    readonly rightToLeft: boolean
 
     // Sheet Dimensions & Stats
-    rowCount: number
-    columnCount: number
-    cellStats: {
+    readonly rowCount: number
+    readonly columnCount: number
+    readonly cellStats: {
       total: number
       nonEmpty: number
       loaded: number
     }
+
+    constructor(parentSpreadsheet: GoogleSpreadsheet, { properties, data })
 
     // Working With Rows
     loadHeaderRow(): Promise<void>
@@ -402,5 +404,52 @@
     private deleteDuplicates(): Promise<void>
     private addSlicer(): Promise<void>
     private updateSlicerSpec(): Promise<void>
+  }
+
+  export class GoogleSpreadsheetCell {
+    // Cell Location
+    readonly rowIndex: number
+    readonly columnIndex: number
+    readonly a1Row: number
+    readonly a1Column: string
+    readonly a1Address: string
+
+    // Cell Value(s)
+    value: any
+    readonly valueType: string
+    readonly formattedValue: any
+    formula: string
+    readonly formulaError: Error
+    note: string
+    readonly hyperlink: string
+
+    // Cell Formatting
+    readonly userEnteredFormat: CellFormat
+    readonly effectiveFormat: CellFormat
+    numberFormat: numberFormat
+    backgroundColor: Color
+    borders: Borders
+    padding: Padding
+    horizontalAlignment: HorizontalAlign
+    verticalAlignment: VerticalAlign
+    wrapStrategy: WrapStrategy
+    textDirection: TextDirection
+    textFormat: TextFormat
+    hyperlinkDisplayType: HyperlinkDisplayType
+    textRotation: TextRotation
+
+    constructor(parentSheet: GoogleSpreadsheetWorksheet, rowIndex: number, columnIndex: number, cellData?: object)
+
+    // Methods
+    clearAllFormatting(): void
+    discardUnsavedChanges(): void
+    save(): Promise<void>
+
+    // "Private" methods (undocumented)
+    private _updateRawData(newData): void
+    private _getFormatParam(param)
+    private _setFormatParam(param, newVal): void
+    private readonly _isDirty: boolean
+    private _getUpdateRequest(): object
   }
 }
