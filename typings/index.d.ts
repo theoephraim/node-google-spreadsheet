@@ -453,4 +453,15 @@
     private readonly _isDirty: boolean
     private _getUpdateRequest(): object
   }
+
+  export class GoogleSpreadsheetRow implements Record<string, any> {
+    readonly rowIndex: number
+    readonly a1Range: string
+
+    constructor(parentSheet: GoogleSpreadsheetWorksheet, rowNumber: number, data)
+
+    save(): Promise<void>
+    delete(): Promise<any>
+    del(): Promise<any>
+  }
 }
