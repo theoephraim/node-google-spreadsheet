@@ -115,6 +115,11 @@ describe('Cell-based operations', () => {
       expect(c3.value).toBe(c1.value + c2.value);
     });
 
+    it('can save a single cell using cell.save()', async () => {
+      c1.value = 9.8765;
+      await c1.save();
+    });
+
     it('can set cell value formatting', async () => {
       c3.numberFormat = { type: 'NUMBER', pattern: '#.00' };
       await sheet.saveUpdatedCells();
