@@ -9,9 +9,6 @@
       "es2015",
       "dom"
     ],
-    "types": [
-      "node"
-    ],
     "allowJs": true,
     "removeComments": true,
     "moduleResolution": "node",
