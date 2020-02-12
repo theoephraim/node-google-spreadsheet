@@ -188,7 +188,7 @@ interface WorksheetDimensionProperties {
   /**
    * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata
    */
-  developerMetadata: [DeveloperMetadata];
+  developerMetadata: DeveloperMetadata[];
 }
 
 interface WorksheetDimensionBounds {
@@ -255,7 +255,7 @@ interface ThemeColorPair {
 
 interface SpreadsheetTheme {
   primaryFontFamily: string;
-  themeColors: [ThemeColorPair];
+  themeColors: ThemeColorPair[];
 }
 
 /**
@@ -593,7 +593,7 @@ interface GoogleSpreadsheetWorksheet extends WorksheetBasicProperties {
    *
    * @param options
    */
-  getRows(options: PaginationOptions): [GoogleSpreadsheetRow];
+  getRows(options?: PaginationOptions): Promise<GoogleSpreadsheetRow[]>;
   /**
    * @description
    * eset local cache of properties and cell data
@@ -613,7 +613,7 @@ interface GoogleSpreadsheetWorksheet extends WorksheetBasicProperties {
    * @param filters single or array of filters
    */
   loadCells(
-    filters: string | WorksheetGridRange | [string | WorksheetGridRange],
+    filters: string | WorksheetGridRange | string[] | WorksheetGridRange[],
   ): Promise<void>;
   /**
    * @description
@@ -626,14 +626,14 @@ interface GoogleSpreadsheetWorksheet extends WorksheetBasicProperties {
    *
    * @param cells array of cells to save
    */
-  saveCells(cells: [GoogleSpreadsheetCell]): Promise<void>;
+  saveCells(cells: GoogleSpreadsheetCell[]): Promise<void>;
   /**
    * @description
    * set the header (first) row in the worksheet
    *
    * @param headers
    */
-  setHeaderRow(headers: [string]): Promise<void>;
+  setHeaderRow(headers: string[]): Promise<void>;
   /**
    * @description
    * append a row to the end of the worksheet
@@ -769,7 +769,7 @@ interface GoogleSpreadsheet extends SpreadsheetBasicProperties {
    * array of child worksheets as displayed in the UI
    * - ordered by their tab index
    */
-  readonly sheetsByIndex: [GoogleSpreadsheetWorksheet];
+  readonly sheetsByIndex: GoogleSpreadsheetWorksheet[];
   /**
    * @description
    * count of child worksheets
