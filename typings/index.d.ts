@@ -319,7 +319,7 @@ declare module 'google-spreadsheet' {
     getRows(options?: {
       offset?: number
       limit?: number
-    }): Promise<GoogleSpreadsheetRow>
+    }): Promise<GoogleSpreadsheetRow[]>
 
     // Working With Cells
     loadCells(filters?: any): Promise<any>
