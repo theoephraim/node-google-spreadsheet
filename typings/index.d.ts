@@ -319,11 +319,11 @@ declare module 'google-spreadsheet' {
     getRows(options?: {
       offset?: number
       limit?: number
-    }): Promise<GoogleSpreadsheetRow>
+    }): Promise<GoogleSpreadsheetRow[]>
 
     // Working With Cells
     loadCells(filters?: any): Promise<any>
-    getCells(rowIndex: number, columnIndex: number): GoogleSpreadsheetCell
+    getCell(rowIndex: number, columnIndex: number): GoogleSpreadsheetCell
     getCellByA1(a1Address: string): GoogleSpreadsheetCell
     saveUpdatedCells(): Promise<void>
     saveCells(cells: GoogleSpreadsheetCell[]): Promise<void>
