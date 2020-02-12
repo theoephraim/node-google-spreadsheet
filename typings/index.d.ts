@@ -323,7 +323,7 @@ declare module 'google-spreadsheet' {
 
     // Working With Cells
     loadCells(filters?: any): Promise<any>
-    getCells(rowIndex: number, columnIndex: number): GoogleSpreadsheetCell
+    getCell(rowIndex: number, columnIndex: number): GoogleSpreadsheetCell
     getCellByA1(a1Address: string): GoogleSpreadsheetCell
     saveUpdatedCells(): Promise<void>
     saveCells(cells: GoogleSpreadsheetCell[]): Promise<void>
