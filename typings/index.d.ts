@@ -290,6 +290,7 @@ declare module 'google-spreadsheet' {
     tabColor?: Color
     rightToLeft?: boolean
   }
+  type RowValues = object | any[]
   export class GoogleSpreadsheetWorksheet implements GoogleSpreadsheetWorksheetBase {
     // Basic sheet properties
     readonly sheetId: string
@@ -315,7 +316,8 @@ declare module 'google-spreadsheet' {
     // Working With Rows
     loadHeaderRow(): Promise<void>
     setHeaderRow(headerValues: string[]): Promise<void>
-    addRow(values: object): Promise<GoogleSpreadsheetRow>
+    addRow(rowValues: RowValues): Promise<GoogleSpreadsheetRow>
+    addRows(arrayOfRowValues: RowValues[]): Promise<GoogleSpreadsheetRow[]>
     getRows(options?: {
       offset?: number
       limit?: number
