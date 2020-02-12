@@ -91,6 +91,17 @@ describe('Row-based operations', () => {
       expect(row.numbers).toEqual(newRowData.numbers);
       expect(row.letters).toEqual(newRowData.letters);
     });
+
+    it('can add multiple rows', async () => {
+      const newRows = await sheet.addRows([
+        { numbers: '7', letters: 'H' },
+        { numbers: '8', letters: 'I' },
+        ['9', 'J'],
+      ]);
+      expect(newRows[0].numbers).toEqual('7');
+      expect(newRows[1].numbers).toEqual('8');
+      expect(newRows[2].numbers).toEqual('9');
+    });
   });
 
   describe('deleting rows', () => {

@@ -77,15 +77,30 @@ Param|Type|Required|Description
 
 - :sparkles: **Side effects** - first row of the sheet is filled, `sheet.headerValues` is populated
 
-#### `addRow(values)` (async) :id=fn-addRow
+#### `addRow(rowValues)` (async) :id=fn-addRow
 > Append a new row to the sheet
 
 Param|Type|Required|Description
 ---|---|---|---
-`values`|Object|✅|Object of cell values, keys are based on the header row
+`rowValues`<br>_option 1_|Object|✅|Object of cell values, keys are based on the header row<br>_ex: `{ col1: 'val1', col2: 'val2', ... }`_
+`rowValues`<br>_option 2_|Array|✅|Array of cell values in order from first column onwards<br>_ex: `['val1', 'val2', ...]`_
+
+
 
 - :leftwards_arrow_with_hook: **Returns** - [GoogleSpreadsheetRow](classes/google-spreadsheet-row) (in a promise)
 - :sparkles: **Side effects** - row is added to the sheet
+
+
+#### `addRows(arrayOfRowValues)` (async) :id=fn-addRows
+> Append multiple new rows to the sheet at once
+
+Param|Type|Required|Description
+---|---|---|---
+`arrayOfRowValues`|Array|✅|Array of rows values to append to the sheet<br>_see [`sheet.addRow()`](#fn-addRow) above for more info_
+
+- :leftwards_arrow_with_hook: **Returns** - [[GoogleSpreadsheetRow](classes/google-spreadsheet-row)] (in a promise)
+- :sparkles: **Side effects** - rows are added to the sheet
+
 
 #### `getRows(options)` (async) :id=fn-getRows
 > Fetch rows from the sheet
