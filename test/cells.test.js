@@ -73,6 +73,13 @@ describe('Cell-based operations', () => {
       expect(() => { sheet.getCellByA1('A1'); }).toThrow();
     });
 
+    it('can load a cell multiple times (this was a bug)', async () => {
+      await sheet.loadCells('J10');
+      expect(sheet.getCellByA1('J10').value).toBeNull();
+      await sheet.loadCells('J10');
+      expect(sheet.getCellByA1('J10').value).toBeNull();
+    });
+
     describe('invalid filters', () => {
       _.each({
         'invalid A1 range': 'NOT-A-RANGE',
