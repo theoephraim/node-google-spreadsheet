@@ -175,7 +175,7 @@ describe('Row-based operations', () => {
             rows = await sheet.getRows();
             expect(rows[0].col1).toEqual(value);
           });
-        },
+        }
       );
     });
   });

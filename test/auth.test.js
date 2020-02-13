@@ -43,7 +43,7 @@ describe('Authentication', () => {
   describe('without setting auth', () => {
     it('loadInfo should fail on any doc', async () => {
       await expect(docs.public.loadInfo()).rejects.toThrow(
-        'initialize some kind of auth',
+        'initialize some kind of auth'
       );
     });
   });
@@ -91,10 +91,10 @@ describe('Authentication', () => {
         (badCreds, description) => {
           it(`should fail for bad creds - ${description}`, async () => {
             await expect(
-              docs.private.useServiceAccountAuth(badCreds),
+              docs.private.useServiceAccountAuth(badCreds)
             ).rejects.toThrow();
           });
-        },
+        }
       );
     });
 
