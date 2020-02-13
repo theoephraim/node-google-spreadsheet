@@ -25,6 +25,14 @@ module.exports = {
     'no-param-reassign': 0, // sometimes it's just much easier
     'lines-between-class-members': 0, // grouping related one-liners can be nice
     'no-continue': 0,
+    // override airbnb - breaks old version of node - https://github.com/eslint/eslint/issues/7749
+    'comma-dangle': ['error', {
+      arrays: 'always-multiline',
+      objects: 'always-multiline',
+      imports: 'always-multiline',
+      exports: 'always-multiline',
+      functions: 'never', // this breaks
+    }],
   },
   overrides: [
     { // extra jest related rules for tests
