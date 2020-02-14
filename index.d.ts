@@ -505,6 +505,14 @@ interface WorksheetBasicProperties {
 
   /**
    * @description
+   * first row values
+   * - used in row-based interactions
+   * - defines the dynamic properties of the Worksheet's GoogleSpreadsheetRows
+   */
+  headerValues: string[];
+
+  /**
+   * @description
    * name of the worksheet tab
    */
   title: string;
@@ -634,6 +642,12 @@ interface GoogleSpreadsheetWorksheet extends WorksheetBasicProperties {
    * @param headers
    */
   setHeaderRow(headers: string[]): Promise<void>;
+  /**
+   * @description
+   * loads the header row (first row) of the sheet
+   * - usually do not need to call this directly
+   */
+  loadHeaderRow(): Promise<void>;
   /**
    * @description
    * append a row to the end of the worksheet
