@@ -33,7 +33,9 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('throws an error if updating title directly', async () => {
-      expect(() => { doc.title = 'new title'; }).toThrow();
+      expect(() => {
+        doc.title = 'new title';
+      }).toThrow();
     });
 
     it('can update the title using updateProperties', async () => {
@@ -62,18 +64,37 @@ describe('Managing doc info and sheets', () => {
       if (sheet) await sheet.delete();
     });
 
-    it('can add a sheet', async () => {
-      const numSheets = doc.sheetCount;
-      sheet = await doc.addWorksheet({
+    // to de-duplicate the test cases for header and headerValues
+    const addSheet = (variableProperties) => {
+      const baseProperties = {
         title: newSheetTitle,
         gridProperties: {
           rowCount: 7,
           columnCount: 11,
         },
-        headers: ['col1', 'col2', 'col3', 'col4', 'col5'],
-      });
-      expect(doc.sheetCount).toBe(numSheets + 1);
+      };
 
+      const properties = { ...baseProperties, ...variableProperties };
+      return doc.addWorksheet(properties);
+    };
+
+    it('can add a sheet using properties.headers', async () => {
+      const numSheets = doc.sheetCount;
+      sheet = await addSheet({ headers: ['col1', 'col2', 'col3', 'col4', 'col5'] });
+
+      expect(doc.sheetCount).toBe(numSheets + 1);
+      expect(sheet.title).toBe(newSheetTitle);
+
+      // tests are tightly coupled
+      // delete this sheet and allow the next to survive for remaining tests
+      await sheet.delete();
+    });
+
+    it('can add a sheet using properties.headerValues', async () => {
+      const numSheets = doc.sheetCount;
+      sheet = await addSheet({ headerValues: ['col1', 'col2', 'col3', 'col4', 'col5'] });
+
+      expect(doc.sheetCount).toBe(numSheets + 1);
       expect(sheet.title).toBe(newSheetTitle);
     });
 
@@ -110,7 +131,9 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('throws an error if updating title directly', async () => {
-      expect(() => { sheet.title = 'new title'; }).toThrow();
+      expect(() => {
+        sheet.title = 'new title';
+      }).toThrow();
     });
 
     it('can update the title using updateProperties', async () => {
@@ -126,7 +149,9 @@ describe('Managing doc info and sheets', () => {
 
     it('can resize a sheet', async () => {
       // cannot update directly
-      expect(() => { sheet.rowCount = 77; }).toThrow();
+      expect(() => {
+        sheet.rowCount = 77;
+      }).toThrow();
       await sheet.resize({ rowCount: 77, columnCount: 44 });
       expect(sheet.rowCount).toBe(77);
       sheet.resetLocalCache();
