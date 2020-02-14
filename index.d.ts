@@ -638,11 +638,17 @@ interface GoogleSpreadsheetWorksheet extends WorksheetBasicProperties {
    * @description
    * append a row to the end of the worksheet
    *
-   * @param values
+   * @param values row values as either:
+   * - an object of header and value pairs (relative to the worksheet header columns)
+   * - an array of values in column order
    */
-  addRow(values: {
-    [header: string]: string | number | boolean;
-  }): Promise<void>;
+  addRow(
+    values:
+      | {
+          [header: string]: string | number | boolean;
+        }
+      | (string | number | boolean)[],
+  ): Promise<void>;
   /**
    * @description
    * set the grid properties of the worksheet
