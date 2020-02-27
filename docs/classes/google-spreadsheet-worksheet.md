@@ -66,7 +66,7 @@ The row-based interface is provided as a simplified way to deal with sheets that
 #### `loadHeaderRow()` (async) :id=fn-loadHeaderRow
 > Loads the header row (first row) of the sheet
 _usually do not need to call this directly_
-- :sparkles: **Side effects** - `sheet.headerValues` is populated
+- ✨ **Side effects** - `sheet.headerValues` is populated
 
 #### `setHeaderRow(headerValues)` (async) :id=fn-setHeaderRow
 > Set the header row (first row) of the sheet
@@ -75,7 +75,7 @@ Param|Type|Required|Description
 ---|---|---|---
 `headerValues`|[String]|✅|Array of strings to set as cell values in first row
 
-- :sparkles: **Side effects** - first row of the sheet is filled, `sheet.headerValues` is populated
+- ✨ **Side effects** - first row of the sheet is filled, `sheet.headerValues` is populated
 
 #### `addRow(rowValues)` (async) :id=fn-addRow
 > Append a new row to the sheet
@@ -87,8 +87,8 @@ Param|Type|Required|Description
 
 
 
-- :leftwards_arrow_with_hook: **Returns** - [GoogleSpreadsheetRow](classes/google-spreadsheet-row) (in a promise)
-- :sparkles: **Side effects** - row is added to the sheet
+- ↩️ **Returns** - [GoogleSpreadsheetRow](classes/google-spreadsheet-row) (in a promise)
+- ✨ **Side effects** - row is added to the sheet
 
 
 #### `addRows(arrayOfRowValues)` (async) :id=fn-addRows
@@ -98,8 +98,8 @@ Param|Type|Required|Description
 ---|---|---|---
 `arrayOfRowValues`|Array|✅|Array of rows values to append to the sheet<br>_see [`sheet.addRow()`](#fn-addRow) above for more info_
 
-- :leftwards_arrow_with_hook: **Returns** - [[GoogleSpreadsheetRow](classes/google-spreadsheet-row)] (in a promise)
-- :sparkles: **Side effects** - rows are added to the sheet
+- ↩️ **Returns** - [[GoogleSpreadsheetRow](classes/google-spreadsheet-row)] (in a promise)
+- ✨ **Side effects** - rows are added to the sheet
 
 
 #### `getRows(options)` (async) :id=fn-getRows
@@ -111,8 +111,8 @@ Param|Type|Required|Description
 `options.offset`|Number<br>_int >= 0_|-|How many rows to skip from the top
 `options.limit`|Number<br>_int > 0_|-|Max number of rows to fetch
 
-- :leftwards_arrow_with_hook: **Returns** - [[GoogleSpreadsheetRow](classes/google-spreadsheet-row)] (in a promise)
-- :sparkles: **Side effects** - row is added to the sheet
+- ↩️ **Returns** - [[GoogleSpreadsheetRow](classes/google-spreadsheet-row)] (in a promise)
+- ✨ **Side effects** - row is added to the sheet
 
 !> The older version of this module allowed you to filter and order the rows as you fetched them, but this is no longer supported by google
 
@@ -140,7 +140,7 @@ Param|Type|Required|Description
 ---|---|---|---
 `filters`|*|-|Can be a single filter or array of filters
 
-- :sparkles: **Side effects** - cells are loaded in the doc, `cellStats` is updated
+- ✨ **Side effects** - cells are loaded in the doc, `cellStats` is updated
 
 
 #### `getCell(rowIndex, columnIndex)` :id=fn-getCell
@@ -151,7 +151,7 @@ Param|Type|Required|Description
 `rowIndex`|Number<br>_int >= 0_|✅|Row of the cell
 `columnIndex`|Number<br>_int >= 0_|✅|Column of the cell to retrieve
 
-- :leftwards_arrow_with_hook: **Returns** - [GoogleSpreadsheetCell](classes/google-spreadsheet-cell)
+- ↩️ **Returns** - [GoogleSpreadsheetCell](classes/google-spreadsheet-cell)
 
 
 #### `getCellByA1(a1Address)` :id=fn-getCellByA1
@@ -161,24 +161,25 @@ Param|Type|Required|Description
 ---|---|---|---
 `a1Address`|String|✅|Address of the cell<br>_ex: "B5"_
 
-- :leftwards_arrow_with_hook: **Returns** - [GoogleSpreadsheetCell](classes/google-spreadsheet-cell)
+- ↩️ **Returns** - [GoogleSpreadsheetCell](classes/google-spreadsheet-cell)
 
 
 #### `saveUpdatedCells()` (async) :id=fn-saveUpdatedCells
-> saves all cells that have unsaved changes
+> saves all cells in the sheet that have unsaved changes
 
-- :sparkles: **Side effects** - cells are saved, data refreshed from google
+- ✨ **Side effects** - cells are saved, data refreshed from google
 
 #### `saveCells(cells)` (async) :id=fn-saveCells
-> saves all cells that have unsaved changes
+> saves specific cells
 
 Param|Type|Required|Description
 ---|---|---|---
 `cells`|[[GoogleSpreadsheetCell](classes/google-spreadsheet-cell)]|✅|Array of cells to save
 
-- :sparkles: **Side effects** - cells are saved, data refreshed from google
+- 🚨 **Warning** - At least one cell must have something to save
+- ✨ **Side effects** - cells are saved, data refreshed from google
 
-?> Easier to just use `sheet.saveUpdatedCells`
+?> Usually easier to just use `sheet.saveUpdatedCells`
 
 
 #### `resetLocalCache(dataOnly)` :id=fn-resetLocalCache
@@ -188,7 +189,7 @@ Param|Type|Required|Description
 ---|---|---|---
 `dataOnly`|Boolean|-|If true, only affects data, not properties
 
-- :sparkles: **Side effects** - cache is emptied so props and cells must be re-fetched
+- ✨ **Side effects** - cache is emptied so props and cells must be re-fetched
 
 
 
@@ -200,7 +201,7 @@ Param|Type|Required|Description
 For example: `await sheet.updateProperties({ title: 'New sheet title' });`<br>
 See [basic sheet properties](#basic-sheet-properties) above for props documentation.
 
-- :sparkles: **Side Effects -** props are updated
+- ✨ **Side Effects -** props are updated
 
 #### `resize(props)` (async) :id=fn-resize
 > Update grid properties / dimensions
@@ -208,7 +209,7 @@ See [basic sheet properties](#basic-sheet-properties) above for props documentat
 Just a shorcut for `(props) => sheet.updateProperties({ gridProperties: props })`<br>
 Example: `await sheet.resize({ rowCount: 1000, columnCount: 20 });`
 
-- :sparkles: **Side Effects -** grid properties / dimensions are updated
+- ✨ **Side Effects -** grid properties / dimensions are updated
 
 _also available as `sheet.updateGridProperties()`_
 
@@ -223,7 +224,7 @@ Param|Type|Required|Description
 `bounds.startIndex`|Number<br>_int >= 0_|-|Start row/column
 `bounds.endIndex`|Number<br>_int >= 0_|-|End row/column
 
-- :sparkles: **Side effects** - sheet is updated
+- ✨ **Side effects** - sheet is updated
 
 
 ### Other
@@ -231,12 +232,12 @@ Param|Type|Required|Description
 #### `clear()` (async) :id=fn-clear
 > Clear all data/cells in the sheet
 
-- :sparkles: **Side Effects -** clears the entire sheet, resets local cache
+- ✨ **Side Effects -** clears the entire sheet, resets local cache
 
 #### `delete()` (async) :id=fn-delete
 > Delete this sheet
 
-- :sparkles: **Side Effects -** sheet is deleted and removed from `doc.sheetsById` and `doc.sheetsByIndex`
+- ✨ **Side Effects -** sheet is deleted and removed from `doc.sheetsById` and `doc.sheetsByIndex`
 
 _also available as `sheet.del()`_
 
@@ -247,7 +248,7 @@ Param|Type|Required|Description
 ---|---|---|---
 `destinationSpreadsheetId`|String|✅|ID of another spreadsheet document
 
-- :sparkles: **Side Effects -** sheet is copied to the other doc
+- ✨ **Side Effects -** sheet is copied to the other doc
 
 ?> The authentication method being used must have access to the destination document as well
 

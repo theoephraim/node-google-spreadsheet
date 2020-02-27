@@ -96,18 +96,18 @@ Property|Type|Description
 
 **This is still only a local change which must still be saved**
 
-- :sparkles: **Side effects** - all user entered format settings are cleared (locally)
+- ✨ **Side effects** - all user entered format settings are cleared (locally)
 
 
 #### `discardUnsavedChanges()` :id=fn-discardUnsavedChanges
 > Discard all unsaved changes - includes value, notes, and formatting
 
-- :sparkles: **Side effects** - cell will no longer be considered "dirty" and unsaved changes are discarded
+- ✨ **Side effects** - cell will no longer be considered "dirty" and unsaved changes are discarded
 
 #### `save()` (async) :id=fn-save
 > Save this individual cell
 
-- :sparkles: **Side effects** - updates are saved and everything re-fetched from google
+- ✨ **Side effects** - updates are saved and everything re-fetched from google
 
 ?> Usually makes more sense to use `sheet.saveUpdatedCells()` to save many cell updates at once
 

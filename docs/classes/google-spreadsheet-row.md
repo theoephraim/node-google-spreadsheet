@@ -79,13 +79,13 @@ await row.save(); // cell will now contain the value "ASDF", not the formula
 #### `save()` (async) :id=fn-save
 > Save any updates made to row values
 
-- :sparkles: **Side effects** - updates are saved and everything re-fetched from google
+- ✨ **Side effects** - updates are saved and everything re-fetched from google
 
 
 #### `delete()` (async) :id=fn-delete
 > Delete this row
 
-- :sparkles: **Side effects** - Row is removed from the sheet
+- ✨ **Side effects** - Row is removed from the sheet
 
 _also available as `_row.del()`_
 

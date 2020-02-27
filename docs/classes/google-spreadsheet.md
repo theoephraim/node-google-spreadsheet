@@ -58,7 +58,7 @@ Param|Type|Required|Description
 `creds.client_email`|String<br>_email_|✅|The email of your service account
 `creds.private_key`|String|✅|The private key for your service account
 
-- :sparkles: **Side effects** - all requests will now authenticate using these credentials
+- ✨ **Side effects** - all requests will now authenticate using these credentials
 
 > See [Getting Started > Authentication](getting-started/authentication) for more details
 
@@ -70,7 +70,7 @@ Param|Type|Required|Description
 ---|---|---|---
 `key`|String|✅|API key for your google project
 
-- :sparkles: **Side effects** - all requests will now authenticate using this api key only
+- ✨ **Side effects** - all requests will now authenticate using this api key only
 
 > See [Getting Started > Authentication](getting-started/authentication) for more details
 
@@ -80,7 +80,7 @@ Param|Type|Required|Description
 #### `loadInfo()` (async) :id=fn-loadInfo
 > Load basic document props and child sheets
 
-- :sparkles: **Side Effects -** props are populated, sheets are populated
+- ✨ **Side Effects -** props are populated, sheets are populated
 
 #### `updateProperties(props)` (async) :id=fn-updateProperties
 > Update basic document properties
@@ -91,7 +91,7 @@ await doc.updateProperties({ title: 'New title' });
 ```
 See [basic document properties](#basic-document-properties) above for props documentation.
 
-- :sparkles: **Side Effects -** props are updated
+- ✨ **Side Effects -** props are updated
 
 
 #### `resetLocalCache()` :id=fn-resetLocalCache
@@ -99,7 +99,7 @@ See [basic document properties](#basic-document-properties) above for props docu
 
 You must call `loadInfo()` again to re-load the properties and sheets
 
-- :sparkles: **Side Effects -** basic props and sheets are gone
+- ✨ **Side Effects -** basic props and sheets are gone
 
 
 ### Managing Sheets
@@ -115,8 +115,8 @@ Param|Type|Required|Description
 `props.[more]`|...|-|_See [GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet#basic-document-properties) for more props_
 
 
-- :leftwards_arrow_with_hook: **Returns** - [GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet) (in a promise)
-- :sparkles: **Side effects** - new sheet is now added to `doc.sheetsByIndex` and `doc.sheetsById`
+- ↩️ **Returns** - [GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet) (in a promise)
+- ✨ **Side effects** - new sheet is now added to `doc.sheetsByIndex` and `doc.sheetsById`
 
 _Also available as `addWorksheet()`_
 
@@ -128,7 +128,7 @@ Param|Type|Required|Description
 ---|---|---|---
 `sheetId`|String|✅|ID of the sheet to remove
 
-- :sparkles: **Side effects** - sheet is removed from `doc.sheetsByIndex` and `doc.sheetsById`
+- ✨ **Side effects** - sheet is removed from `doc.sheetsByIndex` and `doc.sheetsById`
 
 ?> **TIP** - Usually easier to use GoogleSpreadsheetWorksheet instance method `delete()`
 
