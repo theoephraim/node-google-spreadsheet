@@ -1,10 +1,10 @@
 # google-spreadsheet
 > The most popular [Google Sheets API](https://developers.google.com/sheets/api/reference/rest) wrapper for javascript
 
-[![NPM version](https://badge.fury.io/js/google-spreadsheet.png)](http://badge.fury.io/js/google-spreadsheet)
-[![CircleCI](https://circleci.com/gh/theoephraim/node-google-spreadsheet.svg?style=svg)](https://circleci.com/gh/theoephraim/node-google-spreadsheet)
+[![NPM version](https://img.shields.io/npm/v/google-spreadsheet)](https://www.npmjs.com/package/google-spreadsheet)
+[![CircleCI](https://circleci.com/gh/theoephraim/node-google-spreadsheet.svg?style=shield)](https://circleci.com/gh/theoephraim/node-google-spreadsheet)
 [![Known Vulnerabilities](https://snyk.io/test/github/theoephraim/node-google-spreadsheet/badge.svg?targetFile=package.json)](https://snyk.io/test/github/theoephraim/node-google-spreadsheet?targetFile=package.json)
-[![NPM](https://img.shields.io/npm/dw/google-spreadsheet)](https://www.npmjs.com/package/google-spreadsheet)
+[![NPM](https://img.shields.io/npm/dw/google-spreadsheet)](https://www.npmtrends.com/google-spreadsheet)
 
 - multiple auth options - API key, service account, oauth
 - cell-based API - read, write, bulk-updates, formatting
