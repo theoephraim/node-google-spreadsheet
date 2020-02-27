@@ -11,8 +11,15 @@
 - row-based API - read, update, delete (based on the old v3 row-based calls)
 - managing worksheets - add, remove, resize, change title, formatting
 
-## Documentation
+## Documentation Site
 Full docs are available at [https://theoephraim.github.io/node-google-spreadsheet](https://theoephraim.github.io/node-google-spreadsheet)
+
+> **🚨 Google Deprecation Warning - affects older version (v2) of this module 🚨**
+>
+> Google is [phasing out their old v3 api](https://cloud.google.com/blog/products/g-suite/migrate-your-apps-use-latest-sheets-api), which the older version of this module used to use. Originally they were going to shut it down on March 3rd 2020, but have pushed that date back to September 30th.
+
+
+**Regardless, please upgrade to the latest version of this module (v3) which uses the newer sheets v4 API**
 
 -------------
 
