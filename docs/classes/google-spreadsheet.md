@@ -74,6 +74,16 @@ Param|Type|Required|Description
 
 > See [Getting Started > Authentication](getting-started/authentication) for more details
 
+#### `useRawAccessToken(token)` :id=fn-useRawAccessToken
+> Set token to use for auth - managed elsewhere
+
+Param|Type|Required|Description
+---|---|---|---
+`token`|String|✅|Oauth token to use
+
+- ✨ **Side effects** - all requests will now authenticate using this api key only
+
+!> This assumes you are creating and managing/refreshing the token yourself. Deeper oauth support coming soon...
 
 ### Basic info
 
