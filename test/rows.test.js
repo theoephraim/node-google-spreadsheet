@@ -10,6 +10,7 @@ let rows;
 let row;
 
 const HEADERS = ['numbers', 'letters', 'col1', 'col2', 'col3'];
+const INITIAL_ROW_COUNT = 15;
 const INITIAL_DATA = [
   ['0', 'A'],
   ['1', 'B'],
@@ -24,10 +25,9 @@ describe('Row-based operations', () => {
     sheet = await doc.addSheet({
       headers: HEADERS,
       title: `Spécial CнArs - ${+new Date()}`, // some urls have sheet title in them
+      gridProperties: { rowCount: INITIAL_ROW_COUNT },
     });
-    for (let i = 0; i < INITIAL_DATA.length; i++) {
-      await sheet.addRow(INITIAL_DATA[i]);
-    }
+    await sheet.addRows(INITIAL_DATA);
   });
   afterAll(async () => {
     await sheet.delete();
@@ -37,7 +37,7 @@ describe('Row-based operations', () => {
     it('can fetch multiple rows', async () => {
       rows = await sheet.getRows();
       row = rows[0];
-      expect(rows.length).toEqual(5);
+      expect(rows.length).toEqual(INITIAL_DATA.length);
     });
 
     it('a row has properties with keys from the headers', () => {
@@ -95,12 +95,40 @@ describe('Row-based operations', () => {
     it('can add multiple rows', async () => {
       const newRows = await sheet.addRows([
         { numbers: '7', letters: 'H' },
-        { numbers: '8', letters: 'I' },
-        ['9', 'J'],
+        ['8', 'I'],
       ]);
       expect(newRows[0].numbers).toEqual('7');
       expect(newRows[1].numbers).toEqual('8');
-      expect(newRows[2].numbers).toEqual('9');
+    });
+
+    it('can add rows with options.insert', async () => {
+      // we should still have some empty rows left for this test to be valid
+      rows = await sheet.getRows();
+      expect(rows.length).toBeLessThan(INITIAL_ROW_COUNT);
+      const oldRowCount = sheet.rowCount;
+      await sheet.addRows([
+        { numbers: '101', letters: 'XX' },
+      ], { insert: true });
+      expect(sheet.rowCount).toEqual(oldRowCount + 1);
+    });
+
+    it('will update sheet.rowCount if new rows are added (while not in insert mode)', async () => {
+      const oldRowCount = sheet.rowCount;
+      const dataForMoreRowsThanFit = _.times(INITIAL_ROW_COUNT, () => ({
+        numbers: '999', letters: 'ZZZ',
+      }));
+      const newRows = await sheet.addRows(dataForMoreRowsThanFit);
+      expect(sheet.rowCount).toBeGreaterThan(oldRowCount);
+      expect(newRows[newRows.length - 1].rowIndex).toEqual(sheet.rowCount - 1);
+    });
+
+    it('can add rows with options.raw', async () => {
+      const rawValue = 'true';
+      const regularRow = await sheet.addRow({ col1: rawValue });
+      const rawRow = await sheet.addRow({ col1: rawValue }, { raw: true });
+
+      expect(regularRow.col1).toEqual('TRUE'); // internally its treating as a boolean
+      expect(rawRow.col1).toEqual(rawValue);
     });
   });
 

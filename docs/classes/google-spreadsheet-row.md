@@ -76,8 +76,13 @@ await row.save(); // cell will now contain the value "ASDF", not the formula
 
 ## Methods
 
-#### `save()` (async) :id=fn-save
+#### `save(options)` (async) :id=fn-save
 > Save any updates made to row values
+
+Param|Type|Required|Description
+---|---|---|---
+`options`|Object|-|Options object
+`options.raw`|Boolean|-|Store raw values instead of converting as if typed into the sheets UI<br>_see [ValueInputOption](https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption)_
 
 - ✨ **Side effects** - updates are saved and everything re-fetched from google
 
@@ -87,5 +92,5 @@ await row.save(); // cell will now contain the value "ASDF", not the formula
 
 - ✨ **Side effects** - Row is removed from the sheet
 
-_also available as `_row.del()`_
+_also available as `row.del()`_
 

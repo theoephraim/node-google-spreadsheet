@@ -77,26 +77,30 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - first row of the sheet is filled, `sheet.headerValues` is populated
 
-#### `addRow(rowValues)` (async) :id=fn-addRow
+#### `addRow(rowValues, options)` (async) :id=fn-addRow
 > Append a new row to the sheet
 
 Param|Type|Required|Description
 ---|---|---|---
 `rowValues`<br>_option 1_|Object|✅|Object of cell values, keys are based on the header row<br>_ex: `{ col1: 'val1', col2: 'val2', ... }`_
 `rowValues`<br>_option 2_|Array|✅|Array of cell values in order from first column onwards<br>_ex: `['val1', 'val2', ...]`_
-
+`options`|Object|-|Options object
+`options.raw`|Boolean|-|Store raw values instead of converting as if typed into the sheets UI<br>_see [ValueInputOption](https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption)_
+`options.insert`|Boolean|-|Insert new rows instead of overwriting empty rows and only adding if necessary<br>_see [InsertDataOption](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/append#InsertDataOption)_
 
 
 - ↩️ **Returns** - [GoogleSpreadsheetRow](classes/google-spreadsheet-row) (in a promise)
 - ✨ **Side effects** - row is added to the sheet
 
 
-#### `addRows(arrayOfRowValues)` (async) :id=fn-addRows
+#### `addRows(arrayOfRowValues, options)` (async) :id=fn-addRows
 > Append multiple new rows to the sheet at once
 
 Param|Type|Required|Description
 ---|---|---|---
 `arrayOfRowValues`|Array|✅|Array of rows values to append to the sheet<br>_see [`sheet.addRow()`](#fn-addRow) above for more info_
+`options`|Object|-|Inserting options<br>_see [`sheet.addRow()`](#fn-addRow) above for more info_
+
 
 - ↩️ **Returns** - [[GoogleSpreadsheetRow](classes/google-spreadsheet-row)] (in a promise)
 - ✨ **Side effects** - rows are added to the sheet
