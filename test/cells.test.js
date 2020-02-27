@@ -164,6 +164,22 @@ describe('Cell-based operations', () => {
       expect(() => { c1.value = { foo: 1 }; }).toThrow();
     });
 
+    describe('calling saveCells directly', () => {
+      it('can save an array of cells', async () => {
+        _.each([c1, c2, c3], (cell) => { cell.value = 'calling saveCells'; });
+        await sheet.saveCells([c1, c2, c3]);
+      });
+
+      it('can save a mix of dirty and non-dirty', async () => {
+        c2.value = 'saveCells again';
+        await sheet.saveCells([c1, c2, c3]);
+      });
+
+      it('will throw an error if no cells are dirty', async () => {
+        await expect(sheet.saveCells([c1, c2, c3])).rejects.toThrow();
+      });
+    });
+
     describe('cell formulas', () => {
       it('can update a cell with a formula via .value', async () => {
         c1.value = '=2';
