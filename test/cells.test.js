@@ -21,7 +21,7 @@ describe('Cell-based operations', () => {
         rowCount: NUM_ROWS,
         columnCount: NUM_COLS,
       },
-      headers: ['col1', 'col2', 'col3'],
+      headerValues: ['col1', 'col2', 'col3'],
     });
   });
   afterAll(async () => {

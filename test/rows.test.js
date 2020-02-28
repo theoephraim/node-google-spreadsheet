@@ -23,8 +23,8 @@ describe('Row-based operations', () => {
   beforeAll(async () => {
     await doc.useServiceAccountAuth(creds);
     sheet = await doc.addSheet({
-      headers: HEADERS,
-      title: `Spécial CнArs - ${+new Date()}`, // some urls have sheet title in them
+      headerValues: HEADERS,
+      title: `Spécial CнArs ${+new Date()}`, // some urls have sheet title in them
       gridProperties: { rowCount: INITIAL_ROW_COUNT },
     });
     await sheet.addRows(INITIAL_DATA);
@@ -118,8 +118,11 @@ describe('Row-based operations', () => {
         numbers: '999', letters: 'ZZZ',
       }));
       const newRows = await sheet.addRows(dataForMoreRowsThanFit);
+      const updatedRowCount = sheet.rowCount;
+      await doc.loadInfo(); // actually reload to make sure the logic is correct
+      expect(sheet.rowCount).toEqual(updatedRowCount);
       expect(sheet.rowCount).toBeGreaterThan(oldRowCount);
-      expect(newRows[newRows.length - 1].rowIndex).toEqual(sheet.rowCount - 1);
+      expect(newRows[newRows.length - 1].rowNumber).toEqual(sheet.rowCount);
     });
 
     it('can add rows with options.raw', async () => {

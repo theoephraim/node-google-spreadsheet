@@ -70,7 +70,7 @@ describe('Managing doc info and sheets', () => {
           rowCount: 7,
           columnCount: 11,
         },
-        headers: ['col1', 'col2', 'col3', 'col4', 'col5'],
+        headerValues: ['col1', 'col2', 'col3', 'col4', 'col5'],
       });
       expect(doc.sheetCount).toBe(numSheets + 1);
 
@@ -174,7 +174,7 @@ describe('Managing doc info and sheets', () => {
     beforeAll(async () => {
       sheet = await doc.addSheet({
         title: `Sheet to copy ${+new Date()}`,
-        headers: ['copy', 'this', 'sheet'],
+        headerValues: ['copy', 'this', 'sheet'],
       });
     });
     afterAll(async () => {

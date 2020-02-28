@@ -61,7 +61,7 @@ More info:
 ### Working with rows
 ```javascript
 // create a sheet and set the header row
-const sheet = await doc.addSheet({ headers: ['name', 'email'] });
+const sheet = await doc.addSheet({ headerValues: ['name', 'email'] });
 
 // append rows
 const larryRow = await sheet.addRow({ name: 'Larry Page', email: 'larry@google.com' });

@@ -43,7 +43,7 @@ Google uses both row/column indices and A1-style notation, available as **read-o
 
 Property|Type|Description
 ---|---|---
-`rowIndex`|Number<br>_int >= 0_|Row number in the sheet of this row
+`rowNumber`|Number<br>_int >= 1_|A1 row number in the sheet of this row
 `a1Range`|String|Full A1 range of this row, including the sheet name<br>_Ex: "sheet1!A5:D5"_
 
 ### Row Values

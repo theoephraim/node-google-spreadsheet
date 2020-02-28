@@ -148,7 +148,7 @@ Param|Type|Required|Description
 
 
 #### `getCell(rowIndex, columnIndex)` :id=fn-getCell
-> retrieve a cell from the cache based on A1 address
+> retrieve a cell from the cache based on zero-indexed row/column
 
 Param|Type|Required|Description
 ---|---|---|---
