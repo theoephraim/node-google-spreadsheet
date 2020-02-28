@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const delay = require('delay');
 
 const { GoogleSpreadsheetFormulaError } = require('../index.js');
 
@@ -27,6 +28,8 @@ describe('Cell-based operations', () => {
   afterAll(async () => {
     await sheet.delete();
   });
+  // hitting rate limits when running tests on ci - so we add a short delay
+  if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
 
   describe('loading cells', () => {
     afterEach(() => {

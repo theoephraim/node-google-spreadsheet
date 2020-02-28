@@ -1,3 +1,5 @@
+const delay = require('delay');
+
 const { GoogleSpreadsheetWorksheet } = require('../index.js');
 
 const docs = require('./load-test-docs')();
@@ -9,6 +11,9 @@ describe('Managing doc info and sheets', () => {
   beforeAll(async () => {
     await doc.useServiceAccountAuth(creds);
   });
+
+  // hitting rate limits when running tests on ci - so we add a short delay
+  if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
 
   describe('accessing and updating document properties', () => {
     it('accessing properties throws an error if info not fetched yet', async () => {

@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const delay = require('delay');
 
 const docs = require('./load-test-docs')();
 const creds = require('./service-account-creds.json');
@@ -40,6 +41,9 @@ function checkDocAccess(docType, spec) {
 }
 
 describe('Authentication', () => {
+  // hitting rate limits when running tests on ci - so we add a short delay
+  if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
+
   describe('without setting auth', () => {
     it('loadInfo should fail on any doc', async () => {
       await expect(docs.public.loadInfo()).rejects.toThrow(

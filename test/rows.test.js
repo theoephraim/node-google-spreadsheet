@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const delay = require('delay');
 
 const docs = require('./load-test-docs')();
 const creds = require('./service-account-creds.json');
@@ -32,6 +33,8 @@ describe('Row-based operations', () => {
   afterAll(async () => {
     await sheet.delete();
   });
+  // hitting rate limits when running tests on ci - so we add a short delay
+  if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
 
   describe('fetching rows', () => {
     it('can fetch multiple rows', async () => {
