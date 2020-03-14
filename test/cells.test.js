@@ -52,6 +52,15 @@ describe('Cell-based operations', () => {
         loaded: 9,
       });
     });
+
+    it('can load multiple ranges', async () => {
+      await sheet.loadCells(['A1:A3', 'C1:C3']);
+      expect(sheet.cellStats).toMatchObject({
+        nonEmpty: 2,
+        loaded: 6,
+      });
+    });
+
     it('can fetch a range that overlaps the sheet but goes out of bounds', async () => {
       await sheet.loadCells('A10:B11');
       expect(sheet.cellStats).toMatchObject({ loaded: 2 });
