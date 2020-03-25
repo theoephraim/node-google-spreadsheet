@@ -116,7 +116,6 @@ Param|Type|Required|Description
 `options.limit`|Number<br>_int > 0_|-|Max number of rows to fetch
 
 - ↩️ **Returns** - [[GoogleSpreadsheetRow](classes/google-spreadsheet-row)] (in a promise)
-- ✨ **Side effects** - row is added to the sheet
 
 !> The older version of this module allowed you to filter and order the rows as you fetched them, but this is no longer supported by google
 
