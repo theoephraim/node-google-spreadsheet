@@ -126,9 +126,9 @@ Param|Type|Required|Description
 #### `loadCells(filters)` (async) :id=fn-loadCells
 > Fetch cells from google
 
-You can filter the cells you want to fetch in several ways.
+You can filter the cells you want to fetch in several ways. See [Data Filters](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter) for more info. Strings are treated as A1 ranges, objects are detected to be a [GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange) with sheetId not required.
 
-See [Data Filters](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter) for more info. Strings are treated as A1 ranges, objects are detected to be a [GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange) with sheetId not required.
+**NOTE - if using an API key (read-only access), only A1 ranges are supported**
 
 ```javascript
 await sheet.loadCells(); // no filter - will load ALL cells in the sheet

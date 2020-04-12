@@ -1,6 +1,8 @@
 const _ = require('lodash');
 const delay = require('delay');
 
+const GoogleSpreadsheetCell = require('../lib/GoogleSpreadsheetCell');
+
 const docs = require('./load-test-docs')();
 const creds = require('./service-account-creds.json');
 const apiKey = require('./api-key');
@@ -16,9 +18,13 @@ function checkDocAccess(docType, spec) {
         expect(doc.title).toBeTruthy();
         sheet = doc.sheetsByIndex[0];
       });
-      it('reading data should succeed', async () => {
+      it('reading row data should succeed', async () => {
         const rows = await sheet.getRows();
         expect(rows).toBeInstanceOf(Array);
+      });
+      it('reading cell data should succeed', async () => {
+        await sheet.loadCells('A1');
+        expect(sheet.getCell(0, 0)).toBeInstanceOf(GoogleSpreadsheetCell);
       });
     } else {
       it('reading info should fail', async () => {
