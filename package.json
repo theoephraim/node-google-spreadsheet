@@ -28,7 +28,8 @@
   "dependencies": {
     "axios": "^0.19.1",
     "google-auth-library": "^5.9.1",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.15",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "delay": "^4.3.0",
@@ -46,7 +47,9 @@
     "test": "jest --runInBand",
     "lint": "eslint ./",
     "lint:fix": "eslint ./ --fix",
-    "docs:preview": "docsify serve docs"
+    "docs:preview": "docsify serve docs",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "husky": {
     "hooks": {
@@ -62,5 +65,6 @@
       "/examples/",
       "/test/"
     ]
-  }
+  },
+  "snyk": true
 }
