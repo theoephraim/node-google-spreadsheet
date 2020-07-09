@@ -28,7 +28,7 @@
   "dependencies": {
     "axios": "^0.19.1",
     "google-auth-library": "^5.9.1",
-    "lodash": "^4.17.15"
+    "lodash": "^4.17.16"
   },
   "devDependencies": {
     "delay": "^4.3.0",
