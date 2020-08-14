@@ -258,28 +258,12 @@ describe('Cell-based operations', () => {
         await sheet.sortRange([[0, 'desc']]);
         await sheet.loadCells('A1:C4');
         expect(sheet.getCell(1, 0).value).toBe(3);
-
-        await sheet.sortRange([[1, 'desc']]);
-        await sheet.loadCells('A1:C4');
-        expect(sheet.getCell(1, 0).value).toBe(2);
-
-        await sheet.sortRange([[2, 'asc']]);
-        await sheet.loadCells('A1:C4');
-        expect(sheet.getCell(1, 0).value).toBe(1);
       });
 
       it('sorts by header name', async () => {
-        await sheet.sortRange([['a', 'DESCENDING']]);
-        await sheet.loadCells('A1:C4');
-        expect(sheet.getCell(1, 0).value).toBe(3);
-
         await sheet.sortRange([['b', 'DESCENDING']]);
         await sheet.loadCells('A1:C4');
         expect(sheet.getCell(1, 0).value).toBe(2);
-
-        await sheet.sortRange([['c', 'ASCENDING']]);
-        await sheet.loadCells('A1:C4');
-        expect(sheet.getCell(1, 0).value).toBe(1);
       });
     });
   });
