@@ -37,6 +37,12 @@ describe('Managing doc info and sheets', () => {
       expect(sheet.columnCount > 0).toBeTruthy();
     });
 
+    it('can find a sheet by title', async () => {
+      expect(doc.sheetsByIndex.length > 0).toBeTruthy();
+      const sheet = doc.sheetsByIndex[0];
+      expect(doc.sheetsByTitle[sheet.title]).toEqual(sheet);
+    });
+
     it('throws an error if updating title directly', async () => {
       expect(() => { doc.title = 'new title'; }).toThrow();
     });
