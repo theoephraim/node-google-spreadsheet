@@ -26,9 +26,9 @@
     "node": ">=0.8.0"
   },
   "dependencies": {
-    "axios": "^0.19.1",
-    "google-auth-library": "^5.9.1",
-    "lodash": "^4.17.15"
+    "axios": "^0.19.2",
+    "google-auth-library": "^6.0.6",
+    "lodash": "^4.17.20"
   },
   "devDependencies": {
     "delay": "^4.3.0",
