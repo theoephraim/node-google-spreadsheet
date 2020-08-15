@@ -36,6 +36,10 @@ await doc.useServiceAccountAuth({
 });
 // OR load directly from json file if not in secure environment
 await doc.useServiceAccountAuth(require('./creds-from-google.json'));
+// OR supply email of any user in the domain to impersonate the service account.
+// For the impersonation to work, domain-wide authority should be delegated to the service account.
+// See https://developers.google.com/identity/protocols/oauth2/service-account#delegatingauthority
+await doc.useServiceAccountAuth(require('./creds-from-google.json'), '<some-user@my-domain.com>');
 // OR use API key -- only for read-only access to public sheets
 doc.useApiKey('YOUR-API-KEY');
 
