@@ -40,6 +40,7 @@ The child worksheets (each an instance of [`GoogleSpreadsheetWorksheet`](classes
 Property|Type|Description
 ---|---|---
 `sheetsById`|Object|Child worksheets, keyed by their `sheetId`
+`sheetsByTitle`|Object|Child worksheets keyed by their `title` - beware of title conflicts
 `sheetsByIndex`|[[GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet)]|Array of sheets, ordered by their index<br>_this is the order they appear in the Google sheets UI_
 `sheetCount`|Number|Count of child worksheets<br>_same as `doc.sheetsByIndex.length`_
 
@@ -126,7 +127,7 @@ Param|Type|Required|Description
 
 
 - ↩️ **Returns** - [GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet) (in a promise)
-- ✨ **Side effects** - new sheet is now added to `doc.sheetsByIndex` and `doc.sheetsById`
+- ✨ **Side effects** - new sheet is now avilable via sheet getters (`doc.sheetsByIndex`, `doc.sheetsById`, `doc.sheetsByTitle`)
 
 _Also available as `addWorksheet()`_
 
@@ -138,7 +139,7 @@ Param|Type|Required|Description
 ---|---|---|---
 `sheetId`|String|✅|ID of the sheet to remove
 
-- ✨ **Side effects** - sheet is removed from `doc.sheetsByIndex` and `doc.sheetsById`
+- ✨ **Side effects** - sheet is removed and no longer avaialable via sheet getters (`doc.sheetsByIndex`, `doc.sheetsById`, `doc.sheetsByTitle`)
 
 ?> **TIP** - Usually easier to use GoogleSpreadsheetWorksheet instance method `delete()`
 

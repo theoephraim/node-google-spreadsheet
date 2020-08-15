@@ -1,4 +1,5 @@
 const delay = require('delay');
+const _ = require('lodash');
 
 const { GoogleSpreadsheetWorksheet } = require('../index.js');
 
@@ -38,7 +39,7 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('can find a sheet by title', async () => {
-      expect(doc.sheetsByIndex.length > 0).toBeTruthy();
+      expect(_.values(doc.sheetsByIndex).length > 0).toBeTruthy();
       const sheet = doc.sheetsByIndex[0];
       expect(doc.sheetsByTitle[sheet.title]).toEqual(sheet);
     });
