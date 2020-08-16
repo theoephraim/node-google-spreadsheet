@@ -50,7 +50,7 @@ Property|Type|Description
 
 ### Authentication
 
-#### `useServiceAccountAuth(creds)` (async) :id=fn-useServiceAccountAuth
+#### `useServiceAccountAuth(creds, impersonateAs)` (async) :id=fn-useServiceAccountAuth
 > Initialize JWT-style auth for [google service account](https://cloud.google.com/iam/docs/service-accounts)
 
 Param|Type|Required|Description
@@ -58,6 +58,8 @@ Param|Type|Required|Description
 `creds`|Object|✅|Object containing credendtials from google for your service account<br>_usually just `require` the json file google gives you_
 `creds.client_email`|String<br>_email_|✅|The email of your service account
 `creds.private_key`|String|✅|The private key for your service account
+`impersonateAs`|String<br>_email_|-|Email of user to impersonate instead of authing as service account (only possible if service account has domain-wide delegation enabled)
+
 
 - ✨ **Side effects** - all requests will now authenticate using these credentials
 

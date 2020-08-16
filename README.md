@@ -11,7 +11,7 @@
 - row-based API - read, update, delete (based on the old v3 row-based calls)
 - managing worksheets - add, remove, resize, change title, formatting
 
-## Documentation Site
+## Documentation Site {docsify-ignore}
 Full docs are available at [https://theoephraim.github.io/node-google-spreadsheet](https://theoephraim.github.io/node-google-spreadsheet)
 
 > **🚨 Google Deprecation Warning - affects older version (v2) of this module 🚨**
@@ -42,6 +42,8 @@ await doc.useServiceAccountAuth({
 });
 // OR load directly from json file if not in secure environment
 await doc.useServiceAccountAuth(require('./creds-from-google.json'));
+// OR use service account to impersonate a user (see https://developers.google.com/identity/protocols/oauth2/service-account#delegatingauthority)
+await doc.useServiceAccountAuth(require('./creds-from-google.json'), 'some-user@my-domain.com');
 // OR use API key -- only for read-only access to public sheets
 doc.useApiKey('YOUR-API-KEY');
 

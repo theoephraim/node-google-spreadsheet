@@ -25,7 +25,7 @@ This is a 2-legged oauth method and designed to be "an account that belongs to y
 Use this for an app that needs to access a set of documents that you have full access to, or can at least be shared with your service account.
 ([read more](https://developers.google.com/identity/protocols/OAuth2ServiceAccount))
 
-You may also grant your service account "domain-wide delegation" which enables it to impersonate any user within your org. This can be helpful if you need to connect on behalf of users only within your organization. (support + example coming soon)
+You may also grant your service account ["domain-wide delegation"](https://developers.google.com/identity/protocols/oauth2/service-account#delegatingauthority) which enables it to impersonate any user within your org. This can be helpful if you need to connect on behalf of users only within your organization.
 
 __Setup Instructions__
 
@@ -57,6 +57,11 @@ await doc.useServiceAccountAuth({
   client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
   private_key: process.env.GOOGLE_PRIVATE_KEY,
 });
+
+// example using impersonation - NOTE: your service account must have "domain-wide delegation" enabled
+// see https://developers.google.com/identity/protocols/oauth2/service-account#delegatingauthority
+await doc.useServiceAccountAuth(creds, 'user.to.impersonate@mycompany.com');
+
 ```
 
 **SPECIAL NOTE FOR HEROKU USERS**
