@@ -110,7 +110,7 @@ await sheet.saveUpdatedCells(); // save all updates in one call
 ```
 More info:
 - [GoogleSpreadsheetWorksheet > Working With Cells](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet#working-with-cells)
-- [GoogleSpreadsheetCell](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-row)
+- [GoogleSpreadsheetCell](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-cell)
 
 
 
