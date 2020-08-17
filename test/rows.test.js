@@ -10,7 +10,8 @@ let sheet;
 let rows;
 let row;
 
-const HEADERS = ['numbers', 'letters', 'col1', 'col2', 'col3'];
+// having some issues caused by blank headers, so we add one here
+const HEADERS = ['numbers', 'letters', '', 'col1', 'col2', 'col3'];
 const INITIAL_ROW_COUNT = 15;
 const INITIAL_DATA = [
   ['0', 'A'],
