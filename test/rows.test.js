@@ -189,7 +189,7 @@ describe('Row-based operations', () => {
     it('can write a formula', async () => {
       row.col1 = 1;
       row.col2 = 2;
-      row.col3 = '=C2+D2'; // col1 is column C
+      row.col3 = '=D2+E2'; // col1 is column C
       await row.save();
       expect(row.col1).toEqual('1'); // it converts to strings
       expect(row.col2).toEqual('2');
