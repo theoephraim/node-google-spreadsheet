@@ -11,8 +11,8 @@
 - row-based API - read, update, delete (based on the old v3 row-based calls)
 - managing worksheets - add, remove, resize, change title, formatting
 
-## Documentation Site {docsify-ignore}
-Full docs are available at [https://theoephraim.github.io/node-google-spreadsheet](https://theoephraim.github.io/node-google-spreadsheet)
+**Docs site -**
+Full docs available at [https://theoephraim.github.io/node-google-spreadsheet](https://theoephraim.github.io/node-google-spreadsheet)
 
 > **🚨 Google Deprecation Warning - affects older version (v2) of this module 🚨**
 >
