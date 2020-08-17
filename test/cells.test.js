@@ -237,4 +237,9 @@ describe('Cell-based operations', () => {
       });
     });
   });
+
+  describe('cell formatting', () => {
+    // TODO: add tests!
+    // - set the background color twice, conflicts b/w backgroundColor and backgroundColorStyle
+  });
 });
