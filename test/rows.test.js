@@ -215,6 +215,80 @@ describe('Row-based operations', () => {
     });
   });
 
+  describe('merge and unmerge operations', () => {
+    beforeAll(async () => {
+      await sheet.loadCells('A1:H2');
+    });
+
+    const range = {
+      startColumnIndex: 0,
+      endColumnIndex: 2,
+    };
+
+    it('merges all cells', async () => {
+      await sheet.mergeCells({
+        startRowIndex: 2,
+        endRowIndex: 4,
+        ...range,
+      });
+      const mergedRows = await sheet.getRows();
+      expect(mergedRows[1].numbers).toBe('2');
+      expect(mergedRows[1].letters).toBe(undefined);
+      expect(mergedRows[2].numbers).toBe(undefined);
+      expect(mergedRows[2].letters).toBe(undefined);
+    });
+
+    it('merges all cells in column direction', async () => {
+      await sheet.mergeCells({
+        startRowIndex: 4,
+        endRowIndex: 6,
+        ...range,
+      }, 'MERGE_COLUMNS');
+      const mergedRows = await sheet.getRows();
+      expect(mergedRows[3].numbers).toBe('4');
+      expect(mergedRows[3].letters).toBe('E');
+      expect(mergedRows[4].numbers).toBe(undefined);
+      expect(mergedRows[4].letters).toBe(undefined);
+    });
+
+    it('merges all cells in row direction', async () => {
+      await sheet.mergeCells({
+        startRowIndex: 6,
+        endRowIndex: 8,
+        ...range,
+      }, 'MERGE_ROWS');
+      const mergedRows = await sheet.getRows();
+      expect(mergedRows[5].numbers).toBe('6');
+      expect(mergedRows[5].letters).toBe(undefined);
+      expect(mergedRows[6].numbers).toBe('7');
+      expect(mergedRows[6].letters).toBe(undefined);
+    });
+
+    it('unmerges cells', async () => {
+      await sheet.mergeCells({
+        startRowIndex: 8,
+        endRowIndex: 9,
+        ...range,
+      });
+      const mergedRows = await sheet.getRows();
+      expect(mergedRows[7].numbers).toBe('8');
+      expect(mergedRows[7].letters).toBe(undefined);
+      mergedRows[7].letters = 'Z';
+      await mergedRows[7].save();
+      expect(mergedRows[7].numbers).toBe('8');
+      expect(mergedRows[7].letters).toBe(undefined);
+      await sheet.unmergeCells({
+        startRowIndex: 8,
+        endRowIndex: 9,
+        ...range,
+      });
+      mergedRows[7].letters = 'Z';
+      await mergedRows[7].save();
+      expect(mergedRows[7].numbers).toBe('8');
+      expect(mergedRows[7].letters).toBe('Z');
+    });
+  });
+
   describe('header validation and cleanup', () => {
     beforeAll(async () => {
       sheet.loadCells('A1:E1');
