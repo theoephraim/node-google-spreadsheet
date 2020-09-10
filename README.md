@@ -51,7 +51,7 @@ await doc.loadInfo(); // loads document properties and worksheets
 console.log(doc.title);
 await doc.updateProperties({ title: 'renamed doc' });
 
-const sheet = doc.sheetsByIndex[0]; // or use doc.sheetsById[id]
+const sheet = doc.sheetsByIndex[0]; // or use doc.sheetsById[id] or doc.sheetsByTitle[title]
 console.log(sheet.title);
 console.log(sheet.rowCount);
 
