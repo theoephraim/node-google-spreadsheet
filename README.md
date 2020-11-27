@@ -16,17 +16,26 @@ Full docs available at [https://theoephraim.github.io/node-google-spreadsheet](h
 
 > **🚨 Google Deprecation Warning - affects older version (v2) of this module 🚨**
 >
-> Google is [phasing out their old v3 api](https://cloud.google.com/blog/products/g-suite/migrate-your-apps-use-latest-sheets-api), which the older version of this module used to use. Originally they were going to shut it down on March 3rd 2020, but have pushed that date back to September 30th.
+> Google is [phasing out their old v3 api](https://cloud.google.com/blog/products/g-suite/migrate-your-apps-use-latest-sheets-api), which the older version of this module used to use. Originally they were going to shut it down on March 3rd 2020, but have pushed that date back to January 2021.
 
 
 **Regardless, please upgrade to the latest version of this module (v3) which uses the newer sheets v4 API**
 
 -------------
 
-> 🌈 **Installation** - `npm i google-spreadsheet --save`
+> 🌈 **Installation** - `npm i google-spreadsheet --save` or `yarn add google-spreadsheet`
 
 ## Examples
 _the following examples are meant to give you an idea of just some of the things you can do_
+
+!> NOTE - To keep the examples more concise, I'm calling await [at the top level](https://v8.dev/features/top-level-await) which is not allowed by default in most versions of node. If you need to call await in a script at the root level, you must instead wrap it in an async function like so:
+
+```javascript
+(async function() {
+  await someAsyncFunction();
+}());
+```
+
 
 ### The Basics
 ```javascript

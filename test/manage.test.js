@@ -1,7 +1,7 @@
 const delay = require('delay');
 const _ = require('lodash');
 
-const { GoogleSpreadsheetWorksheet } = require('../index.js');
+const { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } = require('../index.js');
 
 const docs = require('./load-test-docs')();
 const creds = require('./service-account-creds.json');
@@ -190,7 +190,7 @@ describe('Managing doc info and sheets', () => {
       });
     });
     afterAll(async () => {
-      sheet.delete();
+      await sheet.delete();
     });
 
     it('should fail without proper permissions', async () => {
@@ -210,6 +210,32 @@ describe('Managing doc info and sheets', () => {
       await copiedSheet.loadHeaderRow();
       expect(copiedSheet.headerValues).toEqual(sheet.headerValues);
       await copiedSheet.delete();
+    });
+  });
+
+  describe('creating a new document', () => {
+    let newDoc;
+
+    afterAll(async () => {
+      await newDoc.delete();
+    });
+
+    it('should fail if GoogleSpreadsheet was initialized with an ID', async () => {
+      newDoc = new GoogleSpreadsheet('someid');
+      await expect(newDoc.createNewSpreadsheetDocument()).rejects.toThrow();
+    });
+    it('should fail without auth', async () => {
+      newDoc = new GoogleSpreadsheet();
+      await expect(newDoc.createNewSpreadsheetDocument()).rejects.toThrow();
+    });
+    it('should create a new sheet', async () => {
+      newDoc = new GoogleSpreadsheet();
+      newDoc.useServiceAccountAuth(creds);
+      const newTitle = `New doc ${+new Date()}`;
+      await newDoc.createNewSpreadsheetDocument({ title: newTitle });
+      expect(newDoc.title).toEqual(newTitle);
+      expect(newDoc.sheetsByIndex.length > 0).toBeTruthy();
+      expect(newDoc.sheetsByIndex[0]).toBeInstanceOf(GoogleSpreadsheetWorksheet);
     });
   });
 });

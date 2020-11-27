@@ -14,6 +14,34 @@ Param|Type|Description
 ---|---|---
 `spreadsheetId`|String|Document ID from the URL of the spreadsheet
 
+
+### Creating a new document
+Normally you will be working with an existing spreasheet document. However if you need to create a new one, you can accomplish this by initializing the GoogleSpreadsheet object without an id, initializing your preferred auth method, and then calling the following method.
+
+As this will create the document owned by the auth method you are using (which is often a service account), it may not be accessible to your google account. Therefore if it recommended to create documents ahead of time if possible rather than using this method.
+
+#### `createNewSpreadsheetDocument(properties)` :id=fn-createNewSpreadsheetDocument
+> Create a new google spreadsheet document
+
+!> You must initialize the GoogleSpreadsheet without an id in order to call this method
+
+Param|Type|Required|Description
+---|---|---|---
+`properties`|Object|-|Properties to use when creating the new doc
+
+See [basic document properties](#basic-document-properties) above for props documentation.
+
+- 🚨 **Warning** - The document will be owned by the authenticated user, which is a service account, may not be accessible to you personally.
+- ✨ **Side effects** - all info (including `spreadsheetId`) and sheets loaded as if you called [`loadInfo()`](#fn-loadInfo)
+
+```javascript
+const doc = new GoogleSpreadsheet();
+await doc.useServiceAccountAuth(creds);
+await doc.createNewSpreadsheetDocument({ title: 'This is a new doc' });
+console.log(doc.spreadsheetId);
+const sheet1 = doc.sheetsByIndex[0];
+```
+
 ## Properties
 
 ### Basic Document Properties
