@@ -215,6 +215,9 @@ describe('Row-based operations', () => {
     });
   });
 
+  // TODO: Move to cells.test.js because mergeCells and unmergeCells are really cell operations
+  // but they were implemented using the existing data we have here in the rows tests
+  // so we'll leave them here for now
   describe('merge and unmerge operations', () => {
     beforeAll(async () => {
       await sheet.loadCells('A1:H2');
