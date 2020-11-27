@@ -194,7 +194,22 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - cache is emptied so props and cells must be re-fetched
 
+#### `mergeCells(range, mergeType)` (async) :id=fn-mergeCells
+> merge cells together
 
+Param|Type|Required|Description
+---|---|---|---
+`range`|[[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)]|✅|Range of cells to merge, sheetId not required!
+`mergeType`|String (enum)<br>[MergeType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#MergeType|-|defaults to MERGE_ALL
+
+- 🚨 **Warning** - Reading values from merged cells other than the top-left one will show a null value
+
+#### `unmergeCells(range)` (async) :id=fn-unmergeCells
+> split merged cells
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|[[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)]|✅|Range of cells to unmerge, sheetId not required!
 
 ### Updating Sheet Properties
 
