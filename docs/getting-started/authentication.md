@@ -101,6 +101,7 @@ doc.useApiKey(process.env.GOOGLE_API_KEY);
 Use [Google's OAuth2Client](https://github.com/googleapis/google-auth-library-nodejs#oauth2) to authenticate. 
 
 ```javascript
+// clientId and clientSecret are required to refresh the access token automatically
 const = oAuth2Client = new OAuth2Client({
   clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
   clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET
@@ -112,7 +113,6 @@ const = oAuth2Client = new OAuth2Client({
 oAuth2Client.credentials.access_token = accessToken;
 oAuth2Client.credentials.refresh_token = refreshToken;
 oAuth2Client.credentials.expiry_date = expiryDate; // Unix epoch milliseconds
-
 
 // Listen in whenever a new access token is obtained. You might want to store them in your database.
 // Mind that the refresh_token never changes (unless it's revoked, in which case your end-user will
