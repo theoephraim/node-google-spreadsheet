@@ -53,6 +53,8 @@ await doc.useServiceAccountAuth({
 await doc.useServiceAccountAuth(require('./creds-from-google.json'));
 // OR use service account to impersonate a user (see https://developers.google.com/identity/protocols/oauth2/service-account#delegatingauthority)
 await doc.useServiceAccountAuth(require('./creds-from-google.json'), 'some-user@my-domain.com');
+// OR use a pre-configured Google OAuth2Client (check the Authentication docs for more info)
+doc.useOAuth2Client(oAuth2Client);
 // OR use API key -- only for read-only access to public sheets
 doc.useApiKey('YOUR-API-KEY');
 
