@@ -6,7 +6,7 @@
 [![Known Vulnerabilities](https://snyk.io/test/github/theoephraim/node-google-spreadsheet/badge.svg?targetFile=package.json)](https://snyk.io/test/github/theoephraim/node-google-spreadsheet?targetFile=package.json)
 [![NPM](https://img.shields.io/npm/dw/google-spreadsheet)](https://www.npmtrends.com/google-spreadsheet)
 
-- multiple auth options - API key, service account, oauth
+- multiple auth options - service account (w/ optional impersonation), OAuth 2.0, API key (read-only)
 - cell-based API - read, write, bulk-updates, formatting
 - row-based API - read, update, delete (based on the old v3 row-based calls)
 - managing worksheets - add, remove, resize, change title, formatting
@@ -16,7 +16,7 @@ Full docs available at [https://theoephraim.github.io/node-google-spreadsheet](h
 
 > **🚨 Google Deprecation Warning - affects older version (v2) of this module 🚨**
 >
-> Google is [phasing out their old v3 api](https://cloud.google.com/blog/products/g-suite/migrate-your-apps-use-latest-sheets-api), which the older version of this module used to use. Originally they were going to shut it down on March 3rd 2020, but have pushed that date back to January 2021.
+> Google is [phasing out their old v3 api](https://cloud.google.com/blog/products/g-suite/migrate-your-apps-use-latest-sheets-api), which the older version of this module used. Originally they were going to shut it down on March 3rd 2020, but have pushed that date back to June 2021.
 
 
 **Regardless, please upgrade to the latest version of this module (v3) which uses the newer sheets v4 API**
@@ -28,7 +28,7 @@ Full docs available at [https://theoephraim.github.io/node-google-spreadsheet](h
 ## Examples
 _the following examples are meant to give you an idea of just some of the things you can do_
 
-!> NOTE - To keep the examples more concise, I'm calling await [at the top level](https://v8.dev/features/top-level-await) which is not allowed by default in most versions of node. If you need to call await in a script at the root level, you must instead wrap it in an async function like so:
+> **IMPORTANT NOTE** - To keep the examples concise, I'm calling await [at the top level](https://v8.dev/features/top-level-await) which is not allowed by default in most versions of node. If you need to call await in a script at the root level, you must instead wrap it in an async function like so:
 
 ```javascript
 (async function() {
@@ -41,22 +41,14 @@ _the following examples are meant to give you an idea of just some of the things
 ```javascript
 const { GoogleSpreadsheet } = require('google-spreadsheet');
 
-// spreadsheet key is the long id in the sheets URL
+// Initialize the sheet - doc ID is the long id in the sheets URL
 const doc = new GoogleSpreadsheet('<the sheet ID from the url>');
 
-// use service account creds
+// Initialize Auth - see more available options at https://theoephraim.github.io/node-google-spreadsheet/#/getting-started/authentication
 await doc.useServiceAccountAuth({
   client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
   private_key: process.env.GOOGLE_PRIVATE_KEY,
 });
-// OR load directly from json file if not in secure environment
-await doc.useServiceAccountAuth(require('./creds-from-google.json'));
-// OR use service account to impersonate a user (see https://developers.google.com/identity/protocols/oauth2/service-account#delegatingauthority)
-await doc.useServiceAccountAuth(require('./creds-from-google.json'), 'some-user@my-domain.com');
-// OR use a pre-configured Google OAuth2Client (check the Authentication docs for more info)
-doc.useOAuth2Client(oAuth2Client);
-// OR use API key -- only for read-only access to public sheets
-doc.useApiKey('YOUR-API-KEY');
 
 await doc.loadInfo(); // loads document properties and worksheets
 console.log(doc.title);
@@ -152,7 +144,7 @@ None yet - get in touch!
 
 Contributions are welcome, but please follow the existing conventions, use the linter, add relevant tests, add relevant documentation.
 
-These docs are generated using [docsify](https://docsify.js.org). To preview and run locally so you can make edits, run `npm run docs:preview` and head to http://localhost:3000
+The docs site is generated using [docsify](https://docsify.js.org). To preview and run locally so you can make edits, run `npm run docs:preview` and head to http://localhost:3000
 The content lives in markdown files in the docs folder.
 
 ## License

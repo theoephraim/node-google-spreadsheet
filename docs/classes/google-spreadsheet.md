@@ -91,8 +91,8 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - all requests will now authenticate using these credentials
 
-> See [Getting Started > Authentication](getting-started/authentication) for more details
-
+> See [Getting Started > Authentication > Service Account](getting-started/authentication#service-account) for more details
+http://localhost:3000/#/getting-started/authentication?id=service-account
 
 #### `useApiKey(key)` :id=fn-useApiKey
 > Set API-key to use for auth - only allows read-only access to public docs
@@ -103,10 +103,23 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - all requests will now authenticate using this api key only
 
-> See [Getting Started > Authentication](getting-started/authentication) for more details
+> See [Getting Started > Authentication > API Key](getting-started/authentication#api-key) for more details
+
+
+#### `useOAuth2Client(oAuth2Client)` :id=fn-useOAuth2Client
+> Use [Google's OAuth2Client](https://github.com/googleapis/google-auth-library-nodejs#oauth2) to authenticate on behalf of a user
+
+Param|Type|Required|Description
+---|---|---|---
+`oAuth2Client`|OAuth2Client|✅|Configured OAuth2Client
+
+- ✨ **Side effects** - requests will use oauth access token to authenticate requests. New access token will be generated if token is expired.
+
+> See [Getting Started > Authentication > OAuth 2.0](getting-started/authentication#oauth) for more details
+
 
 #### `useRawAccessToken(token)` :id=fn-useRawAccessToken
-> Set token to use for auth - managed elsewhere
+> Set raw token to use for auth - managed elsewhere
 
 Param|Type|Required|Description
 ---|---|---|---
@@ -114,7 +127,10 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - all requests will now authenticate using this api key only
 
-!> This assumes you are creating and managing/refreshing the token yourself. Deeper oauth support coming soon...
+!> This assumes you are creating and managing/refreshing the token yourself
+
+
+
 
 ### Basic info
 
