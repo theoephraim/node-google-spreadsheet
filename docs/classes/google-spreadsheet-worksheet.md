@@ -240,6 +240,15 @@ Param|Type|Required|Description
 ---|---|---|---
 `range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)]|✅|Range of cells to unmerge, sheetId not required!
 
+#### `pasteData(coordinate, data, delimiter)` (async) :id=fn-pasteData
+> Inserts data into the spreadsheet starting at the specified coordinate.
+
+Param|Type|Required|Description
+---|---|---|---
+`coordinate`|[[GridCoordinate](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridCoordinate)]|✅|The coordinate at which the data should start being inserted, sheetId not required!
+`data`|String|✅|The data to insert.
+`delimiter`|String|✅|The delimiter in the data.
+
 ### Updating Sheet Properties
 
 #### `updateProperties(props)` (async) :id=fn-updateProperties
