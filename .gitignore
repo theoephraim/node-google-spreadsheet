@@ -4,3 +4,4 @@ ignore/
 .DS_Store
 examples/
 TODO
+.prettierignore
