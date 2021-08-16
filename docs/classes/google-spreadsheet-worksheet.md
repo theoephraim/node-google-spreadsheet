@@ -114,6 +114,7 @@ Param|Type|Required|Description
 `options`|Object|-|Options object
 `options.offset`|Number<br>_int >= 0_|-|How many rows to skip from the top
 `options.limit`|Number<br>_int > 0_|-|Max number of rows to fetch
+`options.headerRowIndex`|Number<br>_int >= 1_|-|Index of header row, starting from 1
 
 - ↩️ **Returns** - [[GoogleSpreadsheetRow](classes/google-spreadsheet-row)] (in a promise)
 
@@ -269,4 +270,3 @@ Param|Type|Required|Description
 - ✨ **Side Effects -** sheet is copied to the other doc
 
 ?> The authentication method being used must have access to the destination document as well
-
