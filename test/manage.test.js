@@ -238,4 +238,36 @@ describe('Managing doc info and sheets', () => {
       expect(newDoc.sheetsByIndex[0]).toBeInstanceOf(GoogleSpreadsheetWorksheet);
     });
   });
+
+  describe('Insert a column or row to a document', () => {
+    let sheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Sheet to copy ${+new Date()}`,
+        headerValues: ['a', 'b'],
+      });
+      await sheet.addRow({
+        a: 'a',
+        b: 'b',
+      });
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('Should insert a new empty row at index', async () => {
+      await sheet.insertDimension('ROWS', {
+        startIndex: 1,
+        endIndex: 2,
+      });
+
+      // read rows
+      const rows = await sheet.getRows();
+
+      expect(rows[0].a).toEqual('');
+      expect(rows[0].b).toEqual('');
+    });
+  });
 });
