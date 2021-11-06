@@ -244,19 +244,20 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - sheet is updated
 
-#### `insertDimension(columnsOrRows, bounds, inheritFromBefore)` (async) :id=fn-insertDimension
+#### `insertDimension(columnsOrRows, range, inheritFromBefore)` (async) :id=fn-insertDimension
 
 > Update sheet "dimension properties"
 
 | Param | Type | Required | Description |
 | --- | --- | --- | --- |
 | `columnsOrRows` | String (enum)<br>_"COLUMNS" or "ROWS"_ | ✅ | Which dimension |
-| `bounds` | Object | - |
-| `bounds.startIndex` | Number<br>_int >= 0_ | - | Start row/column |
-| `bounds.endIndex` | Number<br>_int >= 0_ | - | End row/column |
-| `inheritFromBefore` | Boolean<br>_default false_ | - | If true, tells the API to give the new columns or rows the same properties as the prior row or column |
+| `range` | Object | ✅ |
+| `range.startIndex` | Number<br>_int >= 0_ | ✅ | Start row/column (inclusive) |
+| `range.endIndex` | Number<br>_int >= 1_ | ✅ | End row/column (exclusive), must be greater than startIndex |
+| `inheritFromBefore` | Boolean<br>_default true_ | - | If true, tells the API to give the new columns or rows the same properties as the prior row or column<br>NOTE - defaults to false if inserting in first row/column  |
 
-- ✨ **Side effects** - sheet is updated
+- ✨ **Side effects** - new row(s) or column(s) are inserted into the sheet
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to make any updates to sheet contents
 
 ### Other
 

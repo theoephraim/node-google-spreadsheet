@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const delay = require('delay');
 
-const { GoogleSpreadsheetFormulaError } = require('../index.js');
+const { GoogleSpreadsheetFormulaError } = require('../index');
 
 const docs = require('./load-test-docs')();
 const creds = require('./service-account-creds.json');

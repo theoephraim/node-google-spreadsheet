@@ -1,7 +1,7 @@
 const delay = require('delay');
 const _ = require('lodash');
 
-const { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } = require('../index.js');
+const { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } = require('../index');
 
 const docs = require('./load-test-docs')();
 const creds = require('./service-account-creds.json');
@@ -15,6 +15,14 @@ describe('Managing doc info and sheets', () => {
 
   // hitting rate limits when running tests on ci - so we add a short delay
   if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
+
+  /* eslint-disable jest/no-commented-out-tests */
+  // uncomment temporarily to clear out all the sheets in the test doc
+  // it.only('clear out all the existing sheets', async () => {
+  //   await doc.loadInfo();
+  //   // delete all sheets after the first
+  //   for (const sheet of doc.sheetsByIndex.slice(1)) await sheet.delete();
+  // });
 
   describe('accessing and updating document properties', () => {
     it('accessing properties throws an error if info not fetched yet', async () => {
@@ -50,7 +58,7 @@ describe('Managing doc info and sheets', () => {
 
     it('can update the title using updateProperties', async () => {
       const oldTitle = doc.title;
-      const newTitle = `${doc.title} updated @ ${+new Date()}`;
+      const newTitle = `node-google-spreadsheet test - private (updated @ ${+new Date()})`;
       await doc.updateProperties({ title: newTitle });
       expect(doc.title).toBe(newTitle);
 
@@ -239,35 +247,41 @@ describe('Managing doc info and sheets', () => {
     });
   });
 
-  describe('Insert a column or row to a document', () => {
+  describe('insertDimension - inserting columns/rows into a sheet', () => {
     let sheet;
 
     beforeAll(async () => {
       sheet = await doc.addSheet({
-        title: `Sheet to copy ${+new Date()}`,
+        title: `Insert dimension test ${+new Date()}`,
         headerValues: ['a', 'b'],
       });
-      await sheet.addRow({
-        a: 'a',
-        b: 'b',
-      });
+      await sheet.addRows([
+        { a: 'a1', b: 'b1' },
+        { a: 'a2', b: 'b2' },
+      ]);
     });
 
     afterAll(async () => {
       await sheet.delete();
     });
 
-    it('Should insert a new empty row at index', async () => {
-      await sheet.insertDimension('ROWS', {
-        startIndex: 1,
-        endIndex: 2,
-      });
+    // TODO: add error checking tests
 
-      // read rows
+    it('Should insert a new empty rows at index', async () => {
+      // should insert 2 rows in between the first and second row of data (first row is header)
+      await sheet.insertDimension('ROWS', { startIndex: 2, endIndex: 4 });
+
+      // read rows and check it did what we expected
       const rows = await sheet.getRows();
-
-      expect(rows[0].a).toEqual('');
-      expect(rows[0].b).toEqual('');
+      // header row
+      expect(rows[0].a).toEqual('a1');
+      expect(rows[0].b).toEqual('b1');
+      expect(rows[1].a).toBeUndefined();
+      expect(rows[1].b).toBeUndefined();
+      expect(rows[2].a).toBeUndefined();
+      expect(rows[2].b).toBeUndefined();
+      expect(rows[3].a).toEqual('a2');
+      expect(rows[3].b).toEqual('b2');
     });
   });
 });

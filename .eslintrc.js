@@ -33,6 +33,7 @@ module.exports = {
       exports: 'always-multiline',
       functions: 'never', // this breaks
     }],
+    'no-multiple-empty-lines': 0, // sometimes helpful to break up sections of code
   },
   overrides: [
     { // extra jest related rules for tests
