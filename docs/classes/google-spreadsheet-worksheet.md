@@ -244,19 +244,6 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - sheet is updated
 
-#### `insertDimension(columnsOrRows, bounds, inheritFromBefore)` (async) :id=fn-insertDimension
-
-> Update sheet "dimension properties"
-
-| Param | Type | Required | Description |
-| --- | --- | --- | --- |
-| `columnsOrRows` | String (enum)<br>_"COLUMNS" or "ROWS"_ | ✅ | Which dimension |
-| `bounds` | Object | - |
-| `bounds.startIndex` | Number<br>_int >= 0_ | - | Start row/column |
-| `bounds.endIndex` | Number<br>_int >= 0_ | - | End row/column |
-| `inheritFromBefore` | Boolean<br>_default false_ | - | If true, tells the API to give the new columns or rows the same properties as the prior row or column |
-
-- ✨ **Side effects** - sheet is updated
 
 ### Other
 
