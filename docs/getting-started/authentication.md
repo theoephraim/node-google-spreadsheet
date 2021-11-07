@@ -52,7 +52,7 @@ const creds = require('./config/myapp-1dd646d7c2af.json'); // the file saved abo
 const doc = new GoogleSpreadsheet('<YOUR-DOC-ID>');
 await doc.useServiceAccountAuth(creds);
 
-// or preferably, loading that info from env vars / config instead of the file
+// or preferably, load that info from env vars / config instead of the file
 await doc.useServiceAccountAuth({
   client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
   private_key: process.env.GOOGLE_PRIVATE_KEY,
@@ -64,18 +64,31 @@ await doc.useServiceAccountAuth(creds, 'user.to.impersonate@mycompany.com');
 
 ```
 
-**SPECIAL NOTE FOR HEROKU USERS**
-Getting the key saved/retrieved properly can be a little tricky. Here's one way to get it to work
+**SPECIAL NOTE FOR HEROKU USERS (OR SIMILAR PLATFORMS)**
+
+Sometimes setting/retreiving config vars that include line breaks can get tricky.
+
+Here's one way to get it to work (using heroku cli):
 1. Save the private key to a new text file
 2. Replace `\n` with actual line breaks
 3. Replace `\u003d` with `=`
 4. run `heroku config:add GOOGLE_PRIVATE_KEY="$(cat yourfile.txt)"` in your terminal
+
+And in some other scenarios something like this can be helpful:
+```
+await doc.useServiceAccountAuth({
+  client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+});
+```
 
 
 ## 🔑 API Key :id=api-key
 **read-only access of public docs**
 
 Google requires this so they can at least meter your usage of their API.
+
+!> Allowing only read-only access using an API key is a limitation of Google's API (see [issuetracker](https://issuetracker.google.com/issues/36755576#comment3))
 
 __Setup Instructions__
 1. Follow steps above to set up project and enable sheets API

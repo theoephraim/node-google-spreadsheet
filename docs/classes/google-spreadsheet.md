@@ -83,7 +83,7 @@ Property|Type|Description
 
 Param|Type|Required|Description
 ---|---|---|---
-`creds`|Object|✅|Object containing credendtials from google for your service account<br>_usually just `require` the json file google gives you_
+`creds`|Object|✅|Object containing credentials from google for your service account<br>_usually just `require` the json file google gives you_
 `creds.client_email`|String<br>_email_|✅|The email of your service account
 `creds.private_key`|String|✅|The private key for your service account
 `impersonateAs`|String<br>_email_|-|Email of user to impersonate instead of authing as service account (only possible if service account has domain-wide delegation enabled)
@@ -92,7 +92,6 @@ Param|Type|Required|Description
 - ✨ **Side effects** - all requests will now authenticate using these credentials
 
 > See [Getting Started > Authentication > Service Account](getting-started/authentication#service-account) for more details
-http://localhost:3000/#/getting-started/authentication?id=service-account
 
 #### `useApiKey(key)` :id=fn-useApiKey
 > Set API-key to use for auth - only allows read-only access to public docs

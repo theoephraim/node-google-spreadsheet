@@ -61,7 +61,9 @@ Property|Type|Description
 
 ### Working With Rows
 
-The row-based interface is provided as a simplified way to deal with sheets that are being used like a database (first row is column headers). In some situations it is much easier, but it comes with many limitations, so beware.
+The row-based interface is provided as a simplified way to deal with sheets that are being used like a database (first row is column headers). In some situations it is much simpler to use, but it comes with many limitations, so beware.
+
+Also note that the row-based API and cell-based API are isolated from each other, meaning when you load a set of rows, the corresponding cells are not loaded as well. You usually want to use one or the other.
 
 #### `loadHeaderRow()` (async) :id=fn-loadHeaderRow
 > Loads the header row (first row) of the sheet
@@ -122,6 +124,8 @@ Param|Type|Required|Description
 
 ### Working With Cells
 
+The cell-based interface lets you load and update individual cells in a sheeet, including things like the formula and formatting within those cells. It is more feature rich, but tends to be more awkward to use for many simple use cases.
+
 #### `loadCells(filters)` (async) :id=fn-loadCells
 > Fetch cells from google
 
@@ -170,6 +174,8 @@ Param|Type|Required|Description
 #### `saveUpdatedCells()` (async) :id=fn-saveUpdatedCells
 > saves all cells in the sheet that have unsaved changes
 
+!> NOTE - this method will only save changes made using the cell-based methods described here, not the row-based ones described above
+
 - ✨ **Side effects** - cells are saved, data refreshed from google
 
 #### `saveCells(cells)` (async) :id=fn-saveCells
@@ -199,8 +205,8 @@ Param|Type|Required|Description
 
 Param|Type|Required|Description
 ---|---|---|---
-`range`|[[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)]|✅|Range of cells to merge, sheetId not required!
-`mergeType`|String (enum)<br>[MergeType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#MergeType|-|defaults to MERGE_ALL
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|Range of cells to merge, sheetId not required!
+`mergeType`|String (enum)<br>[MergeType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#MergeType)|-|defaults to MERGE_ALL
 
 - 🚨 **Warning** - Reading values from merged cells other than the top-left one will show a null value
 
@@ -209,7 +215,7 @@ Param|Type|Required|Description
 
 Param|Type|Required|Description
 ---|---|---|---
-`range`|[[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)]|✅|Range of cells to unmerge, sheetId not required!
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)]|✅|Range of cells to unmerge, sheetId not required!
 
 ### Updating Sheet Properties
 
