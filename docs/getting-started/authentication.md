@@ -32,7 +32,7 @@ __Setup Instructions__
 1. Follow steps above to set up project and enable sheets API
 2. Create a service account for your project
   - In the sidebar on the left, select **APIs & Services > Credentials**
-  - Click blue "+ CREATE CREDENITALS" and select "Service account" option
+  - Click blue "+ CREATE CREDENTIALS" and select "Service account" option
   - Enter name, description, click "CREATE"
   - You can skip permissions, click "CONTINUE"
   - Click "+ CREATE KEY" button
@@ -94,7 +94,7 @@ __Setup Instructions__
 1. Follow steps above to set up project and enable sheets API
 2. Create an API key for your project
   - Navigate to the [credentials section of the google developer console](https://console.cloud.google.com/apis/credentials)
-  - Click blue "+ CREATE CREDENITALS" and select "API key" option
+  - Click blue "+ CREATE CREDENTIALS" and select "API key" option
   - Copy the API key
 3. OPTIONAL - click "Restrict key" on popup to set up restrictions
   - Click "API restrictions" > Restrict Key"
@@ -119,7 +119,7 @@ Nevertheless, here is a rough outline of what to do with a few tips:
 1. Follow steps above to set up project and enable sheets API
 2. Create OAuth 2.0 credentials for your project (**these are not the same as the service account credentials described above**)
   - Navigate to the [credentials section of the google developer console](https://console.cloud.google.com/apis/credentials)
-  - Click blue "+ CREATE CREDENITALS" and select "Oauth Client ID" option
+  - Click blue "+ CREATE CREDENTIALS" and select "Oauth Client ID" option
   - Select your application type and set up authorized domains / callback URIs
   - Record your client ID and secret
   - You will need to go through an Oauth Consent screen verification process to use these credentials for a production app with many users
