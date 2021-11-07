@@ -65,19 +65,26 @@ The row-based interface is provided as a simplified way to deal with sheets that
 
 Also note that the row-based API and cell-based API are isolated from each other, meaning when you load a set of rows, the corresponding cells are not loaded as well. You usually want to use one or the other.
 
-#### `loadHeaderRow()` (async) :id=fn-loadHeaderRow
-> Loads the header row (first row) of the sheet
-_usually do not need to call this directly_
+#### `loadHeaderRow(headerRowIndex)` (async) :id=fn-loadHeaderRow
+> Loads the header row (usually first) of the sheet
+
+Usually this is called automatically when loading rows via `getRows()` if the header row has not yet been loaded. However you should call this explicitly if you want to load a header row that is not the first row of the sheet.
+
+Param|Type|Required|Description
+---|---|---|---
+`headerRowIndex`|Number|-|Optionally set custom header row index, if headers are not in first row<br>NOTE - not zero-indexed
+
 - ✨ **Side effects** - `sheet.headerValues` is populated
 
-#### `setHeaderRow(headerValues)` (async) :id=fn-setHeaderRow
-> Set the header row (first row) of the sheet
+#### `setHeaderRow(headerValues, headerRowIndex)` (async) :id=fn-setHeaderRow
+> Set the header row (usually first) of the sheet
 
 Param|Type|Required|Description
 ---|---|---|---
 `headerValues`|[String]|✅|Array of strings to set as cell values in first row
+`headerRowIndex`|Number|-|Optionally set custom header row index, if headers are not in first row<br>NOTE - not zero-indexed
 
-- ✨ **Side effects** - first row of the sheet is filled, `sheet.headerValues` is populated
+- ✨ **Side effects** - header row of the sheet is filled, `sheet.headerValues` is populated
 
 #### `addRow(rowValues, options)` (async) :id=fn-addRow
 > Append a new row to the sheet
