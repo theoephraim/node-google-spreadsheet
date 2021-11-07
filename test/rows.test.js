@@ -7,8 +7,6 @@ const creds = require('./service-account-creds.json');
 const doc = docs.private;
 
 let sheet;
-let rows;
-let row;
 
 // having some issues caused by blank headers, so we add one here
 const HEADERS = ['numbers', 'letters', '', 'col1', 'col2', 'col3'];
@@ -38,9 +36,9 @@ describe('Row-based operations', () => {
   if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
 
   describe('fetching rows', () => {
+    let rows;
     it('can fetch multiple rows', async () => {
       rows = await sheet.getRows();
-      row = rows[0];
       expect(rows.length).toEqual(INITIAL_DATA.length);
     });
 
@@ -69,6 +67,8 @@ describe('Row-based operations', () => {
   });
 
   describe('adding rows', () => {
+    let rows;
+    let row;
     it('can add a row with an array of values', async () => {
       const newRowData = ['5', 'F'];
       row = await sheet.addRow(newRowData);
@@ -140,6 +140,8 @@ describe('Row-based operations', () => {
   });
 
   describe('deleting rows', () => {
+    let rows;
+    let row;
     it('can delete a row', async () => {
       rows = await sheet.getRows();
 
@@ -169,6 +171,8 @@ describe('Row-based operations', () => {
   });
 
   describe('updating rows', () => {
+    let rows;
+    let row;
     it('can update a row', async () => {
       rows = await sheet.getRows();
       row = rows[0];
@@ -293,6 +297,7 @@ describe('Row-based operations', () => {
   });
 
   describe('header validation and cleanup', () => {
+    let rows;
     beforeAll(async () => {
       sheet.loadCells('A1:E1');
     });
@@ -357,6 +362,51 @@ describe('Row-based operations', () => {
       await sheet.saveUpdatedCells();
       sheet.resetLocalCache(true); // forget the header values
       await expect(sheet.getRows()).rejects.toThrow();
+    });
+  });
+
+  describe('custom header row index', () => {
+    const CUSTOM_HEADER_ROW_INDEX = 3;
+    let newSheet;
+
+    afterAll(async () => {
+      await newSheet.delete();
+    });
+
+    it('can set custom header row index while adding a sheet', async () => {
+      newSheet = await doc.addSheet({
+        headerValues: ['a', 'b', 'c'],
+        headerRowIndex: CUSTOM_HEADER_ROW_INDEX,
+        title: `custom header index sheet ${+new Date()}`,
+        gridProperties: { rowCount: INITIAL_ROW_COUNT },
+      });
+      await newSheet.loadCells();
+      const aHeaderCell = newSheet.getCell(CUSTOM_HEADER_ROW_INDEX - 1, 0);
+      expect(aHeaderCell.value).toEqual('a');
+    });
+
+    it('can load existing header row from custom index', async () => {
+      newSheet.resetLocalCache(true);
+
+      // first row is empty so this should fail
+      await expect(newSheet.getRows()).rejects.toThrow();
+
+      // load header row from custom index
+      await newSheet.loadHeaderRow(CUSTOM_HEADER_ROW_INDEX);
+      expect(newSheet.headerValues[0]).toEqual('a');
+
+      await newSheet.addRows([
+        { a: 'a1', b: 'b1' },
+        { a: 'a2', b: 'b2' },
+      ]);
+
+      const rows = await newSheet.getRows();
+      expect(rows[0].a).toEqual('a1');
+
+      await newSheet.loadCells();
+      // now verify header and data are in the right place, using the cell-based methods
+      const aDataCell = newSheet.getCell(CUSTOM_HEADER_ROW_INDEX, 0);
+      expect(aDataCell.value).toEqual('a1');
     });
   });
 });
