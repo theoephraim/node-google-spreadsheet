@@ -45,7 +45,7 @@ Property|Type|Description
 ---|---|---
 `rowIndex`|Number<br>_int >= 0_|Row in the sheet this cell is in<br>_first row is 0_
 `columnIndex`|Number<br>_int >= 0_|Column in the sheet this cell is in
-`a1Row`|Number<br>_int > 0_|Row number used in A1 addresses<br>_This matches what you see in the UI_
+`a1Row`|Number<br>_int >= 1_|Row number used in A1 addresses<br>_This matches what you see in the UI_
 `a1Column`|String|Column letter used in the sheet<br>_starts at A, goes up to Z, then AA..._
 `a1Address`|String|Full A1 address of the cell<br>_for example "B5"_
 

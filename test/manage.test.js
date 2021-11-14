@@ -188,6 +188,35 @@ describe('Managing doc info and sheets', () => {
     });
   });
 
+  describe('duplicating a sheet within the same document', () => {
+    let sheet;
+    let duplicateSheet;
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Sheet to duplicate ${+new Date()}`,
+        headerValues: ['duplicate', 'this', 'sheet'],
+      });
+    });
+    afterAll(async () => {
+      await sheet.delete();
+      await duplicateSheet.delete();
+    });
+
+    it('can duplicate the sheet within the same doc', async () => {
+      const existingSheetIndex = sheet.index;
+
+      const newTitle = `duplicated ${+new Date()}`;
+      duplicateSheet = await sheet.duplicate({
+        title: newTitle,
+      });
+
+      expect(duplicateSheet.title).toEqual(newTitle);
+      expect(doc.sheetsByIndex[0]).toEqual(duplicateSheet);
+
+      expect(sheet.index).toEqual(existingSheetIndex + 1);
+    });
+  });
+
   describe('copying a sheet to another document', () => {
     let sheet;
 

@@ -168,7 +168,7 @@ Param|Type|Required|Description
 `props`|Object|-|Object of all sheet properties
 `props.sheetId`|Number<br>_positive int_|-|Sheet ID, cannot be chagned after setting<br>_easiest to just let google handle it_
 `props.headerValues`|[String]|-|Sets the contents of the first row, to be used in row-based interactions
-`props.headerRowIndex`|Number|-|Set custom header row index (defaults to 1)
+`props.headerRowIndex`|Number|-|Set custom header row index (1-indexed)<br>_defaults to 1 (first)_
 `props.[more]`|...|-|_See [GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet#basic-document-properties) for more props_
 
 
