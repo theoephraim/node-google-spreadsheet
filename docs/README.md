@@ -104,7 +104,7 @@ More info:
 
 ### Working with cells
 ```javascript
-await sheet.loadCells('A1:E10'); // loads a range of cells
+await sheet.loadCells('A1:E10'); // loads range of cells into local cache - DOES NOT RETURN THE CELLS
 console.log(sheet.cellStats); // total cells, loaded, how many non-empty
 const a1 = sheet.getCell(0, 0); // access cells using a zero-based index
 const c6 = sheet.getCellByA1('C6'); // or A1 style notation

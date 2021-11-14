@@ -136,9 +136,9 @@ The cell-based interface lets you load and update individual cells in a sheeet, 
 #### `loadCells(filters)` (async) :id=fn-loadCells
 > Fetch cells from google
 
-You can filter the cells you want to fetch in several ways. See [Data Filters](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter) for more info. Strings are treated as A1 ranges, objects are detected to be a [GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange) with sheetId not required.
+!> This method does not return the cells it loads, instead they are kept in a local cache managed by the sheet. See methods below (`getCell` and `getCellByA1`) to access them.
 
-**NOTE - if using an API key (read-only access), only A1 ranges are supported**
+You can filter the cells you want to fetch in several ways. See [Data Filters](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter) for more info. Strings are treated as A1 ranges, objects are detected to be a [GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange) with sheetId not required.
 
 ```javascript
 await sheet.loadCells(); // no filter - will load ALL cells in the sheet
@@ -150,11 +150,13 @@ await sheet.loadCells({ startRowIndex: 50 }); // not all props required
 await sheet.loadCells(['B2:D5', 'B50:D55']); // can pass an array of filters
 ```
 
+!> If using an API key (read-only access), only A1 ranges are supported
+
 Param|Type|Required|Description
 ---|---|---|---
 `filters`|*|-|Can be a single filter or array of filters
 
-- ✨ **Side effects** - cells are loaded in the doc, `cellStats` is updated
+- ✨ **Side effects** - cells are loaded into local cache, `cellStats` is updated
 
 
 #### `getCell(rowIndex, columnIndex)` :id=fn-getCell
