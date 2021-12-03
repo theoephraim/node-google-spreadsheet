@@ -210,3 +210,13 @@ Param|Type|Required|Description
 `rangeId`|String|✅|ID of the range to remove
 
 
+### Retry logic
+
+### `setRetryOptions(metadataId)` (async) :id=fn-setRetryOptions
+> Set the retry options for when your requests are rate-limited (error 429)
+> If these options are not set then requests won't be retried
+
+Param|Type|Required|Description
+---|---|---|---
+`retries`|Number|✅|The number of times a request should be retried
+`retryDelay`|Number|✅|The time to delay in miliseconds between retry attempts
