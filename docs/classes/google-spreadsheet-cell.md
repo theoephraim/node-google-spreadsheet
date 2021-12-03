@@ -115,6 +115,9 @@ Property|Type|Description
 
 ### Developer Metadata
 
+### `getDeveloperMetadata()` (async) :id=fn-getDeveloperMetadata
+> Get developer metadata for the current cell's column
+
 #### `createDeveloperMetadata(metadataKey, metadataValue, visibility, metadataId)` (async) :id=fn-createSheetDeveloperMetadata
 > Add a new developer metadata object to the column of the cell
 

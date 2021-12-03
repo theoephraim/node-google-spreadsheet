@@ -215,9 +215,19 @@ Param|Type|Required|Description
 ### `getMetadataById(metadataId)` (async) :id=fn-getMetadataById
 > Get the developer metadata by ID
 
+### `getDeveloperMetadataByA1Range(a1Range)` (async) :id=fn-getDeveloperMetadataByA1Range
+> Get a range of developer metadata by A1Range
+
 Param|Type|Required|Description
 ---|---|---|---
-`metadataId`|Number|✅|The ID of the developer metadata object
+`a1Range`|String|✅|The A1 range to find developer metadata<br>_Must be a single column or a single row_
+
+### `getDeveloperMetadataByGridRange(gridRange)` (async) :id=fn-getDeveloperMetadataByA1Range
+> Get a range of developer metadata by Grid Range
+
+Param|Type|Required|Description
+---|---|---|---
+`gridRange`|Object|✅|The Grid Range to find developer metadata<br>_Must represent a single column or a single row_
 
 #### `createSheetDeveloperMetadata(metadataKey, metadataValue, sheetId, visibility, metadataId)` (async) :id=fn-createSheetDeveloperMetadata
 > Add a new developer metadata object to a specific sheet

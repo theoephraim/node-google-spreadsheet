@@ -97,6 +97,9 @@ _also available as `row.del()`_
 
 ### Developer Metadata
 
+### `getDeveloperMetadata()` (async) :id=fn-getDeveloperMetadata
+> Get developer metadata for the current row
+
 #### `createDeveloperMetadata(metadataKey, metadataValue, visibility, metadataId)` (async) :id=fn-createSheetDeveloperMetadata
 > Add a new developer metadata object to the row
 
