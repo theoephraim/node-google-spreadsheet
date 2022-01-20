@@ -249,6 +249,14 @@ Param|Type|Required|Description
 `data`|String|✅|The data to insert.
 `delimiter`|String|✅|The delimiter in the data.
 
+#### `appendDimension(dimension, length)` (async) :id=fn-appendDimension
+> Appends rows or columns to the end of a sheet.
+
+Param|Type|Required|Description
+---|---|---|---
+`dimension`|[[Dimension](https://developers.google.com/sheets/api/reference/rest/v4/Dimension)]|✅|Whether rows or columns should be appended.
+`length`|number|✅|The number of rows or columns to append.
+
 ### Updating Sheet Properties
 
 #### `updateProperties(props)` (async) :id=fn-updateProperties
