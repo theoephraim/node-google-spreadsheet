@@ -177,6 +177,19 @@ Param|Type|Required|Description
 
 _Also available as `addWorksheet()`_
 
+#### `duplicateSheet(props)` (async) :id=fn-duplicateSheet
+> Add a new worksheet to the document
+
+Param|Type|Required|Description
+---|---|---|---
+`props`|Object|-|Object of duplicate sheet properties
+`props.sourceSheetId`|Number|-|The ID of source sheet to duplicate.
+`props.insertSheetIndex`|Number|-|The zero-based index where the new sheet should be inserted. The index of all sheets after this are incremented.
+`props.newSheetId`|Number|-|If set, the ID of the new sheet. If not set, an ID is chosen. If set, the ID must not conflict with any existing sheet ID. If set, it must be non-negative.
+`props.newSheetName`|[String]|-|The name of the new sheet. If empty, a new name is chosen for you.
+
+
+- ↩️ **Returns** - [GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet) (in a promise)
 
 #### `deleteSheet(sheetId)` (async) :id=fn-deleteSheet
 > Delete a worksheet from the document
