@@ -408,5 +408,16 @@ describe('Row-based operations', () => {
       const aDataCell = newSheet.getCell(CUSTOM_HEADER_ROW_INDEX, 0);
       expect(aDataCell.value).toEqual('a1');
     });
+
+    it('can clear rows properly when custom header index is used', async () => {
+      await newSheet.clearRows();
+
+      await newSheet.loadCells();
+      // now verify header is still there and data is cleared
+      const aHeaderCell = newSheet.getCell(CUSTOM_HEADER_ROW_INDEX - 1, 0);
+      expect(aHeaderCell.value).toEqual('a');
+      const aDataCell = newSheet.getCell(CUSTOM_HEADER_ROW_INDEX, 0);
+      expect(aDataCell.value).toEqual(null);
+    });
   });
 });

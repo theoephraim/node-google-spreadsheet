@@ -129,6 +129,20 @@ Param|Type|Required|Description
 !> The older version of this module allowed you to filter and order the rows as you fetched them, but this is no longer supported by google
 
 
+#### `clearRows(options)` (async) :id=fn-clearRows
+> Clear rows in the sheet
+
+By default, this will clear all rows and leave the header (and anything above it) intact, but you can pass in start and/or end to limit which rows are cleared.
+
+Param|Type|Required|Description
+---|---|---|---
+`options`|Object|-|Options object
+`options.start`|Number<br>_int >= 1_|-|A1 style row number of first row to clear<br>_defaults to first non-header row_
+`options.end`|Number<br>_int >= 1_|-|A1 style row number of last row to clear<br>_defaults to last row_
+
+- ✨ **Side effects** - rows in the sheet are emptied
+
+
 ### Working With Cells
 
 The cell-based interface lets you load and update individual cells in a sheeet, including things like the formula and formatting within those cells. It is more feature rich, but tends to be more awkward to use for many simple use cases.
@@ -276,10 +290,16 @@ Param|Type|Required|Description
 
 ### Other
 
-#### `clear()` (async) :id=fn-clear
-> Clear all data/cells in the sheet
+#### `clear(a1Range)` (async) :id=fn-clear
+> Clear data/cells in the sheet
 
-- ✨ **Side Effects -** clears the entire sheet, resets local cache
+Defaults to clearing the entire sheet, or pass in a specific a1 range
+
+| Param | Type | Required | Description |
+| --- | --- | --- | --- |
+| `a1Range` | String (A1 range) | - | Optional specific range within the sheet to clear |
+
+- ✨ **Side Effects -** clears the sheet (entire sheet or specified range), resets local cache
 
 #### `delete()` (async) :id=fn-delete
 > Delete this sheet
