@@ -312,3 +312,35 @@ Param|Type|Required|Description
 
 ?> The authentication method being used must have write access to the destination document as well
 
+### Export
+
+#### `downloadAsCSV(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsCSV
+> Export worksheet in CSV format
+
+Param|Type|Required|Description
+---|---|---|---
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+
+- ↩️ **Returns** - Buffer (or stream) containing CSV data
+
+
+#### `downloadAsTSV(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsTSV
+> Export worksheet in TSV format
+
+Param|Type|Required|Description
+---|---|---|---
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+
+- ↩️ **Returns** - Buffer (or stream) containing TSV data
+
+
+#### `downloadAsPDF(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsPDF
+> Export worksheet in PDF format
+
+Param|Type|Required|Description
+---|---|---|---
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+
+- ↩️ **Returns** - Buffer (or stream) containing PDF data
+
+

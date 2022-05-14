@@ -16,7 +16,7 @@
     "api",
     "googleapis"
   ],
-  "homepage": "https://github.com/theoephraim/node-google-spreadsheet",
+  "homepage": "https://theoephraim.github.io/node-google-spreadsheet",
   "repository": {
     "type": "git",
     "url": "git://github.com/theoephraim/node-google-spreadsheet.git"

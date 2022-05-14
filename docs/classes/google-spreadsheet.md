@@ -54,8 +54,8 @@ Property|Type|Description
 ---|---|---
 `spreadsheetId`|String|Document ID<br>_set during initialization, not editable_
 `title`|String|Document title
-`locale`|String|Document locale/language<br>_ISO code - ex: "en", "en_US"_
-`timeZone`|String|Document timezone<br>_CLDR format - ex: "America/New_York", "GMT-07:00"_
+`locale`|String|Document locale/language<br>_ISO code - ex: "en", "en\_US"_
+`timeZone`|String|Document timezone<br>_CLDR format - ex: "America/New\_York", "GMT-07:00"_
 `autoRecalc`|String<br>_enum_|See [RecalculationInterval](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#RecalculationInterval)
 `defaultFormat`|Object|See [CellFormat](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#CellFormat)
 `spreadsheetTheme`|Object|See [SpreadsheetTheme](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#SpreadsheetTheme)
@@ -209,4 +209,36 @@ Param|Type|Required|Description
 ---|---|---|---
 `rangeId`|String|✅|ID of the range to remove
 
+
+
+### Export
+
+#### `downloadAsHTML(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsHTML
+> Export entire document in HTML format (zip file)
+
+Param|Type|Required|Description
+---|---|---|---
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+
+- ↩️ **Returns** - Buffer (or stream) containing HTML data (in a zip file)
+
+
+#### `downloadAsXLSX(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsXLSX
+> Export entire document in XLSX (excel) format
+
+Param|Type|Required|Description
+---|---|---|---
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+
+- ↩️ **Returns** - Buffer (or stream) containing XLSX data
+
+
+#### `downloadAsODS(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsODS
+> Export entire document in ODS (Open Document Format) format
+
+Param|Type|Required|Description
+---|---|---|---
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+
+- ↩️ **Returns** - Buffer (or stream) containing ODS data
 
