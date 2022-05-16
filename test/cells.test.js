@@ -236,6 +236,36 @@ describe('Cell-based operations', () => {
         });
       });
     });
+
+    describe('sorting a sheet', () => {
+      beforeEach(async () => {
+        await sheet.loadCells('A1:C4');
+        const sheetData = [
+          ['a', 'b', 'c'],
+          [1, 1, 2],
+          [2, 3, 1],
+          [3, 2, 3],
+        ];
+        for (let row = 0; row < sheetData.length; row++) {
+          for (let col = 0; col < sheetData[row].length; col++) {
+            sheet.getCell(row, col).value = sheetData[row][col];
+          }
+        }
+        await sheet.saveUpdatedCells();
+      });
+
+      it('sorts by index', async () => {
+        await sheet.sortRange([[0, 'desc']]);
+        await sheet.loadCells('A1:C4');
+        expect(sheet.getCell(1, 0).value).toBe(3);
+      });
+
+      it('sorts by header name', async () => {
+        await sheet.sortRange([['b', 'DESCENDING']]);
+        await sheet.loadCells('A1:C4');
+        expect(sheet.getCell(1, 0).value).toBe(2);
+      });
+    });
   });
 
   describe('cell formatting', () => {
