@@ -76,6 +76,10 @@ More info:
 // create a sheet and set the header row
 const sheet = await doc.addSheet({ headerValues: ['name', 'email'] });
 
+// or load a sheet and set the header row
+const sheet = doc.sheetsByTitle['my sheet'];
+await sheet.setHeaderRow(['name', 'email']);
+
 // append rows
 const larryRow = await sheet.addRow({ name: 'Larry Page', email: 'larry@google.com' });
 const moreRows = await sheet.addRows([
