@@ -76,13 +76,15 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - `sheet.headerValues` is populated
 
-#### `setHeaderRow(headerValues, headerRowIndex)` (async) :id=fn-setHeaderRow
+#### `setHeaderRow(headerValues, headerRowIndex, options)` (async) :id=fn-setHeaderRow
 > Set the header row (usually first) of the sheet
 
 Param|Type|Required|Description
 ---|---|---|---
 `headerValues`|[String]|✅|Array of strings to set as cell values in first row
 `headerRowIndex`|Number<br>_int >= 1_|-|Optionally set custom header row index, if headers are not in first row<br>NOTE - not zero-indexed, 1 = first
+`options`|Object|-|Optionally set custom params
+`options.valueInputOption`|String|-| valueInputOptions, default USER_ENTERED <br>_see [ValueInputOption](https://developers.google.com/sheets/api/reference/rest/v4/ValueInputOption)
 
 - ✨ **Side effects** - header row of the sheet is filled, `sheet.headerValues` is populated
 
