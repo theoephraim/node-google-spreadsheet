@@ -248,6 +248,7 @@ Param|Type|Required|Description
 `coordinate`|[[GridCoordinate](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridCoordinate)]|✅|The coordinate at which the data should start being inserted, sheetId not required!
 `data`|String|✅|The data to insert.
 `delimiter`|String|✅|The delimiter in the data.
+`type`|String (enum)<br>[PasteType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteType)|-|How the data should be pasted. _defaults to `PASTE_NORMAL`_
 
 #### `appendDimension(dimension, length)` (async) :id=fn-appendDimension
 > Appends rows or columns to the end of a sheet.
