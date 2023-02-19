@@ -68,6 +68,7 @@ More info:
 - [GoogleSpreadsheet](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet)
 - [GoogleSpreadsheetWorksheet](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet)
 - [Authentication](https://theoephraim.github.io/node-google-spreadsheet/#/getting-started/authentication)
+- [How to find google sheets id](https://fabform.io/a/how-to-find-google-sheet-id)
 
 
 
