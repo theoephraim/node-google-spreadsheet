@@ -115,14 +115,15 @@ Param|Type|Required|Description
 - ✨ **Side effects** - rows are added to the sheet
 
 
-#### `getRows(options)` (async) :id=fn-getRows
+#### `getRows(options, googleSheetQueryParameters)` (async) :id=fn-getRows
 > Fetch rows from the sheet
 
 Param|Type|Required|Description
 ---|---|---|---
 `options`|Object|-|Options object
-`options.offset`|Number<br>_int >= 0_|-|How many rows to skip from the top
-`options.limit`|Number<br>_int >= 1_|-|Max number of rows to fetch
+`options.offset`|Number<br>_int >= 0|-| How many rows to skip from the top
+`options.limit`|Number<br>_int >= 1|-| Max number of rows to fetch
+`googleSheetQueryParameters`|Object|-| Paramter object which is passed to `axios.get` when calling the spreadsheet API. (https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get#query-parameters)
 
 - ↩️ **Returns** - [[GoogleSpreadsheetRow](classes/google-spreadsheet-row)] (in a promise)
 
