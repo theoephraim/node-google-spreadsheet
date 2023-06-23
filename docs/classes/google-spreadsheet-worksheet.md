@@ -13,12 +13,13 @@ _Class Reference_
 You do not initialize worksheets directly. Instead you can load the sheets from a doc. For example:
 
 ```javascript
-const doc = new GoogleSpreadsheet('<YOUR-DOC-ID>');
+const doc = new GoogleSpreadsheet('<YOUR-DOC-ID>', auth);
 await doc.loadInfo(); // loads sheets
 
-const newSheet = await doc.addSheet(); // adds a new sheet
 const firstSheet = doc.sheetsByIndex[0]; // in the order they appear on the sheets UI
 const otherSheet = doc.sheetsById[123]; // accessible via ID if you already know it
+
+const newSheet = await doc.addSheet(); // adds a new sheet
 ```
 
 ## Properties
@@ -140,7 +141,7 @@ Param|Type|Required|Description
 `options.start`|Number<br>_int >= 1_|-|A1 style row number of first row to clear<br>_defaults to first non-header row_
 `options.end`|Number<br>_int >= 1_|-|A1 style row number of last row to clear<br>_defaults to last row_
 
-- ✨ **Side effects** - rows in the sheet are emptied
+- ✨ **Side effects** - rows in the sheet are emptied, loaded GoogleSpreadsheetRows in the cache have the data cleared
 
 
 ### Working With Cells
@@ -333,6 +334,8 @@ Param|Type|Required|Description
 ?> The authentication method being used must have write access to the destination document as well
 
 ### Export
+
+Several export methods are available, which are the same as using the `File > Download` menu in the Google Sheets UI. The formats listed below export only a single sheet. See [GoogleSpreadsheet > Export](classes/google-spreadsheet?id=export) formats which include the entire document.
 
 #### `downloadAsCSV(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsCSV
 > Export worksheet in CSV format

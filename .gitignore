@@ -1,6 +1,7 @@
 node_modules/
-ignore/
+src/ignore/
 .env
 .DS_Store
 examples/
 TODO
+dist

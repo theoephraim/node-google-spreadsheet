@@ -1,12 +1,13 @@
-const _ = require('lodash');
-const delay = require('delay');
+import * as _ from 'lodash-es';
+import delay from 'delay';
 
-const docs = require('./load-test-docs')();
-const creds = require('./service-account-creds.json');
+import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet, GoogleSpreadsheetRow } from '..';
 
-const doc = docs.private;
+import { DOC_IDS, testServiceAccountAuth } from './auth/docs-and-auth';
 
-let sheet;
+const doc = new GoogleSpreadsheet(DOC_IDS.private, testServiceAccountAuth);
+
+let sheet: GoogleSpreadsheetWorksheet;
 
 // having some issues caused by blank headers, so we add one here
 const HEADERS = ['numbers', 'letters', '', 'col1', 'col2', 'col3'];
@@ -21,7 +22,6 @@ const INITIAL_DATA = [
 
 describe('Row-based operations', () => {
   beforeAll(async () => {
-    await doc.useServiceAccountAuth(creds);
     sheet = await doc.addSheet({
       headerValues: HEADERS,
       title: `Spécial CнArs ${+new Date()}`, // some urls have sheet title in them
@@ -36,54 +36,54 @@ describe('Row-based operations', () => {
   if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
 
   describe('fetching rows', () => {
-    let rows;
+    let rows: GoogleSpreadsheetRow[];
     it('can fetch multiple rows', async () => {
       rows = await sheet.getRows();
       expect(rows.length).toEqual(INITIAL_DATA.length);
     });
 
     it('a row has properties with keys from the headers', () => {
-      expect(rows[0].numbers).toEqual(INITIAL_DATA[0][0]);
-      expect(rows[0].letters).toEqual(INITIAL_DATA[0][1]);
+      expect(rows[0].get('numbers')).toEqual(INITIAL_DATA[0][0]);
+      expect(rows[0].get('letters')).toEqual(INITIAL_DATA[0][1]);
     });
 
     it('supports `offset` option', async () => {
       rows = await sheet.getRows({ offset: 2 });
       expect(rows.length).toEqual(3);
-      expect(rows[0].numbers).toEqual(INITIAL_DATA[2][0]);
+      expect(rows[0].get('numbers')).toEqual(INITIAL_DATA[2][0]);
     });
 
     it('supports `limit` option', async () => {
       rows = await sheet.getRows({ limit: 3 });
       expect(rows.length).toEqual(3);
-      expect(rows[0].numbers).toEqual(INITIAL_DATA[0][0]);
+      expect(rows[0].get('numbers')).toEqual(INITIAL_DATA[0][0]);
     });
 
     it('supports combined `limit` and `offset`', async () => {
       rows = await sheet.getRows({ offset: 2, limit: 2 });
       expect(rows.length).toEqual(2);
-      expect(rows[0].numbers).toEqual(INITIAL_DATA[2][0]);
+      expect(rows[0].get('numbers')).toEqual(INITIAL_DATA[2][0]);
     });
   });
 
   describe('adding rows', () => {
-    let rows;
-    let row;
+    let rows: GoogleSpreadsheetRow[];
+    let row: GoogleSpreadsheetRow;
     it('can add a row with an array of values', async () => {
       const newRowData = ['5', 'F'];
       row = await sheet.addRow(newRowData);
-      expect(row.numbers).toEqual(newRowData[0]);
-      expect(row.letters).toEqual(newRowData[1]);
-      expect(row.dates).toEqual(newRowData[2]);
+      expect(row.get('numbers')).toEqual(newRowData[0]);
+      expect(row.get('letters')).toEqual(newRowData[1]);
+      expect(row.get('dates')).toEqual(newRowData[2]);
     });
 
     it('persisted the row', async () => {
       rows = await sheet.getRows();
       expect(rows.length).toEqual(INITIAL_DATA.length + 1);
       const newRowIndex = INITIAL_DATA.length;
-      expect(rows[newRowIndex].numbers).toEqual(row.numbers);
-      expect(rows[newRowIndex].letters).toEqual(row.letters);
-      expect(rows[newRowIndex].dates).toEqual(row.dates);
+      expect(rows[newRowIndex].get('numbers')).toEqual(row.get('numbers'));
+      expect(rows[newRowIndex].get('letters')).toEqual(row.get('letters'));
+      expect(rows[newRowIndex].get('dates')).toEqual(row.get('dates'));
     });
 
     it('can add a row with keyed object data', async () => {
@@ -92,8 +92,8 @@ describe('Row-based operations', () => {
         letters: 'G',
       };
       row = await sheet.addRow(newRowData);
-      expect(row.numbers).toEqual(newRowData.numbers);
-      expect(row.letters).toEqual(newRowData.letters);
+      expect(row.get('numbers')).toEqual(newRowData.numbers);
+      expect(row.get('letters')).toEqual(newRowData.letters);
     });
 
     it('can add multiple rows', async () => {
@@ -101,8 +101,8 @@ describe('Row-based operations', () => {
         { numbers: '7', letters: 'H' },
         ['8', 'I'],
       ]);
-      expect(newRows[0].numbers).toEqual('7');
-      expect(newRows[1].numbers).toEqual('8');
+      expect(newRows[0].get('numbers')).toEqual('7');
+      expect(newRows[1].get('numbers')).toEqual('8');
     });
 
     it('can add rows with options.insert', async () => {
@@ -134,70 +134,70 @@ describe('Row-based operations', () => {
       const regularRow = await sheet.addRow({ col1: rawValue });
       const rawRow = await sheet.addRow({ col1: rawValue }, { raw: true });
 
-      expect(regularRow.col1).toEqual('TRUE'); // internally its treating as a boolean
-      expect(rawRow.col1).toEqual(rawValue);
+      expect(regularRow.get('col1')).toEqual('TRUE'); // internally its treating as a boolean
+      expect(rawRow.get('col1')).toEqual(rawValue);
     });
   });
 
   describe('deleting rows', () => {
-    let rows;
-    let row;
+    let rows: GoogleSpreadsheetRow[];
+    let row: GoogleSpreadsheetRow;
     it('can delete a row', async () => {
       rows = await sheet.getRows();
 
       const numRows = rows.length;
 
-      // delete the row with number === 1
+      // delete the row at index 1 (which has "1" in numbers col)
       row = rows[1];
-      await row.del();
+      await row.delete();
 
       // make sure we have 1 less row
       rows = await sheet.getRows();
       expect(rows.length).toEqual(numRows - 1);
 
       // make sure we deleted the correct row
-      expect(rows[0].numbers).toEqual('0');
-      expect(rows[1].numbers).toEqual('2');
+      expect(rows[0].get('numbers')).toEqual('0');
+      expect(rows[1].get('numbers')).toEqual('2');
     });
 
     it('cannot delete a row twice', async () => {
-      await expect(row.del()).rejects.toThrow();
+      await expect(row.delete()).rejects.toThrow();
     });
 
     it('cannot update a deleted row', async () => {
-      row.col1 = 'new value';
+      row.set('col1', 'new value');
       await expect(row.save()).rejects.toThrow();
     });
   });
 
   describe('updating rows', () => {
-    let rows;
-    let row;
+    let rows: GoogleSpreadsheetRow[];
+    let row: GoogleSpreadsheetRow;
     it('can update a row', async () => {
       rows = await sheet.getRows();
       row = rows[0];
 
-      row.numbers = '999';
-      row.letters = 'Z';
+      row.set('numbers', '999');
+      row.set('letters', 'Z');
       await row.save();
-      expect(row.numbers).toBe('999');
-      expect(row.letters).toBe('Z');
+      expect(row.get('numbers')).toBe('999');
+      expect(row.get('letters')).toBe('Z');
     });
 
     it('persisted the row update', async () => {
       rows = await sheet.getRows();
-      expect(rows[0].numbers).toEqual(row.numbers);
-      expect(rows[0].letters).toEqual(row.letters);
+      expect(rows[0].get('numbers')).toEqual(row.get('numbers'));
+      expect(rows[0].get('letters')).toEqual(row.get('letters'));
     });
 
     it('can write a formula', async () => {
-      row.col1 = 1;
-      row.col2 = 2;
-      row.col3 = '=D2+E2'; // col1 is column C
+      row.set('col1', 1);
+      row.set('col2', 2);
+      row.set('col3', '=D2+E2'); // col1 is column C
       await row.save();
-      expect(row.col1).toEqual('1'); // it converts to strings
-      expect(row.col2).toEqual('2');
-      expect(row.col3).toEqual('3'); // it evaluates the formula and formats as a string
+      expect(row.get('col1')).toEqual('1'); // it converts to strings
+      expect(row.get('col2')).toEqual('2');
+      expect(row.get('col3')).toEqual('3'); // it evaluates the formula and formats as a string
     });
 
     describe('encoding and odd characters', () => {
@@ -208,11 +208,11 @@ describe('Row-based operations', () => {
         },
         (value, description) => {
           it(`supports ${description}`, async () => {
-            row.col1 = value;
+            row.set('col1', value);
             await row.save();
 
             rows = await sheet.getRows();
-            expect(rows[0].col1).toEqual(value);
+            expect(rows[0].get('col1')).toEqual(value);
           });
         }
       );
@@ -239,10 +239,10 @@ describe('Row-based operations', () => {
         ...range,
       });
       const mergedRows = await sheet.getRows();
-      expect(mergedRows[1].numbers).toBe('2');
-      expect(mergedRows[1].letters).toBe(undefined);
-      expect(mergedRows[2].numbers).toBe(undefined);
-      expect(mergedRows[2].letters).toBe(undefined);
+      expect(mergedRows[1].get('numbers')).toBe('2');
+      expect(mergedRows[1].get('letters')).toBe(undefined);
+      expect(mergedRows[2].get('numbers')).toBe(undefined);
+      expect(mergedRows[2].get('letters')).toBe(undefined);
     });
 
     it('merges all cells in column direction', async () => {
@@ -252,10 +252,10 @@ describe('Row-based operations', () => {
         ...range,
       }, 'MERGE_COLUMNS');
       const mergedRows = await sheet.getRows();
-      expect(mergedRows[3].numbers).toBe('4');
-      expect(mergedRows[3].letters).toBe('E');
-      expect(mergedRows[4].numbers).toBe(undefined);
-      expect(mergedRows[4].letters).toBe(undefined);
+      expect(mergedRows[3].get('numbers')).toBe('4');
+      expect(mergedRows[3].get('letters')).toBe('E');
+      expect(mergedRows[4].get('numbers')).toBe(undefined);
+      expect(mergedRows[4].get('letters')).toBe(undefined);
     });
 
     it('merges all cells in row direction', async () => {
@@ -265,10 +265,10 @@ describe('Row-based operations', () => {
         ...range,
       }, 'MERGE_ROWS');
       const mergedRows = await sheet.getRows();
-      expect(mergedRows[5].numbers).toBe('6');
-      expect(mergedRows[5].letters).toBe(undefined);
-      expect(mergedRows[6].numbers).toBe('7');
-      expect(mergedRows[6].letters).toBe(undefined);
+      expect(mergedRows[5].get('numbers')).toBe('6');
+      expect(mergedRows[5].get('letters')).toBe(undefined);
+      expect(mergedRows[6].get('numbers')).toBe('7');
+      expect(mergedRows[6].get('letters')).toBe(undefined);
     });
 
     it('unmerges cells', async () => {
@@ -278,26 +278,26 @@ describe('Row-based operations', () => {
         ...range,
       });
       const mergedRows = await sheet.getRows();
-      expect(mergedRows[7].numbers).toBe('8');
-      expect(mergedRows[7].letters).toBe(undefined);
-      mergedRows[7].letters = 'Z';
+      expect(mergedRows[7].get('numbers')).toBe('8');
+      expect(mergedRows[7].get('letters')).toBe(undefined);
+      mergedRows[7].set('letters', 'Z');
       await mergedRows[7].save();
-      expect(mergedRows[7].numbers).toBe('8');
-      expect(mergedRows[7].letters).toBe(undefined);
+      expect(mergedRows[7].get('numbers')).toBe('8');
+      expect(mergedRows[7].get('letters')).toBe(undefined);
       await sheet.unmergeCells({
         startRowIndex: 8,
         endRowIndex: 9,
         ...range,
       });
-      mergedRows[7].letters = 'Z';
+      mergedRows[7].set('letters', 'Z');
       await mergedRows[7].save();
-      expect(mergedRows[7].numbers).toBe('8');
-      expect(mergedRows[7].letters).toBe('Z');
+      expect(mergedRows[7].get('numbers')).toBe('8');
+      expect(mergedRows[7].get('letters')).toBe('Z');
     });
   });
 
   describe('header validation and cleanup', () => {
-    let rows;
+    let rows: GoogleSpreadsheetRow[];
     beforeAll(async () => {
       sheet.loadCells('A1:E1');
     });
@@ -313,15 +313,15 @@ describe('Row-based operations', () => {
     it('allows empty headers', async () => {
       await sheet.setHeaderRow(['', 'col1', '', 'col2']);
       rows = await sheet.getRows();
-      expect(rows[0]).not.toHaveProperty('');
-      expect(rows[0]).toHaveProperty('col1');
+      expect(rows[0].toObject()).not.toHaveProperty('');
+      expect(rows[0].toObject()).toHaveProperty('col1');
     });
 
     it('trims each header', async () => {
       await sheet.setHeaderRow([' col1 ', ' something with spaces ']);
       rows = await sheet.getRows();
-      expect(rows[0]).toHaveProperty('col1');
-      expect(rows[0]).toHaveProperty(['something with spaces']);
+      expect(rows[0].toObject()).toHaveProperty('col1');
+      expect(rows[0].toObject()).toHaveProperty(['something with spaces']);
     });
 
     it('throws an error if setting duplicate headers', async () => {
@@ -367,7 +367,7 @@ describe('Row-based operations', () => {
 
   describe('custom header row index', () => {
     const CUSTOM_HEADER_ROW_INDEX = 3;
-    let newSheet;
+    let newSheet: GoogleSpreadsheetWorksheet;
 
     afterAll(async () => {
       await newSheet.delete();
@@ -401,7 +401,7 @@ describe('Row-based operations', () => {
       ]);
 
       const rows = await newSheet.getRows();
-      expect(rows[0].a).toEqual('a1');
+      expect(rows[0].get('a')).toEqual('a1');
 
       await newSheet.loadCells();
       // now verify header and data are in the right place, using the cell-based methods

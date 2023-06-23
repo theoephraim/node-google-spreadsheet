@@ -4,6 +4,7 @@ module.exports = {
   parserOptions: {
     sourceType: 'module',
     ecmaVersion: 2018,
+    project: './tsconfig.json',
   },
   env: {
     es6: true,
@@ -11,9 +12,10 @@ module.exports = {
   },
   extends: [
     'airbnb-base',
+    'airbnb-typescript/base',
   ],
   plugins: [
-    'async-await',
+    'no-floating-promise',
   ],
   // add your custom rules here
   rules: {
@@ -23,10 +25,10 @@ module.exports = {
     'radix': 0,
     'prefer-destructuring': 0,
     'no-param-reassign': 0, // sometimes it's just much easier
-    'lines-between-class-members': 0, // grouping related one-liners can be nice
+    '@typescript-eslint/lines-between-class-members': 0, // grouping related one-liners can be nice
     'no-continue': 0,
     // override airbnb - breaks old version of node - https://github.com/eslint/eslint/issues/7749
-    'comma-dangle': ['error', {
+    '@typescript-eslint/comma-dangle': ['error', {
       arrays: 'always-multiline',
       objects: 'always-multiline',
       imports: 'always-multiline',
@@ -34,20 +36,40 @@ module.exports = {
       functions: 'never', // this breaks
     }],
     'no-multiple-empty-lines': 0, // sometimes helpful to break up sections of code
+    'import/prefer-default-export': 0,
+    'import/no-cycle': 0,
+    'grouped-accessor-pairs': 0,
+    "@typescript-eslint/naming-convention": 0,
+
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_",
+      },
+    ],
+
+    'max-len': ['error', 120, 2, { // bumped to 120, otherwise same as airbnb's rule but ignoring comments
+      ignoreUrls: true,
+      ignoreComments: true,
+      ignoreRegExpLiterals: true,
+      ignoreStrings: true,
+      ignoreTemplateLiterals: true,
+    }],
+
   },
   overrides: [
     { // extra jest related rules for tests
       files: 'test/*',
-      plugins: ["jest"],
-      extends: ["plugin:jest/recommended"],
+      plugins: ['jest'],
+      extends: ['plugin:jest/recommended'],
       env: {
-        "jest/globals": true,
+        'jest/globals': true,
       },
       rules: {
-        "jest/consistent-test-it": "error",
+        'jest/consistent-test-it': 'error',
         'jest/expect-expect': 0, // sometimes the lack of an error thrown is a good test
         'no-await-in-loop': 0,
-
       }
     },
     { // relaxed rules for examples
@@ -58,4 +80,4 @@ module.exports = {
       },
     },
   ],
-}
+};
