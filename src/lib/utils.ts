@@ -1,10 +1,10 @@
-const _ = require('lodash');
+import * as _ from 'lodash-es';
 
-function getFieldMask(obj) {
-  return _.keys(obj).join(',');
+export function getFieldMask(obj: Record<string, unknown>) {
+  return Object.keys(obj).join(',');
 }
 
-function columnToLetter(column) {
+export function columnToLetter(column: number) {
   let temp;
   let letter = '';
   let col = column;
@@ -16,7 +16,7 @@ function columnToLetter(column) {
   return letter;
 }
 
-function letterToColumn(letter) {
+export function letterToColumn(letter: string) {
   let column = 0;
   const { length } = letter;
   for (let i = 0; i < length; i++) {
@@ -25,8 +25,33 @@ function letterToColumn(letter) {
   return column;
 }
 
-module.exports = {
-  getFieldMask,
-  columnToLetter,
-  letterToColumn,
-};
+// send arrays in params with duplicate keys - ie `?thing=1&thing=2` vs `?thing[]=1...`
+// solution taken from https://github.com/axios/axios/issues/604
+export function axiosParamsSerializer(params: Record<PropertyKey, any>) {
+  let options = '';
+  Object.keys(params).forEach((key) => {
+    const isParamTypeObject = typeof params[key] === 'object';
+    const isParamTypeArray = isParamTypeObject && (params[key].length >= 0);
+    if (!isParamTypeObject) options += `${key}=${encodeURIComponent(params[key])}&`;
+    if (isParamTypeObject && isParamTypeArray) {
+      // eslint-disable-next-line no-restricted-syntax
+      for (const val of params[key]) {
+        options += `${key}=${encodeURIComponent(val)}&`;
+      }
+    }
+  });
+  return options ? options.slice(0, -1) : options;
+}
+
+
+export function checkForDuplicateHeaders(headers: string[]) {
+  // check for duplicate headers
+  const checkForDupes = _.groupBy(headers); // { c1: ['c1'], c2: ['c2', 'c2' ]}
+  _.each(checkForDupes, (grouped, header) => {
+    if (!header) return; // empty columns are skipped, so multiple is ok
+    if (grouped.length > 1) {
+      throw new Error(`Duplicate header detected: "${header}". Please make sure all non-empty headers are unique`);
+    }
+  });
+}
+

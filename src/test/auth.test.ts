@@ -1,15 +1,23 @@
-const _ = require('lodash');
-const delay = require('delay');
+import delay from 'delay';
 
-const GoogleSpreadsheetCell = require('../lib/GoogleSpreadsheetCell');
+import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet, GoogleSpreadsheetCell } from '..';
 
-const docs = require('./load-test-docs')();
-const creds = require('./service-account-creds.json');
-const apiKey = require('./api-key');
+import { DOC_IDS, testServiceAccountAuth } from './auth/docs-and-auth';
+import apiKey from './auth/api-key';
+import { GoogleApiAuth } from '../lib/types/auth-types';
 
-function checkDocAccess(docType, spec) {
-  const doc = docs[docType];
-  let sheet;
+function checkDocAccess(
+  docType: keyof typeof DOC_IDS,
+  auth: GoogleApiAuth,
+  spec: {
+    canRead?: boolean,
+    canWrite?: boolean,
+    readError?: string,
+    writeError?: string,
+  }
+) {
+  const doc = new GoogleSpreadsheet(DOC_IDS[docType], auth);
+  let sheet: GoogleSpreadsheetWorksheet;
 
   describe(`Doc type = ${docType}`, () => {
     if (spec.canRead) {
@@ -50,82 +58,47 @@ describe('Authentication', () => {
   // hitting rate limits when running tests on ci - so we add a short delay
   if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
 
-  describe('without setting auth', () => {
-    it('loadInfo should fail on any doc', async () => {
-      await expect(docs.public.loadInfo()).rejects.toThrow(
-        'initialize some kind of auth'
-      );
-    });
-  });
+  const apiKeyAuth = { apiKey };
 
-  describe('using an API key', () => {
-    it('*set up auth for all docs*', async () => {
-      await docs.private.useApiKey(apiKey);
-      await docs.public.useApiKey(apiKey);
-      await docs.publicReadOnly.useApiKey(apiKey);
-    });
-
-    checkDocAccess('private', {
+  describe('api key', () => {
+    checkDocAccess('private', apiKeyAuth, {
       canRead: false,
       canWrite: false,
       readError: '[403]',
     });
-    checkDocAccess('public', {
+    checkDocAccess('public', apiKeyAuth, {
       canRead: true,
-      canWrite: false,
+      canWrite: false, // requires auth to write
       writeError: '[401]',
-    }); // requires auth to write
-    checkDocAccess('publicReadOnly', {
+    });
+
+    checkDocAccess('publicReadOnly', apiKeyAuth, {
       canRead: true,
       canWrite: false,
       writeError: '[401]',
     });
   });
 
-  describe('using service account creds', () => {
-    it('can initialize service account auth', async () => {
-      await docs.private.useServiceAccountAuth(creds);
+  describe('service account', () => {
+    checkDocAccess('private', testServiceAccountAuth, {
+      canRead: true,
+      canWrite: true,
     });
-
-    describe('initializing auth with bad creds', () => {
-      _.each(
-        {
-          null: null,
-          'empty object': {},
-          'bad email': { ...creds, client_email: 'not-the-email@gmail.com' },
-          'bad token': {
-            ...creds,
-            private_key: creds.private_key.replace(/a/g, 'b'),
-          },
-        },
-        (badCreds, description) => {
-          it(`should fail for bad creds - ${description}`, async () => {
-            await expect(
-              docs.private.useServiceAccountAuth(badCreds)
-            ).rejects.toThrow();
-          });
-        }
-      );
+    checkDocAccess('public', testServiceAccountAuth, {
+      canRead: true,
+      canWrite: true,
     });
-
-    it('*set up auth for all docs*', async () => {
-      await docs.private.useServiceAccountAuth(creds);
-      await docs.public.useServiceAccountAuth(creds);
-      await docs.publicReadOnly.useServiceAccountAuth(creds);
-      await docs.privateReadOnly.useServiceAccountAuth(creds);
-    });
-
-    checkDocAccess('private', { canRead: true, canWrite: true });
-    checkDocAccess('public', { canRead: true, canWrite: true });
-    checkDocAccess('publicReadOnly', {
+    checkDocAccess('publicReadOnly', testServiceAccountAuth, {
       canRead: true,
       canWrite: false,
       writeError: '[403]',
     });
-    checkDocAccess('privateReadOnly', {
+    checkDocAccess('privateReadOnly', testServiceAccountAuth, {
       canRead: true,
       canWrite: false,
       writeError: '[403]',
     });
   });
+
+  // describe('oauth')
 });

@@ -11,7 +11,7 @@ _Class Reference_
 You do not initialize cells directly. Instead you can load a range of cells in a worksheet and access them by their A1 style address (ex: "B5") or row/column indices. For example:
 
 ```javascript
-const doc = new GoogleSpreadsheet('<YOUR-DOC-ID>');
+const doc = new GoogleSpreadsheet('<YOUR-DOC-ID>', auth);
 await doc.loadInfo(); // loads sheets
 const sheet = doc.sheetsByIndex[0]; // the first sheet
 await sheet.loadCells('A1:D5');
@@ -55,11 +55,14 @@ A cell can contain several layers of information. For example, the cell can cont
 
 Property|Type|Writeable|Description
 ---|---|---|---
-`value`|*|✅|This is the full value in the cell. If there is a formula in the cell, this will be the value the formula resolves to
-`valueType`|String|-|The type of the value, using google's terminology<br>_One of `boolValue`, `stringValue`, `numberValue`, `errorValue`_
+`value`|*|✅|This is the _value_ in the cell. If there is a formula in the cell, this will be the value the formula resolves to
+`valueType`|String|-|The type of the value contained in the cell, using google's terminology<br>_One of `boolValue`, `stringValue`, `numberValue`, `errorValue`_
+`boolValue`|boolean|✅|the value as a boolean, if the cell contains a boolean
+`stringValue`|string|✅|the value as a string, if the cell contains a string
+`numberValue`|string|✅|the value as a number, if the cell contains a number
 `formattedValue`|*|-|The value in the cell with [formatting rules](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#numberformat) applied<br>_Ex: value is `123.456`, formattedValue is `$123.46`_
 `formula`|String|✅|The formula in the cell (if there is one)
-`formulaError`|Error|-|An error with some details if the formula is invalid
+`error`|Error|-|An error with some details if the formula is invalid
 `note`|String|✅|The note attached to the cell
 `hyperlink`|String<br>_url_|-|URL of the cell's link if it has a`=HYPERLINK` formula<br>_ex: `=HYPERLINK("http://google.com", "google")`_
 

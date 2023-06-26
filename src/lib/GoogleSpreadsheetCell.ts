@@ -1,50 +1,74 @@
-const _ = require('lodash');
+/* eslint-disable max-classes-per-file */
+import * as _ from 'lodash-es';
 
-const { columnToLetter } = require('./utils');
+import { columnToLetter } from './utils';
 
-const { GoogleSpreadsheetFormulaError } = require('./errors');
+import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
+import { GoogleSpreadsheetCellErrorValue } from './GoogleSpreadsheetCellErrorValue';
 
-class GoogleSpreadsheetCell {
-  constructor(parentSheet, rowIndex, columnIndex, cellData) {
-    this._sheet = parentSheet; // the parent GoogleSpreadsheetWorksheet instance
-    this._row = rowIndex;
-    this._column = columnIndex;
+import {
+  CellData,
+  CellFormat, CellValueType, ColumnIndex, RowIndex,
+} from './types/sheets-types';
 
-    this._updateRawData(cellData);
-    return this;
+export class GoogleSpreadsheetCell {
+  private _rawData?: CellData;
+  private _draftData: any = {};
+  private _error?: GoogleSpreadsheetCellErrorValue;
+
+  constructor(
+    readonly _sheet: GoogleSpreadsheetWorksheet,
+    private _rowIndex: RowIndex,
+    private _columnIndex: ColumnIndex,
+    rawCellData: CellData
+  ) {
+    this._updateRawData(rawCellData);
+    this._rawData = rawCellData; // so TS does not complain
   }
 
+  // TODO: figure out how to deal with empty rawData
   // newData can be undefined/null if the cell is totally empty and unformatted
-  _updateRawData(newData = {}) {
+  /**
+   * update cell using raw CellData coming back from sheets API
+   * @internal
+   */
+  _updateRawData(newData: CellData) {
     this._rawData = newData;
-    this._draftData = {}; // stuff to save
-    this._error = null;
-    if (_.get(this._rawData, 'effectiveValue.errorValue')) {
-      this._error = new GoogleSpreadsheetFormulaError(this._rawData.effectiveValue.errorValue);
+    this._draftData = {};
+    if (this._rawData?.effectiveValue && 'errorValue' in this._rawData.effectiveValue) {
+      this._error = new GoogleSpreadsheetCellErrorValue(this._rawData.effectiveValue.errorValue);
+    } else {
+      this._error = undefined;
     }
   }
 
   // CELL LOCATION/ADDRESS /////////////////////////////////////////////////////////////////////////
-  get rowIndex() { return this._row; }
-  get columnIndex() { return this._column; }
-  get a1Column() { return columnToLetter(this._column + 1); }
-  get a1Row() { return this._row + 1; } // a1 row numbers start at 1 instead of 0
+  get rowIndex() { return this._rowIndex; }
+  get columnIndex() { return this._columnIndex; }
+  get a1Column() { return columnToLetter(this._columnIndex + 1); }
+  get a1Row() { return this._rowIndex + 1; } // a1 row numbers start at 1 instead of 0
   get a1Address() { return `${this.a1Column}${this.a1Row}`; }
 
   // CELL CONTENTS - VALUE/FORMULA/NOTES ///////////////////////////////////////////////////////////
-  get value() {
+  get value(): number | boolean | string | null | GoogleSpreadsheetCellErrorValue {
     // const typeKey = _.keys(this._rawData.effectiveValue)[0];
     if (this._draftData.value !== undefined) throw new Error('Value has been changed');
     if (this._error) return this._error;
-    if (!this._rawData.effectiveValue) return null;
+    if (!this._rawData?.effectiveValue) return null;
     return _.values(this._rawData.effectiveValue)[0];
   }
 
-  set value(newValue) {
+
+  set value(newValue: number | boolean | Date | string | null | undefined | GoogleSpreadsheetCellErrorValue) {
+    // had to include the GoogleSpreadsheetCellErrorValue in the type to make TS happy
+    if (newValue instanceof GoogleSpreadsheetCellErrorValue) {
+      throw new Error("You can't manually set a value to an error");
+    }
+
     if (_.isBoolean(newValue)) {
       this._draftData.valueType = 'boolValue';
     } else if (_.isString(newValue)) {
-      if (newValue.substr(0, 1) === '=') this._draftData.valueType = 'formulaValue';
+      if (newValue.substring(0, 1) === '=') this._draftData.valueType = 'formulaValue';
       else this._draftData.valueType = 'stringValue';
     } else if (_.isFinite(newValue)) {
       this._draftData.valueType = 'numberValue';
@@ -58,60 +82,97 @@ class GoogleSpreadsheetCell {
     this._draftData.value = newValue;
   }
 
-  get valueType() {
-    // an error only happens with a formula
+  get valueType(): CellValueType | null {
+    // an error only happens with a formula (as far as I know)
     if (this._error) return 'errorValue';
-    if (!this._rawData.effectiveValue) return null;
-    return _.keys(this._rawData.effectiveValue)[0];
+    if (!this._rawData?.effectiveValue) return null;
+    return _.keys(this._rawData.effectiveValue)[0] as CellValueType;
   }
 
-  get formattedValue() { return this._rawData.formattedValue || null; }
-  set formattedValue(newVal) {
-    throw new Error('You cannot modify the formatted value directly');
-  }
+  /** The formatted value of the cell - this is the value as it's shown to the user */
+  get formattedValue(): string | null { return this._rawData?.formattedValue || null; }
 
   get formula() { return _.get(this._rawData, 'userEnteredValue.formulaValue', null); }
-  set formula(newValue) {
-    if (newValue.substr(0, 1) !== '=') throw new Error('formula must begin with "="');
+  set formula(newValue: string | null) {
+    if (!newValue) throw new Error('To clear a formula, set `cell.value = null`');
+    if (newValue.substring(0, 1) !== '=') throw new Error('formula must begin with "="');
     this.value = newValue; // use existing value setter
   }
+  /**
+   * @deprecated use `cell.errorValue` instead
+   */
   get formulaError() { return this._error; }
+  /**
+   * error contained in the cell, which can happen with a bad formula (maybe some other weird cases?)
+   */
+  get errorValue() { return this._error; }
 
+  get numberValue(): number | undefined {
+    if (this.valueType !== 'numberValue') return undefined;
+    return this.value as number;
+  }
+  set numberValue(val: number | undefined) {
+    this.value = val;
+  }
+
+  get boolValue(): boolean | undefined {
+    if (this.valueType !== 'boolValue') return undefined;
+    return this.value as boolean;
+  }
+  set boolValue(val: boolean | undefined) {
+    this.value = val;
+  }
+
+  get stringValue(): string | undefined {
+    if (this.valueType !== 'stringValue') return undefined;
+    return this.value as string;
+  }
+  set stringValue(val: string | undefined) {
+    if (val?.startsWith('=')) {
+      throw new Error('Use cell.formula to set formula values');
+    }
+    this.value = val;
+  }
+
+  /**
+   * Hyperlink contained within the cell.
+   *
+   * To modify, do not set directly. Instead set cell.formula, for example `cell.formula = \'=HYPERLINK("http://google.com", "Google")\'`
+   */
   get hyperlink() {
     if (this._draftData.value) throw new Error('Save cell to be able to read hyperlink');
-    return this._rawData.hyperlink;
-  }
-  set hyperlink(val) {
-    throw new Error('Do not set hyperlink directly. Instead set cell.formula, for example `cell.formula = \'=HYPERLINK("http://google.com", "Google")\'`');
+    return this._rawData?.hyperlink;
   }
 
-  get note() {
-    return this._draftData.note !== undefined ? this._draftData.note : this._rawData.note;
+  /** a note attached to the cell */
+  get note(): string {
+    return this._draftData.note !== undefined ? this._draftData.note : this._rawData?.note;
   }
-
-  set note(newVal) {
-    if (newVal === null || newVal === undefined) newVal = '';
+  set note(newVal: string | null | undefined | false) {
+    if (newVal === null || newVal === undefined || newVal === false) newVal = '';
     if (!_.isString(newVal)) throw new Error('Note must be a string');
-    if (newVal === this._rawData.note) delete this._draftData.note;
+    if (newVal === this._rawData?.note) delete this._draftData.note;
     else this._draftData.note = newVal;
   }
 
   // CELL FORMATTING ///////////////////////////////////////////////////////////////////////////////
-  get userEnteredFormat() { return this._rawData.userEnteredFormat; }
-  get effectiveFormat() { return this._rawData.effectiveFormat; }
-  set userEnteredFormat(newVal) { throw new Error('Do not modify directly, instead use format properties'); }
-  set effectiveFormat(newVal) { throw new Error('Read-only'); }
+  get userEnteredFormat() { return Object.freeze(this._rawData?.userEnteredFormat); }
+  get effectiveFormat() { return Object.freeze(this._rawData?.effectiveFormat); }
 
-  _getFormatParam(param) {
+  private _getFormatParam<T extends keyof CellFormat>(param: T): Readonly<CellFormat[T]> {
     // we freeze the object so users don't change nested props accidentally
     // TODO: figure out something that would throw an error if you try to update it?
     if (_.get(this._draftData, `userEnteredFormat.${param}`)) {
       throw new Error('User format is unsaved - save the cell to be able to read it again');
     }
-    return Object.freeze(this._rawData.userEnteredFormat[param]);
+    // TODO: figure out how to deal with possible empty rawData
+    // if (!this._rawData?.userEnteredFormat?.[param]) {
+    //   return undefined;
+    // }
+    return Object.freeze(this._rawData!.userEnteredFormat[param]);
   }
 
-  _setFormatParam(param, newVal) {
+  private _setFormatParam<T extends keyof CellFormat>(param: T, newVal: CellFormat[T]) {
     if (_.isEqual(newVal, _.get(this._rawData, `userEnteredFormat.${param}`))) {
       _.unset(this._draftData, `userEnteredFormat.${param}`);
     } else {
@@ -123,6 +184,7 @@ class GoogleSpreadsheetCell {
   // format getters
   get numberFormat() { return this._getFormatParam('numberFormat'); }
   get backgroundColor() { return this._getFormatParam('backgroundColor'); }
+  get backgroundColorStyle() { return this._getFormatParam('backgroundColorStyle'); }
   get borders() { return this._getFormatParam('borders'); }
   get padding() { return this._getFormatParam('padding'); }
   get horizontalAlignment() { return this._getFormatParam('horizontalAlignment'); }
@@ -134,17 +196,18 @@ class GoogleSpreadsheetCell {
   get textRotation() { return this._getFormatParam('textRotation'); }
 
   // format setters
-  set numberFormat(newVal) { return this._setFormatParam('numberFormat', newVal); }
-  set backgroundColor(newVal) { return this._setFormatParam('backgroundColor', newVal); }
-  set borders(newVal) { return this._setFormatParam('borders', newVal); }
-  set padding(newVal) { return this._setFormatParam('padding', newVal); }
-  set horizontalAlignment(newVal) { return this._setFormatParam('horizontalAlignment', newVal); }
-  set verticalAlignment(newVal) { return this._setFormatParam('verticalAlignment', newVal); }
-  set wrapStrategy(newVal) { return this._setFormatParam('wrapStrategy', newVal); }
-  set textDirection(newVal) { return this._setFormatParam('textDirection', newVal); }
-  set textFormat(newVal) { return this._setFormatParam('textFormat', newVal); }
-  set hyperlinkDisplayType(newVal) { return this._setFormatParam('hyperlinkDisplayType', newVal); }
-  set textRotation(newVal) { return this._setFormatParam('textRotation', newVal); }
+  set numberFormat(newVal: CellFormat['numberFormat']) { this._setFormatParam('numberFormat', newVal); }
+  set backgroundColor(newVal: CellFormat['backgroundColor']) { this._setFormatParam('backgroundColor', newVal); }
+  set backgroundColorStyle(newVal: CellFormat['backgroundColorStyle']) { this._setFormatParam('backgroundColorStyle', newVal); }
+  set borders(newVal: CellFormat['borders']) { this._setFormatParam('borders', newVal); }
+  set padding(newVal: CellFormat['padding']) { this._setFormatParam('padding', newVal); }
+  set horizontalAlignment(newVal: CellFormat['horizontalAlignment']) { this._setFormatParam('horizontalAlignment', newVal); }
+  set verticalAlignment(newVal: CellFormat['verticalAlignment']) { this._setFormatParam('verticalAlignment', newVal); }
+  set wrapStrategy(newVal: CellFormat['wrapStrategy']) { this._setFormatParam('wrapStrategy', newVal); }
+  set textDirection(newVal: CellFormat['textDirection']) { this._setFormatParam('textDirection', newVal); }
+  set textFormat(newVal: CellFormat['textFormat']) { this._setFormatParam('textFormat', newVal); }
+  set hyperlinkDisplayType(newVal: CellFormat['hyperlinkDisplayType']) { this._setFormatParam('hyperlinkDisplayType', newVal); }
+  set textRotation(newVal: CellFormat['textRotation']) { this._setFormatParam('textRotation', newVal); }
 
   clearAllFormatting() {
     // need to track this separately since by setting/unsetting things, we may end up with
@@ -170,12 +233,19 @@ class GoogleSpreadsheetCell {
     this._draftData = {};
   }
 
+  /**
+   * saves updates for single cell
+   * usually it's better to make changes and call sheet.saveUpdatedCells
+   * */
   async save() {
-    await this._sheet.saveUpdatedCells([this]);
+    await this._sheet.saveCells([this]);
   }
 
-  // used by worksheet when saving cells
-  // returns an individual batchUpdate request to update the cell
+  /**
+   * used by worksheet when saving cells
+   * returns an individual batchUpdate request to update the cell
+   * @internal
+   */
   _getUpdateRequest() {
     // this logic should match the _isDirty logic above
     // but we need it broken up to build the request below
@@ -192,7 +262,7 @@ class GoogleSpreadsheetCell {
     // build up the formatting object, which has some quirks...
     const format = {
       // have to pass the whole object or it will clear existing properties
-      ...this._rawData.userEnteredFormat,
+      ...this._rawData?.userEnteredFormat,
       ...this._draftData.userEnteredFormat,
     };
     // if background color already set, cell has backgroundColor and backgroundColorStyle
@@ -235,5 +305,3 @@ class GoogleSpreadsheetCell {
     };
   }
 }
-
-module.exports = GoogleSpreadsheetCell;
