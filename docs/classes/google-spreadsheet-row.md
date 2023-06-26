@@ -19,17 +19,17 @@ Larry Page|larry@google.com
 Sergey Brin|sergey@google.com
 
 ```javascript
-const doc = new GoogleSpreadsheet('<YOUR-DOC-ID>');
+const doc = new GoogleSpreadsheet('<YOUR-DOC-ID>', auth);
 await doc.loadInfo(); // loads sheets
 const sheet = doc.sheetsByIndex[0]; // the first sheet
 
 const rows = await sheet.getRows();
 console.log(rows.length); // 2
-console.log(rows[0].name); // 'Larry Page'
-console.log(rows[0].email); // 'larry@google.com'
+console.log(rows[0].get('name')); // 'Larry Page'
+console.log(rows[0].get('email')); // 'larry@google.com'
 
 // make updates
-rows[1].email = 'sergey@abc.xyz';
+rows[1].set('email', 'sergey@abc.xyz');
 await rows[1].save(); // save changes
 
 // add new row, returns a GoogleSpreadsheetRow object
@@ -66,15 +66,40 @@ The row-based interface is designed to much simpler than using cells. It therefo
 That said, you can set a formula in a property and after saving the row, it will return the value the formula resolved to. However if you were to make other updates and NOT re-set the formula into the cell, the cell will lose the formula and will be overwritten with the value.
 
 ```javascript
-const row = await doc.addRow({ col1: '=ASDF' });
-console.log(row.col1); // logs 'ASDF', the cell does actually contain the formula
-await row.save(); // cell will now contain the value "ASDF", not the formula
+const row = await doc.addRow({ col1: '=A1' });
+console.log(row.get('col1')); // logs '=A1', the formula has not been actually resolved yet
+await row.save(); // cell will now contain the value from cell A1
 ```
 
 !> Be careful - it is not recommended to use formulas with the row based interface if you are planning on ever updating row values. If you are only inserting rows and reading data, you should be ok.
 
 
 ## Methods
+
+#### `get(key)` (async) :id=fn-get
+> Get value of specific cell using header key
+
+Param|Type|Required|Description
+---|---|---|---
+`key`|String|-|header value
+
+#### `set(key, value)` (async) :id=fn-set
+> Get value of specific cell using header key
+
+Param|Type|Required|Description
+---|---|---|---
+`key`|String|-|header value
+`value`|String|-|new value
+
+#### `assign(valuesObject)` (async) :id=fn-assign
+> Assign multiple values in the row at once
+
+Similar to `Object.assign()`
+
+Param|Type|Required|Description
+---|---|---|---
+`valuesObject`|Object|-|key-value object of data to set
+
 
 #### `save(options)` (async) :id=fn-save
 > Save any updates made to row values
@@ -86,11 +111,15 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - updates are saved and everything re-fetched from google
 
-
 #### `delete()` (async) :id=fn-delete
 > Delete this row
 
-- ✨ **Side effects** - Row is removed from the sheet
+- ✨ **Side effects** - Row is removed from the sheet. Later rows that have been loaded have their `rowNumber` shifted accordingly.
 
 _also available as `row.del()`_
+
+
+
+#### `toObject()` :id=fn-toObject
+> Get plain javascript object of row data
 
