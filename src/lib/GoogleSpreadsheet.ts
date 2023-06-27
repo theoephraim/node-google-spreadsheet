@@ -1,9 +1,9 @@
-import * as _ from 'lodash-es';
 import Axios, {
   AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig,
 } from 'axios';
 
 import { Stream } from 'stream';
+import * as _ from './lodash';
 import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
 import { axiosParamsSerializer, getFieldMask } from './utils';
 import {

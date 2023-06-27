@@ -1,4 +1,4 @@
-import * as _ from 'lodash-es';
+import * as _ from './lodash';
 
 export function getFieldMask(obj: Record<string, unknown>) {
   return Object.keys(obj).join(',');

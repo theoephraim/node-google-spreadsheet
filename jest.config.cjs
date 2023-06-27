@@ -5,9 +5,6 @@ module.exports = {
   transform: {
     "^.+\\.(t|j)s$": "@swc/jest",
   },
-  moduleNameMapper: {
-    "lodash-es": "lodash"
-  },
   testTimeout: 10000,
   coveragePathIgnorePatterns: [
     "/node_modules/",

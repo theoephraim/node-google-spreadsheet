@@ -1,5 +1,6 @@
-import * as _ from 'lodash-es';
+
 import delay from 'delay';
+import * as _ from '../lib/lodash';
 
 import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } from '..';
 
@@ -77,7 +78,7 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('throws an error if updating title directly', async () => {
-      expect(() => { doc.title = 'new title'; }).toThrow();
+      expect(() => { (doc as any).title = 'new title'; }).toThrow();
     });
 
     it('can update the title using updateProperties', async () => {
@@ -171,7 +172,7 @@ describe('Managing doc info and sheets', () => {
 
     it('can resize a sheet', async () => {
       // cannot update directly
-      expect(() => { sheet.rowCount = 77; }).toThrow();
+      expect(() => { (sheet as any).rowCount = 77; }).toThrow();
       await sheet.resize({ rowCount: 77, columnCount: 44 });
       expect(sheet.rowCount).toBe(77);
       sheet.resetLocalCache();

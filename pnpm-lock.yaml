@@ -4,7 +4,7 @@ dependencies:
   axios:
     specifier: ^1.4.0
     version: 1.4.0
-  lodash-es:
+  lodash:
     specifier: ^4.17.21
     version: 4.17.21
 
@@ -21,9 +21,6 @@ devDependencies:
   '@types/lodash':
     specifier: ^4.14.195
     version: 4.14.195
-  '@types/lodash-es':
-    specifier: ^4.17.7
-    version: 4.17.7
   '@types/node':
     specifier: ^20.2.5
     version: 20.2.5
@@ -75,9 +72,6 @@ devDependencies:
   jest-junit:
     specifier: ^16.0.0
     version: 16.0.0
-  lodash:
-    specifier: ^4.17.21
-    version: 4.17.21
   release-it:
     specifier: ^15.11.0
     version: 15.11.0
@@ -1573,12 +1567,6 @@ packages:
     resolution: {integrity: sha512-BQ5aZNSCpj7D6K2ksrRCTmKRLEpnPvWDiLPfoGyhZ++8YtiK9d/3DBKPJgry359X/P1PfruyYwvnvwFjuEiEIg==}
     dependencies:
       '@types/node': 20.2.5
-    dev: true
-
-  /@types/lodash-es@4.17.7:
-    resolution: {integrity: sha512-z0ptr6UI10VlU6l5MYhGwS4mC8DZyYer2mCoyysZtSF7p26zOX8UpbrV0YpNYLGS8K4PUFIyEr62IMFFjveSiQ==}
-    dependencies:
-      '@types/lodash': 4.14.195
     dev: true
 
   /@types/lodash@4.14.195:
@@ -5370,10 +5358,6 @@ packages:
       p-locate: 5.0.0
     dev: true
 
-  /lodash-es@4.17.21:
-    resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
-    dev: false
-
   /lodash.capitalize@4.2.1:
     resolution: {integrity: sha512-kZzYOKspf8XVX5AvmQF94gQW0lejFVgb80G85bU4ZWzoJ6C03PQg3coYAUpSTpQWelrZELd3XWgHzw4Ck5kaIw==}
     dev: true
@@ -5414,7 +5398,6 @@ packages:
 
   /lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
-    dev: true
 
   /log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}

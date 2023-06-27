@@ -1,5 +1,5 @@
-import * as _ from 'lodash-es';
 import delay from 'delay';
+import * as _ from '../lib/lodash';
 
 import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet, GoogleSpreadsheetRow } from '..';
 

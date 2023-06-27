@@ -1,6 +1,6 @@
-import * as _ from 'lodash-es';
-
 import { ReadableStream } from 'node:stream/web';
+import * as _ from './lodash';
+
 import { GoogleSpreadsheetRow } from './GoogleSpreadsheetRow';
 import { GoogleSpreadsheetCell } from './GoogleSpreadsheetCell';
 
