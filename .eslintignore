@@ -2,3 +2,4 @@
 build.config.js
 jest.config.cjs
 dist
+examples
