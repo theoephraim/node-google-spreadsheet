@@ -14,10 +14,10 @@ You do not initialize worksheets directly. Instead you can load the sheets from 
 
 ```javascript
 const doc = new GoogleSpreadsheet('<YOUR-DOC-ID>', auth);
-await doc.loadInfo(); // loads sheets
+await doc.loadInfo(); // loads sheets and other document metadata
 
 const firstSheet = doc.sheetsByIndex[0]; // in the order they appear on the sheets UI
-const otherSheet = doc.sheetsById[123]; // accessible via ID if you already know it
+const sheet123 = doc.sheetsById[123]; // accessible via ID if you already know it
 
 const newSheet = await doc.addSheet(); // adds a new sheet
 ```
@@ -333,16 +333,16 @@ Param|Type|Required|Description
 
 ?> The authentication method being used must have write access to the destination document as well
 
-### Export
+### Exports
 
-Several export methods are available, which are the same as using the `File > Download` menu in the Google Sheets UI. The formats listed below export only a single sheet. See [GoogleSpreadsheet > Export](classes/google-spreadsheet?id=export) formats which include the entire document.
+See [Exports guide](guides/exports) for more info.
 
 #### `downloadAsCSV(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsCSV
 > Export worksheet in CSV format
 
 Param|Type|Required|Description
 ---|---|---|---
-`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer<br/>_See [Exports guide](guides/exports) for more details_
 
 - ↩️ **Returns** - Buffer (or stream) containing CSV data
 
@@ -352,7 +352,7 @@ Param|Type|Required|Description
 
 Param|Type|Required|Description
 ---|---|---|---
-`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer<br/>_See [Exports guide](guides/exports) for more details_
 
 - ↩️ **Returns** - Buffer (or stream) containing TSV data
 
@@ -362,7 +362,7 @@ Param|Type|Required|Description
 
 Param|Type|Required|Description
 ---|---|---|---
-`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer<br/>_See [Exports guide](guides/exports) for more details_
 
 - ↩️ **Returns** - Buffer (or stream) containing PDF data
 

@@ -35,7 +35,7 @@ _the following examples are meant to give you an idea of just some of the things
 ### The Basics
 ```js
 import { GoogleSpreadsheet } from 'google-spreadsheet';
-import { JWT } from 'google-auth-library'
+import { JWT } from 'google-auth-library';
 
 
 // Initialize auth - see https://theoephraim.github.io/node-google-spreadsheet/#/guides/authentication

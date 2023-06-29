@@ -164,14 +164,14 @@ Param|Type|Required|Description
 
 ### Exports
 
-Several export methods are available, which are the same as using the `File > Download` menu in the Google Sheets UI. The formats listed below export all sheets in the document. See [GoogleSpreadsheetWorksheet > Export](classes/google-spreadsheet-worksheet?id=export) formats which export only a single sheet.
+See [Exports guide](guides/exports) for more info.
 
 #### `downloadAsHTML(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsHTML
 > Export entire document in HTML format (zip file)
 
 Param|Type|Required|Description
 ---|---|---|---
-`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer<br/>_See [Exports guide](guides/exports) for more details_
 
 - ↩️ **Returns** - Buffer (or stream) containing HTML data (in a zip file)
 
@@ -181,7 +181,7 @@ Param|Type|Required|Description
 
 Param|Type|Required|Description
 ---|---|---|---
-`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer<br/>_See [Exports guide](guides/exports) for more details_
 
 - ↩️ **Returns** - Buffer (or stream) containing XLSX data
 
@@ -191,7 +191,7 @@ Param|Type|Required|Description
 
 Param|Type|Required|Description
 ---|---|---|---
-`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer<br/>_See [Exports guide](guides/exports) for more details_
 
 - ↩️ **Returns** - Buffer (or stream) containing ODS data
 
