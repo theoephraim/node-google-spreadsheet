@@ -76,14 +76,14 @@ await row.save(); // cell will now contain the value from cell A1
 
 ## Methods
 
-#### `get(key)` (async) :id=fn-get
+#### `get(key)` :id=fn-get
 > Get value of specific cell using header key
 
 Param|Type|Required|Description
 ---|---|---|---
 `key`|String|-|header value
 
-#### `set(key, value)` (async) :id=fn-set
+#### `set(key, value)` :id=fn-set
 > Get value of specific cell using header key
 
 Param|Type|Required|Description
