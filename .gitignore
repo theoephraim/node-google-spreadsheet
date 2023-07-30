@@ -4,4 +4,3 @@ src/ignore/
 .DS_Store
 examples/
 TODO
-dist
