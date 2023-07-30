@@ -1,17 +1,42 @@
-const delay = require('delay');
-const _ = require('lodash');
 
-const { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } = require('../index');
+import delay from 'delay';
+import * as _ from '../lib/lodash';
 
-const docs = require('./load-test-docs')();
-const creds = require('./service-account-creds.json');
+import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } from '..';
 
-const doc = docs.private;
+import { DOC_IDS, testServiceAccountAuth } from './auth/docs-and-auth';
+
+const doc = new GoogleSpreadsheet(DOC_IDS.private, testServiceAccountAuth);
+
+// TODO: reorganize some of this?
 
 describe('Managing doc info and sheets', () => {
-  beforeAll(async () => {
-    await doc.useServiceAccountAuth(creds);
+  describe('creation and deletion', () => {
+    let spreadsheetId: string;
+    const title = `new sheet - ${+new Date()}`;
+    it('can create a new document', async () => {
+      const newDoc = await GoogleSpreadsheet.createNewSpreadsheetDocument(testServiceAccountAuth, { title });
+      expect(newDoc.title).toEqual(title);
+      spreadsheetId = newDoc.spreadsheetId;
+    });
+    it('confirm the document exists', async () => {
+      const newDoc = new GoogleSpreadsheet(spreadsheetId, testServiceAccountAuth);
+      await newDoc.loadInfo();
+      expect(newDoc.title).toEqual(title);
+    });
+    it('can delete the document', async () => {
+      const newDoc = new GoogleSpreadsheet(spreadsheetId, testServiceAccountAuth);
+      await newDoc.delete();
+    });
+    it('deleting the document twice fails', async () => {
+      const newDoc = new GoogleSpreadsheet(spreadsheetId, testServiceAccountAuth);
+      await expect(newDoc.delete()).rejects.toThrow('404');
+    });
   });
+
+  // beforeAll(async () => {
+  //   // TODO: do something to trigger auth refresh?
+  // });
 
   // hitting rate limits when running tests on ci - so we add a short delay
   if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
@@ -53,7 +78,7 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('throws an error if updating title directly', async () => {
-      expect(() => { doc.title = 'new title'; }).toThrow();
+      expect(() => { (doc as any).title = 'new title'; }).toThrow();
     });
 
     it('can update the title using updateProperties', async () => {
@@ -76,7 +101,7 @@ describe('Managing doc info and sheets', () => {
 
   describe('adding and updating sheets', () => {
     const newSheetTitle = `Test sheet ${+new Date()}`;
-    let sheet;
+    let sheet: GoogleSpreadsheetWorksheet;
 
     afterAll(async () => {
       if (sheet) await sheet.delete();
@@ -84,7 +109,7 @@ describe('Managing doc info and sheets', () => {
 
     it('can add a sheet', async () => {
       const numSheets = doc.sheetCount;
-      sheet = await doc.addWorksheet({
+      sheet = await doc.addSheet({
         title: newSheetTitle,
         gridProperties: {
           rowCount: 7,
@@ -101,6 +126,7 @@ describe('Managing doc info and sheets', () => {
       doc.resetLocalCache();
       await doc.loadInfo(); // re-fetch
       const newSheet = doc.sheetsByIndex.pop();
+      if (!newSheet) throw new Error('Expected to find new sheet');
       expect(newSheet.title).toBe(sheet.title);
       expect(newSheet.rowCount).toBe(sheet.rowCount);
       expect(newSheet.columnCount).toBe(sheet.columnCount);
@@ -120,7 +146,7 @@ describe('Managing doc info and sheets', () => {
   });
 
   describe('updating sheet properties', () => {
-    let sheet;
+    let sheet: GoogleSpreadsheetWorksheet;
 
     beforeAll(async () => {
       sheet = await doc.addSheet({ title: `Spécial CнArs - ${+new Date()}` });
@@ -146,7 +172,7 @@ describe('Managing doc info and sheets', () => {
 
     it('can resize a sheet', async () => {
       // cannot update directly
-      expect(() => { sheet.rowCount = 77; }).toThrow();
+      expect(() => { (sheet as any).rowCount = 77; }).toThrow();
       await sheet.resize({ rowCount: 77, columnCount: 44 });
       expect(sheet.rowCount).toBe(77);
       sheet.resetLocalCache();
@@ -165,14 +191,14 @@ describe('Managing doc info and sheets', () => {
   });
 
   describe('deleting a sheet', () => {
-    let sheet;
-    let numSheets;
+    let sheet: GoogleSpreadsheetWorksheet;
+    let numSheets: number;
 
     it('can remove a sheet', async () => {
       await doc.loadInfo();
       numSheets = doc.sheetsByIndex.length;
 
-      sheet = await doc.addWorksheet({
+      sheet = await doc.addSheet({
         title: `please delete me ${+new Date()}`,
       });
       expect(doc.sheetsByIndex.length).toBe(numSheets + 1);
@@ -189,8 +215,8 @@ describe('Managing doc info and sheets', () => {
   });
 
   describe('duplicating a sheet within the same document', () => {
-    let sheet;
-    let duplicateSheet;
+    let sheet: GoogleSpreadsheetWorksheet;
+    let duplicateSheet: GoogleSpreadsheetWorksheet;
     beforeAll(async () => {
       sheet = await doc.addSheet({
         title: `Sheet to duplicate ${+new Date()}`,
@@ -218,7 +244,7 @@ describe('Managing doc info and sheets', () => {
   });
 
   describe('copying a sheet to another document', () => {
-    let sheet;
+    let sheet: GoogleSpreadsheetWorksheet;
 
     beforeAll(async () => {
       sheet = await doc.addSheet({
@@ -231,18 +257,17 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('should fail without proper permissions', async () => {
-      const newDocId = docs.privateReadOnly.spreadsheetId;
+      const newDocId = DOC_IDS.privateReadOnly;
       await expect(sheet.copyToSpreadsheet(newDocId)).rejects.toThrow('403');
     });
 
     it('can copy the sheet to another doc', async () => {
-      await sheet.copyToSpreadsheet(docs.public.spreadsheetId);
+      await sheet.copyToSpreadsheet(DOC_IDS.public);
 
-      await docs.public.useServiceAccountAuth(creds);
-      await docs.public.loadInfo();
-
+      const publicDoc = new GoogleSpreadsheet(DOC_IDS.public, testServiceAccountAuth);
+      await publicDoc.loadInfo();
       // check title and content (header row)
-      const copiedSheet = docs.public.sheetsByIndex.splice(-1)[0];
+      const copiedSheet = publicDoc.sheetsByIndex.splice(-1)[0];
       expect(copiedSheet.title).toBe(`Copy of ${sheet.title}`);
       await copiedSheet.loadHeaderRow();
       expect(copiedSheet.headerValues).toEqual(sheet.headerValues);
@@ -251,25 +276,19 @@ describe('Managing doc info and sheets', () => {
   });
 
   describe('creating a new document', () => {
-    let newDoc;
+    let newDoc: GoogleSpreadsheet;
 
     afterAll(async () => {
       await newDoc.delete();
     });
 
-    it('should fail if GoogleSpreadsheet was initialized with an ID', async () => {
-      newDoc = new GoogleSpreadsheet('someid');
-      await expect(newDoc.createNewSpreadsheetDocument()).rejects.toThrow();
-    });
     it('should fail without auth', async () => {
-      newDoc = new GoogleSpreadsheet();
-      await expect(newDoc.createNewSpreadsheetDocument()).rejects.toThrow();
+      // @ts-ignore
+      await expect(GoogleSpreadsheet.createNewSpreadsheetDocument()).rejects.toThrow();
     });
     it('should create a new sheet', async () => {
-      newDoc = new GoogleSpreadsheet();
-      newDoc.useServiceAccountAuth(creds);
       const newTitle = `New doc ${+new Date()}`;
-      await newDoc.createNewSpreadsheetDocument({ title: newTitle });
+      newDoc = await GoogleSpreadsheet.createNewSpreadsheetDocument(testServiceAccountAuth, { title: newTitle });
       expect(newDoc.title).toEqual(newTitle);
       expect(newDoc.sheetsByIndex.length > 0).toBeTruthy();
       expect(newDoc.sheetsByIndex[0]).toBeInstanceOf(GoogleSpreadsheetWorksheet);
@@ -277,7 +296,7 @@ describe('Managing doc info and sheets', () => {
   });
 
   describe('insertDimension - inserting columns/rows into a sheet', () => {
-    let sheet;
+    let sheet: GoogleSpreadsheetWorksheet;
 
     beforeAll(async () => {
       sheet = await doc.addSheet({
@@ -301,16 +320,19 @@ describe('Managing doc info and sheets', () => {
       await sheet.insertDimension('ROWS', { startIndex: 2, endIndex: 4 });
 
       // read rows and check it did what we expected
-      const rows = await sheet.getRows();
+      const rows = await sheet.getRows<{
+        a: string,
+        b: string,
+      }>();
       // header row
-      expect(rows[0].a).toEqual('a1');
-      expect(rows[0].b).toEqual('b1');
-      expect(rows[1].a).toBeUndefined();
-      expect(rows[1].b).toBeUndefined();
-      expect(rows[2].a).toBeUndefined();
-      expect(rows[2].b).toBeUndefined();
-      expect(rows[3].a).toEqual('a2');
-      expect(rows[3].b).toEqual('b2');
+      expect(rows[0].get('a')).toEqual('a1');
+      expect(rows[0].get('b')).toEqual('b1');
+      expect(rows[1].get('a')).toBeUndefined();
+      expect(rows[1].get('b')).toBeUndefined();
+      expect(rows[2].get('a')).toBeUndefined();
+      expect(rows[2].get('b')).toBeUndefined();
+      expect(rows[3].get('a')).toEqual('a2');
+      expect(rows[3].get('b')).toEqual('b2');
     });
   });
 });

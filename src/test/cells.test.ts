@@ -1,14 +1,15 @@
-const _ = require('lodash');
-const delay = require('delay');
+import delay from 'delay';
+import * as _ from '../lib/lodash';
 
-const { GoogleSpreadsheetFormulaError } = require('../index');
+import {
+  GoogleSpreadsheet, GoogleSpreadsheetWorksheet, GoogleSpreadsheetCell, GoogleSpreadsheetCellErrorValue,
+} from '..';
 
-const docs = require('./load-test-docs')();
-const creds = require('./service-account-creds.json');
+import { DOC_IDS, testServiceAccountAuth } from './auth/docs-and-auth';
 
-const doc = docs.private;
+const doc = new GoogleSpreadsheet(DOC_IDS.private, testServiceAccountAuth);
 
-let sheet;
+let sheet: GoogleSpreadsheetWorksheet;
 
 const NUM_ROWS = 10;
 const NUM_COLS = 10;
@@ -16,7 +17,6 @@ const TOTAL_CELLS = NUM_ROWS * NUM_COLS;
 
 describe('Cell-based operations', () => {
   beforeAll(async () => {
-    await doc.useServiceAccountAuth(creds);
     sheet = await doc.addSheet({
       gridProperties: {
         rowCount: NUM_ROWS,
@@ -101,15 +101,16 @@ describe('Cell-based operations', () => {
         'not a string or object': 5,
       }, (badFilter, description) => {
         it(`throws for ${description}`, async () => {
-          await expect(sheet.loadCells(badFilter)).rejects.toThrow();
+          await expect(sheet.loadCells(badFilter as any)).rejects.toThrow();
         });
       });
     });
   });
 
   describe('basic cell functionality', () => {
-    let c1; let c2; let
-      c3;
+    let c1: GoogleSpreadsheetCell;
+    let c2: GoogleSpreadsheetCell;
+    let c3: GoogleSpreadsheetCell;
     beforeEach(async () => {
       sheet.resetLocalCache(true);
       await sheet.loadCells('A1:C1');
@@ -142,8 +143,11 @@ describe('Cell-based operations', () => {
     it('can set cell value formatting', async () => {
       c3.numberFormat = { type: 'NUMBER', pattern: '#.00' };
       await sheet.saveUpdatedCells();
-      expect(c3.value).toBe(c1.value + c2.value);
-      expect(c3.formattedValue).toBe(c3.value.toFixed(2));
+      if (!_.isNumber(c1.value) || !_.isNumber(c2.value) || !_.isNumber(c3.value)) {
+        throw new Error('expected cell values to be numeric');
+      }
+      expect(c3.numberValue).toBe(c1.value + c2.value);
+      expect(c3.formattedValue!).toBe(c3.value.toFixed(2));
       expect(c3.formula).toBe('=A1 + B1');
     });
 
@@ -173,7 +177,7 @@ describe('Cell-based operations', () => {
     });
 
     it('cannot set a cell value to an object', async () => {
-      expect(() => { c1.value = { foo: 1 }; }).toThrow();
+      expect(() => { (c1.value as any) = { foo: 1 }; }).toThrow();
     });
 
     describe('calling saveCells directly', () => {
@@ -207,15 +211,19 @@ describe('Cell-based operations', () => {
         expect(c1.formula).toBe('=1');
       });
 
-      it('can only set .formula with a formula (starting with "=")', async () => {
-        expect(() => { c1.formula = 123; }).toThrow();
+      it('can only set .formula with a string starting with "="', async () => {
+        expect(() => { c1.formula = '123'; }).toThrow();
+      });
+
+      it('cannot set a formula to a non-string', async () => {
+        expect(() => { (c1.formula as any) = 123; }).toThrow();
       });
 
       it('handles formula errors correctly', async () => {
         c1.formula = '=NOTAFORMULA';
         await sheet.saveUpdatedCells();
-        expect(c1.value).toBeInstanceOf(GoogleSpreadsheetFormulaError);
-        expect(c1.value).toEqual(c1.formulaError);
+        expect(c1.value).toBeInstanceOf(GoogleSpreadsheetCellErrorValue);
+        expect(c1.value).toEqual(c1.errorValue);
       });
     });
 

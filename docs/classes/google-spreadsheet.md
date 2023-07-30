@@ -8,36 +8,45 @@ _Class Reference_
 
 ## Initialization
 
-`new GoogleSpreadsheet(spreadsheetId);`
+### Existing documents
+#### `new GoogleSpreadsheet(id, auth)` :id=fn-newGoogleSpreadsheet
+> Work with an existing document
 
-Param|Type|Description
----|---|---
-`spreadsheetId`|String|Document ID from the URL of the spreadsheet
-
-
-### Creating a new document
-Normally you will be working with an existing spreasheet document. However if you need to create a new one, you can accomplish this by initializing the GoogleSpreadsheet object without an id, initializing your preferred auth method, and then calling the following method.
-
-As this will create the document owned by the auth method you are using (which is often a service account), it may not be accessible to your google account. Therefore if it recommended to create documents ahead of time if possible rather than using this method.
-
-#### `createNewSpreadsheetDocument(properties)` :id=fn-createNewSpreadsheetDocument
-> Create a new google spreadsheet document
-
-!> You must initialize the GoogleSpreadsheet without an id in order to call this method
+>  You'll need the document ID, which you can find in your browser's URL when you navigate to the document.<br/>
+>  For example: `https://docs.google.com/spreadsheets/d/THIS-IS-THE-DOCUMENT-ID/edit#gid=123456789`
 
 Param|Type|Required|Description
 ---|---|---|---
-`properties`|Object|-|Properties to use when creating the new doc
+`spreadsheetId` | String | ✅ | Document ID
+`auth` | `GoogleAuth` \|<br/> `JWT` \|<br/> `OAuth2Client` \|<br/> `{ apiKey: string }` \|<br/> `{ token: string }` | ✅ | Authentication to use<br/>See [Authentication](guides/authentication) for more info
 
-See [basic document properties](#basic-document-properties) above for props documentation.
 
-- 🚨 **Warning** - The document will be owned by the authenticated user, which is a service account, may not be accessible to you personally.
+### Creating a new document
+
+In cases where you need to create a new document and then work with it, a static method is provided:
+
+#### `GoogleSpreadsheet.createNewSpreadsheetDocument(auth, properties)` (async) :id=fn-createNewSpreadsheetDocument
+> Create a new google spreadsheet document
+
+In case you do need to create a new document, a static method is provided.
+
+Note that as this will create the document owned by the auth method you are using (which is often a service account), it may not be accessible to _your_ google account. If you need to share with yourself or others, see the [sharing methods below](#sharing-permissions)
+
+
+Param|Type|Required|Description
+---|---|---|---
+`auth`|Auth|✅|Auth object to use when creating the document<br/>_See [Authentication](guides/authentication) for more info_
+`properties`|Object|-|Properties to use when creating the new doc<br/>_See [basic document properties](#basic-document-properties) for more details_
+
+
+
+- ↩️ **Returns** - Promise<[GoogleSpreadsheet](classes/google-spreadsheet)> with auth set, id and info loaded
+- 🚨 **Warning** - The document will be owned by the authenticated user, which depending on the auth you are using, could be a service account. In this case the sheet may not be accessible to you personally
 - ✨ **Side effects** - all info (including `spreadsheetId`) and sheets loaded as if you called [`loadInfo()`](#fn-loadInfo)
 
 ```javascript
-const doc = new GoogleSpreadsheet();
-await doc.useServiceAccountAuth(creds);
-await doc.createNewSpreadsheetDocument({ title: 'This is a new doc' });
+// see Authentication for more info on auth and how to create jwt
+const doc = await GoogleSpreadsheet.createNewSpreadsheetDocument(jwt, { title: 'This is a new doc' });
 console.log(doc.spreadsheetId);
 const sheet1 = doc.sheetsByIndex[0];
 ```
@@ -67,69 +76,13 @@ The child worksheets (each an instance of [`GoogleSpreadsheetWorksheet`](classes
 
 Property|Type|Description
 ---|---|---
-`sheetsById`|Object|Child worksheets, keyed by their `sheetId`
-`sheetsByTitle`|Object|Child worksheets keyed by their `title` - beware of title conflicts
-`sheetsByIndex`|[[GoogleSpreadsheetWorksheet](classes/google-spreadsheet-worksheet)]|Array of sheets, ordered by their index<br>_this is the order they appear in the Google sheets UI_
-`sheetCount`|Number|Count of child worksheets<br>_same as `doc.sheetsByIndex.length`_
+`sheetsById`| `{ [sheetId: string]: GoogleSpreadsheetWorksheet }` | Child worksheets, keyed by their `sheetId`
+`sheetsByTitle`| `{ [title: string]: GoogleSpreadsheetWorksheet }` | Child worksheets keyed by their `title`<br/>_⚠️ beware of title conflicts_
+`sheetsByIndex`| `GoogleSpreadsheetWorksheet[]` |Array of sheets, ordered by their index<br>_this is the order they appear in the Google sheets UI_
+`sheetCount`| `number` |Count of child worksheets<br>_same as `doc.sheetsByIndex.length`_
 
 
 ## Methods
-
-
-### Authentication
-
-#### `useServiceAccountAuth(creds, impersonateAs)` (async) :id=fn-useServiceAccountAuth
-> Initialize JWT-style auth for [google service account](https://cloud.google.com/iam/docs/service-accounts)
-
-Param|Type|Required|Description
----|---|---|---
-`creds`|Object|✅|Object containing credentials from google for your service account<br>_usually just `require` the json file google gives you_
-`creds.client_email`|String<br>_email_|✅|The email of your service account
-`creds.private_key`|String|✅|The private key for your service account
-`impersonateAs`|String<br>_email_|-|Email of user to impersonate instead of authing as service account (only possible if service account has domain-wide delegation enabled)
-
-
-- ✨ **Side effects** - all requests will now authenticate using these credentials
-
-> See [Getting Started > Authentication > Service Account](getting-started/authentication#service-account) for more details
-
-#### `useApiKey(key)` :id=fn-useApiKey
-> Set API-key to use for auth - only allows read-only access to public docs
-
-Param|Type|Required|Description
----|---|---|---
-`key`|String|✅|API key for your google project
-
-- ✨ **Side effects** - all requests will now authenticate using this api key only
-
-> See [Getting Started > Authentication > API Key](getting-started/authentication#api-key) for more details
-
-
-#### `useOAuth2Client(oAuth2Client)` :id=fn-useOAuth2Client
-> Use [Google's OAuth2Client](https://github.com/googleapis/google-auth-library-nodejs#oauth2) to authenticate on behalf of a user
-
-Param|Type|Required|Description
----|---|---|---
-`oAuth2Client`|OAuth2Client|✅|Configured OAuth2Client
-
-- ✨ **Side effects** - requests will use oauth access token to authenticate requests. New access token will be generated if token is expired.
-
-> See [Getting Started > Authentication > OAuth 2.0](getting-started/authentication#oauth) for more details
-
-
-#### `useRawAccessToken(token)` :id=fn-useRawAccessToken
-> Set raw token to use for auth - managed elsewhere
-
-Param|Type|Required|Description
----|---|---|---
-`token`|String|✅|Oauth token to use
-
-- ✨ **Side effects** - all requests will now authenticate using this api key only
-
-!> This assumes you are creating and managing/refreshing the token yourself
-
-
-
 
 ### Basic info
 
@@ -141,11 +94,10 @@ Param|Type|Required|Description
 #### `updateProperties(props)` (async) :id=fn-updateProperties
 > Update basic document properties
 
-Just set keys on the `props` object and those properties will be updated on the doc. For example:
-```javascript
-await doc.updateProperties({ title: 'New title' });
-```
-See [basic document properties](#basic-document-properties) above for props documentation.
+Param|Type|Required|Description
+---|---|---|---
+`props`|Object|-|properties to update<br/>See [basic document properties](#basic-document-properties) above for props documentation.
+
 
 - ✨ **Side Effects -** props are updated
 
@@ -190,7 +142,6 @@ Param|Type|Required|Description
 ?> **TIP** - Usually easier to use GoogleSpreadsheetWorksheet instance method `delete()`
 
 
-
 ### Named Ranges
 
 #### `addNamedRange(name, range, rangeId)` (async) :id=fn-addNamedRange
@@ -211,14 +162,16 @@ Param|Type|Required|Description
 
 
 
-### Export
+### Exports
+
+See [Exports guide](guides/exports) for more info.
 
 #### `downloadAsHTML(returnStreamInsteadOfBuffer)` (async) :id=fn-downloadAsHTML
 > Export entire document in HTML format (zip file)
 
 Param|Type|Required|Description
 ---|---|---|---
-`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer<br/>_See [Exports guide](guides/exports) for more details_
 
 - ↩️ **Returns** - Buffer (or stream) containing HTML data (in a zip file)
 
@@ -228,7 +181,7 @@ Param|Type|Required|Description
 
 Param|Type|Required|Description
 ---|---|---|---
-`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer<br/>_See [Exports guide](guides/exports) for more details_
 
 - ↩️ **Returns** - Buffer (or stream) containing XLSX data
 
@@ -238,7 +191,64 @@ Param|Type|Required|Description
 
 Param|Type|Required|Description
 ---|---|---|---
-`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer
+`returnStreamInsteadOfBuffer`|Boolean|-|Set to true to return a stream instead of a Buffer<br/>_See [Exports guide](guides/exports) for more details_
 
 - ↩️ **Returns** - Buffer (or stream) containing ODS data
 
+### Deletion
+#### `delete()` (async) :id=fn-delete
+> delete the document
+
+NOTE - requires drive scopes
+
+
+### Sharing / Permissions
+
+NOTE - to deal with permissions, you must include Drive API scope(s) when setting up auth
+- `https://www.googleapis.com/auth/drive`
+- `https://www.googleapis.com/auth/drive.readonly`
+- `https://www.googleapis.com/auth/drive.file`
+
+#### `listPermissions()` (async) :id=fn-listPermissions
+> list all permissions entries for doc
+
+- ↩️ **Returns** - `Promise<PermissionsList>`
+
+```js
+const permissions = await doc.listPermissions();
+```
+
+#### `setPublicAccessLevel(role)` (async) :id=fn-setPublicAccessLevel
+> list all permissions entries for doc
+
+Param|Type|Required|Description
+---|---|---|---
+`role`|`false` or `'writer'` or `'commenter'` or `'reader'`|✅|
+
+Possible roles:
+- `false` - revoke all public access
+- `'writer'` - anyone* with the link can edit the document
+- `'commenter'` - anyone* with the link can comment on the document
+- `'reader'` - anyone with the link can read the document
+
+> * - users will still need to be logged in, even though not explicitly granted any access 
+
+
+
+#### `share(emailAddressOrDomain, options?)` (async) :id=fn-share
+> list all permissions entries for doc
+
+Param|Type|Required|Description
+---|---|---|---
+`emailAddressOrDomain`|string|✅|email or domain to share
+`options`|object|-|
+`options.role`|string|-|set to role
+`options.isGroup`|boolean|-|set to true if sharing with an email that refers to a group
+`options.emailMessage`|false or string|-|leave empty to send default message<br/>set to a string to include special messsage in email<br/>set to false to disable email notificaiton entirely
+
+
+Possible roles:
+- `owner` - transfers ownership. Only valid for single users (not groups or domains)
+- `writer` - allows writing, commenting, reading
+- `commenter` - allows reading and commenting
+- `reader` - allows reading only

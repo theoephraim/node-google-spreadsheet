@@ -1,63 +1,95 @@
-const _ = require('lodash');
+import { ReadableStream } from 'node:stream/web';
+import * as _ from './lodash';
 
-const GoogleSpreadsheetRow = require('./GoogleSpreadsheetRow');
-const GoogleSpreadsheetCell = require('./GoogleSpreadsheetCell');
+import { GoogleSpreadsheetRow } from './GoogleSpreadsheetRow';
+import { GoogleSpreadsheetCell } from './GoogleSpreadsheetCell';
 
-const { getFieldMask, columnToLetter, letterToColumn } = require('./utils');
+import {
+  getFieldMask, columnToLetter, letterToColumn, checkForDuplicateHeaders,
+} from './utils';
+import { GoogleSpreadsheet } from './GoogleSpreadsheet';
+import {
+  A1Range, SpreadsheetId, DimensionRangeIndexes, WorksheetDimension, WorksheetId, WorksheetProperties, A1Address,
+  RowIndex, ColumnIndex, DataFilterWithoutWorksheetId, DataFilter, GetValuesRequestOptions, WorksheetGridProperties,
+  WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId,
+} from './types/sheets-types';
 
-function checkForDuplicateHeaders(headers) {
-  // check for duplicate headers
-  const checkForDupes = _.groupBy(headers); // { c1: ['c1'], c2: ['c2', 'c2' ]}
-  _.each(checkForDupes, (grouped, header) => {
-    if (!header) return; // empty columns are skipped, so multiple is ok
-    if (grouped.length > 1) {
-      throw new Error(`Duplicate header detected: "${header}". Please make sure all non-empty headers are unique`);
+
+// types of cell data accepted when using row based api
+type RowCellData = string | number | boolean | Date;
+// raw row data can be passed in as an array or an object using header values as keys
+type RawRowData = RowCellData[] | Record<string, RowCellData>;
+
+export class GoogleSpreadsheetWorksheet {
+  // assume "header row" (for row-based calls) is in first row, can be adjusted later
+  private _headerRowIndex = 1;
+
+  private _rawProperties: WorksheetProperties | null = null;
+  private _cells: GoogleSpreadsheetCell[][] = [];
+  private _rowMetadata: any[] = [];
+  private _columnMetadata: any[] = [];
+
+  private _headerValues: string[] | undefined;
+  get headerValues() {
+    if (!this._headerValues) {
+      throw new Error('Header values are not yet loaded');
     }
-  });
-}
+    return this._headerValues!;
+  }
 
-class GoogleSpreadsheetWorksheet {
-  constructor(parentSpreadsheet, { properties, data }) {
-    this._spreadsheet = parentSpreadsheet; // the parent GoogleSpreadsheet instance
-
-    this._headerRowIndex = 1; // assume "header row" (for row-based calls) is in first row
+  constructor(
+      /** parent GoogleSpreadsheet instance */
+      readonly _spreadsheet: GoogleSpreadsheet,
+      rawProperties: WorksheetProperties,
+      rawCellData?: CellDataRange[]
+  ) {
+    this._headerRowIndex = 1;
 
     // basic properties
-    this._rawProperties = properties;
+    this._rawProperties = rawProperties;
 
     this._cells = []; // we will use a 2d sparse array to store cells;
 
     this._rowMetadata = []; // 1d sparse array
     this._columnMetadata = [];
 
-    if (data) this._fillCellData(data);
-
-    return this;
+    if (rawCellData) this._fillCellData(rawCellData);
   }
 
   // INTERNAL UTILITY FUNCTIONS ////////////////////////////////////////////////////////////////////
-  async _makeSingleUpdateRequest(requestType, requestParams) {
+
+  updateRawData(properties: WorksheetProperties, rawCellData: CellDataRange[]) {
+    this._rawProperties = properties;
+    this._fillCellData(rawCellData);
+  }
+
+  async _makeSingleUpdateRequest(requestType: string, requestParams: any) {
     // pass the call up to the parent
     return this._spreadsheet._makeSingleUpdateRequest(requestType, {
-      // sheetId: this.sheetId,
       ...requestParams,
     });
   }
 
-  _ensureInfoLoaded() {
+  private _ensureInfoLoaded() {
     if (!this._rawProperties) {
       throw new Error('You must call `doc.loadInfo()` again before accessing this property');
     }
   }
 
-  resetLocalCache(dataOnly) {
+  /** clear local cache of sheet data/properties */
+  resetLocalCache(
+      /** set to true to clear data only, leaving sheet metadata/propeties intact */
+      dataOnly?: boolean
+  ) {
     if (!dataOnly) this._rawProperties = null;
-    this.headerValues = null;
+    this._headerValues = undefined;
     this._headerRowIndex = 1;
     this._cells = [];
   }
 
-  _fillCellData(dataRanges) {
+  private _fillCellData(
+      dataRanges: CellDataRange[]
+  ) {
     _.each(dataRanges, (range) => {
       const startRow = range.startRow || 0;
       const startColumn = range.startColumn || 0;
@@ -81,10 +113,10 @@ class GoogleSpreadsheetWorksheet {
             this._cells[actualRow][actualColumn]._updateRawData(cellData);
           } else {
             this._cells[actualRow][actualColumn] = new GoogleSpreadsheetCell(
-              this,
-              actualRow,
-              actualColumn,
-              cellData
+                this,
+                actualRow,
+                actualColumn,
+                cellData
             );
           }
         }
@@ -101,13 +133,27 @@ class GoogleSpreadsheetWorksheet {
     });
   }
 
+  // TODO: make this handle A1 ranges as well?
+  private _addSheetIdToRange(range: GridRangeWithOptionalWorksheetId) {
+    if (range.sheetId && range.sheetId !== this.sheetId) {
+      throw new Error('Leave sheet ID blank or set to matching ID of this sheet');
+    }
+    return {
+      ...range,
+      sheetId: this.sheetId,
+    };
+  }
+
 
   // PROPERTY GETTERS //////////////////////////////////////////////////////////////////////////////
-  _getProp(param) {
+
+  private _getProp<T extends keyof WorksheetProperties>(param: T): WorksheetProperties[T] {
     this._ensureInfoLoaded();
-    return this._rawProperties[param];
+    // see note about asserting info loaded on GoogleSpreasheet
+    return this._rawProperties![param];
   }
-  _setProp(param, newVal) { // eslint-disable-line no-unused-vars
+  // eslint-disable-line no-unused-vars
+  private _setProp<T extends keyof WorksheetProperties>(_param: T, _newVal: WorksheetProperties[T]) {
     throw new Error('Do not update directly - use `updateProperties()`');
   }
 
@@ -120,14 +166,14 @@ class GoogleSpreadsheetWorksheet {
   get tabColor() { return this._getProp('tabColor'); }
   get rightToLeft() { return this._getProp('rightToLeft'); }
 
-  set sheetId(newVal) { return this._setProp('sheetId', newVal); }
-  set title(newVal) { return this._setProp('title', newVal); }
-  set index(newVal) { return this._setProp('index', newVal); }
-  set sheetType(newVal) { return this._setProp('sheetType', newVal); }
-  set gridProperties(newVal) { return this._setProp('gridProperties', newVal); }
-  set hidden(newVal) { return this._setProp('hidden', newVal); }
-  set tabColor(newVal) { return this._setProp('tabColor', newVal); }
-  set rightToLeft(newVal) { return this._setProp('rightToLeft', newVal); }
+  set sheetId(newVal: WorksheetProperties['sheetId']) { this._setProp('sheetId', newVal); }
+  set title(newVal: WorksheetProperties['title']) { this._setProp('title', newVal); }
+  set index(newVal: WorksheetProperties['index']) { this._setProp('index', newVal); }
+  set sheetType(newVal: WorksheetProperties['sheetType']) { this._setProp('sheetType', newVal); }
+  set gridProperties(newVal: WorksheetProperties['gridProperties']) { this._setProp('gridProperties', newVal); }
+  set hidden(newVal: WorksheetProperties['hidden']) { this._setProp('hidden', newVal); }
+  set tabColor(newVal: WorksheetProperties['tabColor']) { this._setProp('tabColor', newVal); }
+  set rightToLeft(newVal: WorksheetProperties['rightToLeft']) { this._setProp('rightToLeft', newVal); }
 
   get rowCount() {
     this._ensureInfoLoaded();
@@ -137,13 +183,13 @@ class GoogleSpreadsheetWorksheet {
     this._ensureInfoLoaded();
     return this.gridProperties.columnCount;
   }
-  get colCount() { throw new Error('`colCount` is deprecated - please use `columnCount` instead.'); }
-  set rowCount(newVal) { throw new Error('Do not update directly. Use resize()'); }
-  set columnCount(newVal) { throw new Error('Do not update directly. Use resize()'); }
 
   get a1SheetName() { return `'${this.title.replace(/'/g, "''")}'`; }
   get encodedA1SheetName() { return encodeURIComponent(this.a1SheetName); }
-  get lastColumnLetter() { return columnToLetter(this.columnCount); }
+  get lastColumnLetter() {
+    // TODO: double check behaviour if data not loaded
+    return this.columnCount ? columnToLetter(this.columnCount) : '';
+  }
 
 
   // CELLS-BASED INTERACTIONS //////////////////////////////////////////////////////////////////////
@@ -158,14 +204,15 @@ class GoogleSpreadsheetWorksheet {
     };
   }
 
-  getCellByA1(a1Address) {
+  getCellByA1(a1Address: A1Address) {
     const split = a1Address.match(/([A-Z]+)([0-9]+)/);
+    if (!split) throw new Error(`Cell address "${a1Address}" not valid`);
     const columnIndex = letterToColumn(split[1]);
     const rowIndex = parseInt(split[2]);
     return this.getCell(rowIndex - 1, columnIndex - 1);
   }
 
-  getCell(rowIndex, columnIndex) {
+  getCell(rowIndex: RowIndex, columnIndex: ColumnIndex) {
     if (rowIndex < 0 || columnIndex < 0) throw new Error('Min coordinate is 0, 0');
     if (rowIndex >= this.rowCount || columnIndex >= this.columnCount) {
       throw new Error(`Out of bounds, sheet is ${this.rowCount} by ${this.columnCount}`);
@@ -177,12 +224,12 @@ class GoogleSpreadsheetWorksheet {
     return this._cells[rowIndex][columnIndex];
   }
 
-  async loadCells(sheetFilters) {
+  async loadCells(sheetFilters?: DataFilterWithoutWorksheetId | DataFilterWithoutWorksheetId[]) {
     // load the whole sheet
     if (!sheetFilters) return this._spreadsheet.loadCells(this.a1SheetName);
 
-    let filtersArray = _.isArray(sheetFilters) ? sheetFilters : [sheetFilters];
-    filtersArray = _.map(filtersArray, (filter) => {
+    const filtersArray = _.isArray(sheetFilters) ? sheetFilters : [sheetFilters];
+    const filtersArrayWithSheetId: DataFilter[] = _.map(filtersArray, (filter) => {
       // add sheet name to A1 ranges
       if (_.isString(filter)) {
         if (filter.startsWith(this.a1SheetName)) return filter;
@@ -190,19 +237,18 @@ class GoogleSpreadsheetWorksheet {
       }
       if (_.isObject(filter)) {
         // TODO: detect and support DeveloperMetadata filters
-        if (!filter.sheetId) {
-          return { sheetId: this.sheetId, ...filter };
-        }
-        if (filter.sheetId !== this.sheetId) {
+
+        // check if the user passed in a sheet id
+        const filterAny = filter as any;
+        if (filterAny.sheetId && filterAny.sheetId !== this.sheetId) {
           throw new Error('Leave sheet ID blank or set to matching ID of this sheet');
-        } else {
-          return filter;
         }
-      } else {
-        throw new Error('Each filter must be a A1 range string or gridrange object');
+
+        return { sheetId: this.sheetId, ...filter };
       }
+      throw new Error('Each filter must be a A1 range string or gridrange object');
     });
-    return this._spreadsheet.loadCells(filtersArray);
+    return this._spreadsheet.loadCells(filtersArrayWithSheetId);
   }
 
   async saveUpdatedCells() {
@@ -213,7 +259,7 @@ class GoogleSpreadsheetWorksheet {
     // TODO: do we want to return stats? or the cells that got updated?
   }
 
-  async saveCells(cellsToUpdate) {
+  async saveCells(cellsToUpdate: GoogleSpreadsheetCell[]) {
     // we send an individual "updateCells" request for each cell
     // because the fields that are udpated for each group are the same
     // and we dont want to accidentally overwrite something
@@ -287,20 +333,26 @@ class GoogleSpreadsheetWorksheet {
 
   // ROW BASED FUNCTIONS ///////////////////////////////////////////////////////////////////////////
 
-  async loadHeaderRow(headerRowIndex) {
+  async _ensureHeaderRowLoaded() {
+    if (!this._headerValues) {
+      await this.loadHeaderRow();
+    }
+  }
+
+  async loadHeaderRow(headerRowIndex?: number) {
     if (headerRowIndex !== undefined) this._headerRowIndex = headerRowIndex;
     const rows = await this.getCellsInRange(`A${this._headerRowIndex}:${this.lastColumnLetter}${this._headerRowIndex}`);
     if (!rows) {
       throw new Error('No values in the header row - fill the first row with header values before trying to interact with rows');
     }
-    this.headerValues = _.map(rows[0], (header) => header.trim());
+    this._headerValues = _.map(rows[0], (header) => header.trim());
     if (!_.compact(this.headerValues).length) {
       throw new Error('All your header cells are blank - fill the first row with header values before trying to interact with rows');
     }
     checkForDuplicateHeaders(this.headerValues);
   }
 
-  async setHeaderRow(headerValues, headerRowIndex) {
+  async setHeaderRow(headerValues: string[], headerRowIndex?: number) {
     if (!headerValues) return;
     if (headerValues.length > this.columnCount) {
       throw new Error(`Sheet is not large enough to fit ${headerValues.length} columns. Resize the sheet first.`);
@@ -314,7 +366,7 @@ class GoogleSpreadsheetWorksheet {
 
     if (headerRowIndex) this._headerRowIndex = headerRowIndex;
 
-    const response = await this._spreadsheet.axios.request({
+    const response = await this._spreadsheet.sheetsApi.request({
       method: 'put',
       url: `/values/${this.encodedA1SheetName}!${this._headerRowIndex}:${this._headerRowIndex}`,
       params: {
@@ -331,10 +383,14 @@ class GoogleSpreadsheetWorksheet {
         ]],
       },
     });
-    this.headerValues = response.data.updatedData.values[0];
+    this._headerValues = response.data.updatedData.values[0];
   }
 
-  async addRows(rows, options = {}) {
+  // TODO: look at these types
+  async addRows(
+      rows: RawRowData[],
+      options: AddRowOptions = {}
+  ) {
     // adds multiple rows in one API interaction using the append endpoint
 
     // each row can be an array or object
@@ -343,7 +399,7 @@ class GoogleSpreadsheetWorksheet {
     // an object must use the header row values as keys
     // ex: { col1: 'column 1', col2: 'column 2', col3: 'column 3' }
 
-    // google bug that does not handle colons in names
+    // google bug that does not handle colons in sheet names
     // see https://issuetracker.google.com/issues/150373119
     if (this.title.includes(':')) {
       throw new Error('Please remove the ":" from your sheet title. There is a bug with the google API which breaks appending rows if any colons are in the sheet title.');
@@ -351,10 +407,10 @@ class GoogleSpreadsheetWorksheet {
 
     if (!_.isArray(rows)) throw new Error('You must pass in an array of row values to append');
 
-    if (!this.headerValues) await this.loadHeaderRow();
+    await this._ensureHeaderRowLoaded();
 
     // convert each row into an array of cell values rather than the key/value object
-    const rowsAsArrays = [];
+    const rowsAsArrays: RawRowData[] = [];
     _.each(rows, (row) => {
       let rowAsArray;
       if (_.isArray(row)) {
@@ -371,7 +427,7 @@ class GoogleSpreadsheetWorksheet {
       rowsAsArrays.push(rowAsArray);
     });
 
-    const response = await this._spreadsheet.axios.request({
+    const response = await this._spreadsheet.sheetsApi.request({
       method: 'post',
       url: `/values/${this.encodedA1SheetName}!A${this._headerRowIndex}:append`,
       params: {
@@ -390,12 +446,14 @@ class GoogleSpreadsheetWorksheet {
     let rowNumber = updatedRange.match(/![A-Z]+([0-9]+):?/)[1];
     rowNumber = parseInt(rowNumber);
 
+
+    this._ensureInfoLoaded();
     // if new rows were added, we need update sheet.rowRount
     if (options.insert) {
-      this._rawProperties.gridProperties.rowCount += rows.length;
+      this._rawProperties!.gridProperties.rowCount += rows.length;
     } else if (rowNumber + rows.length > this.rowCount) {
       // have to subtract 1 since one row was inserted at rowNumber
-      this._rawProperties.gridProperties.rowCount = rowNumber + rows.length - 1;
+      this._rawProperties!.gridProperties.rowCount = rowNumber + rows.length - 1;
     }
 
     return _.map(response.data.updates.updatedData.values, (rowValues) => {
@@ -404,12 +462,23 @@ class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async addRow(rowValues, options) {
+  /** add a single row - see addRows for more info */
+  async addRow(rowValues: RawRowData, options?: AddRowOptions) {
     const rows = await this.addRows([rowValues], options);
     return rows[0];
   }
 
-  async getRows(options = {}, googleSheetQueryParameters = {}) {
+
+  private _rowCache: GoogleSpreadsheetRow[] = [];
+  async getRows<T extends Record<string, any>>(
+      options?: {
+        /** skip first N rows */
+        offset?: number,
+        /** limit number of rows fetched */
+        limit?: number,
+      },
+      googleSheetQueryParameters?: GetValuesRequestOptions
+  ) {
     // https://developers.google.com/sheets/api/guides/migration
     // v4 API does not have equivalents for the row-order query parameters provided
     // Reverse-order is trivial; simply process the returned values array in reverse order.
@@ -417,22 +486,17 @@ class GoogleSpreadsheetWorksheet {
 
     // v4 API does not currently have a direct equivalent for the Sheets API v3 structured queries
     // However, you can retrieve the relevant data and sort through it as needed in your application
+    const offset = options?.offset || 0;
+    const limit = options?.limit || this.rowCount - 1;
 
-    // options
-    // - offset
-    // - limit
+    await this._ensureHeaderRowLoaded();
 
-    options.offset = options.offset || 0;
-    options.limit = options.limit || this.rowCount - 1;
-
-    if (!this.headerValues) await this.loadHeaderRow();
-
-    const firstRow = 1 + this._headerRowIndex + options.offset;
-    const lastRow = firstRow + options.limit - 1; // inclusive so we subtract 1
+    const firstRow = 1 + this._headerRowIndex + offset;
+    const lastRow = firstRow + limit - 1; // inclusive so we subtract 1
     const lastColumn = columnToLetter(this.headerValues.length);
     const rawRows = await this.getCellsInRange(
-      `A${firstRow}:${lastColumn}${lastRow}`,
-      googleSheetQueryParameters
+        `A${firstRow}:${lastColumn}${lastRow}`,
+        googleSheetQueryParameters
     );
 
     if (!rawRows) return [];
@@ -440,30 +504,46 @@ class GoogleSpreadsheetWorksheet {
     const rows = [];
     let rowNum = firstRow;
     for (let i = 0; i < rawRows.length; i++) {
-      rows.push(new GoogleSpreadsheetRow(this, rowNum++, rawRows[i]));
+      const row = new GoogleSpreadsheetRow<T>(this, rowNum++, rawRows[i]);
+      this._rowCache[row.rowNumber] = row;
+      rows.push(row);
     }
     return rows;
   }
 
-  async clearRows(options = {}) {
+  /**
+   * @internal
+   * Used internally to update row numbers after deleting rows.
+   * Should not be called directly.
+   * */
+  _shiftRowCache(deletedRowNumber: number) {
+    delete this._rowCache[deletedRowNumber];
+    this._rowCache.forEach((row) => {
+      if (row.rowNumber > deletedRowNumber) {
+        row._updateRowNumber(row.rowNumber - 1);
+      }
+    });
+  }
+
+  async clearRows(
+      options?: {
+        start?: number,
+        end?: number,
+      }
+  ) {
     // default to first row after header
-    const startRowIndex = options.start || this._headerRowIndex + 1;
-    const endRowIndex = options.end || this.rowCount;
-    await this._spreadsheet.axios.post(`/values/${this.encodedA1SheetName}!${startRowIndex}:${endRowIndex}:clear`);
+    const startRowIndex = options?.start || this._headerRowIndex + 1;
+    const endRowIndex = options?.end || this.rowCount;
+    await this._spreadsheet.sheetsApi.post(`/values/${this.encodedA1SheetName}!${startRowIndex}:${endRowIndex}:clear`);
+    this._rowCache.forEach((row) => {
+      if (row.rowNumber >= startRowIndex && row.rowNumber <= endRowIndex) row._clearRowData();
+    });
   }
 
   // BASIC PROPS ///////////////////////////////////////////////////////////////////////////////////
-  async updateProperties(properties) {
+  /** @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateSheetPropertiesRequest */
+  async updateProperties(properties: Partial<Omit<WorksheetProperties, 'sheetId'>>) {
     // Request type = `updateSheetProperties`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateSheetPropertiesRequest
-
-    // properties
-    // - title (string)
-    // - index (number)
-    // - gridProperties ({ object (GridProperties) } - https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#gridproperties
-    // - hidden (boolean)
-    // - tabColor ({ object (Color) } - https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Color
-    // - rightToLeft (boolean)
 
     return this._makeSingleUpdateRequest('updateSheetProperties', {
       properties: {
@@ -474,48 +554,39 @@ class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async updateGridProperties(gridProperties) {
-    // just passes the call through to update gridProperties
-    // see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#GridProperties
-
-    // gridProperties
-    // - rowCount
-    // - columnCount
-    // - frozenRowCount
-    // - frozenColumnCount
-    // - hideGridLines
+  /**
+   * passes through the call to updateProperties to update only the gridProperties object
+   */
+  async updateGridProperties(gridProperties: WorksheetGridProperties) {
     return this.updateProperties({ gridProperties });
   }
 
-  // just a shortcut because resize makes more sense to change rowCount / columnCount
-  async resize(gridProperties) {
+  /** resize, internally just calls updateGridProperties */
+  async resize(gridProperties: Pick<WorksheetGridProperties, 'rowCount' | 'columnCount'>) {
     return this.updateGridProperties(gridProperties);
   }
 
-  async updateDimensionProperties(columnsOrRows, properties, bounds) {
+  /**
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#updatedimensionpropertiesrequest
+   */
+  async updateDimensionProperties(
+      columnsOrRows: WorksheetDimension,
+      properties: WorksheetDimensionProperties,
+      bounds: Partial<DimensionRangeIndexes>
+  ) {
     // Request type = `updateDimensionProperties`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#updatedimensionpropertiesrequest
 
-    // columnsOrRows = COLUMNS|ROWS
-    // properties
-    // - pixelSize
-    // - hiddenByUser
-    // - developerMetadata
-    // bounds
-    // - startIndex
-    // - endIndex
+    Object.keys(properties);
 
     return this._makeSingleUpdateRequest('updateDimensionProperties', {
       range: {
         sheetId: this.sheetId,
         dimension: columnsOrRows,
-        ...bounds && {
-          startIndex: bounds.startIndex,
-          endIndex: bounds.endIndex,
-        },
+        ...bounds,
       },
       properties,
-      fields: getFieldMask(properties),
+      fields: getFieldMask(properties as any),
     });
   }
 
@@ -523,9 +594,9 @@ class GoogleSpreadsheetWorksheet {
 
   // this uses the "values" getter and does not give all the info about the cell contents
   // it is used internally when loading header cells
-  async getCellsInRange(a1Range, googleSheetParams) {
-    const response = await this._spreadsheet.axios.get(`/values/${this.encodedA1SheetName}!${a1Range}`, {
-      params: googleSheetParams,
+  async getCellsInRange(a1Range: A1Range, options?: GetValuesRequestOptions) {
+    const response = await this._spreadsheet.sheetsApi.get(`/values/${this.encodedA1SheetName}!${a1Range}`, {
+      params: options,
     });
     return response.data.values;
   }
@@ -565,32 +636,26 @@ class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#CopyPasteRequest
   }
 
-  async mergeCells(range, mergeType = 'MERGE_ALL') {
-    // Request type = `mergeCells`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#MergeCellsRequest
-    if (range.sheetId && range.sheetId !== this.sheetId) {
-      throw new Error('Leave sheet ID blank or set to matching ID of this sheet');
-    }
+  // TODO: check types on these ranges
+
+  /**
+   * Merges all cells in the range
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#MergeCellsRequest
+   */
+  async mergeCells(range: GridRangeWithOptionalWorksheetId, mergeType = 'MERGE_ALL') {
     await this._makeSingleUpdateRequest('mergeCells', {
       mergeType,
-      range: {
-        ...range,
-        sheetId: this.sheetId,
-      },
+      range: this._addSheetIdToRange(range),
     });
   }
 
-  async unmergeCells(range) {
-    // Request type = `unmergeCells`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UnmergeCellsRequest
-    if (range.sheetId && range.sheetId !== this.sheetId) {
-      throw new Error('Leave sheet ID blank or set to matching ID of this sheet');
-    }
+  /**
+   * Unmerges cells in the given range
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UnmergeCellsRequest
+   */
+  async unmergeCells(range: GridRangeWithOptionalWorksheetId) {
     await this._makeSingleUpdateRequest('unmergeCells', {
-      range: {
-        ...range,
-        sheetId: this.sheetId,
-      },
+      range: this._addSheetIdToRange(range),
     });
   }
 
@@ -634,14 +699,22 @@ class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DuplicateFilterViewRequest
   }
 
-  async duplicate(options = {}) {
-    // Request type = `duplicateSheet`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DuplicateSheetRequest
+  /**
+   * Duplicate worksheet within the document
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DuplicateSheetRequest
+   */
+  async duplicate(
+      options?: {
+        id?: WorksheetId,
+        title?: string,
+        index?: number,
+      }
+  ) {
     const response = await this._makeSingleUpdateRequest('duplicateSheet', {
       sourceSheetId: this.sheetId,
-      ...options.index !== undefined && { insertSheetIndex: options.index },
-      ...options.id && { newSheetId: options.id },
-      ...options.title && { newSheetName: options.title },
+      ...options?.index !== undefined && { insertSheetIndex: options.index },
+      ...options?.id && { newSheetId: options.id },
+      ...options?.title && { newSheetName: options.title },
     });
     const newSheetId = response.properties.sheetId;
     return this._spreadsheet.sheetsById[newSheetId];
@@ -652,23 +725,28 @@ class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#FindReplaceRequest
   }
 
-  async insertDimension(columnsOrRows, range, inheritFromBefore = null) {
-    // Request type = `insertDimension`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#InsertDimensionRequest
-
+  /**
+   * Inserts rows or columns at a particular index
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#InsertDimensionRequest
+   */
+  async insertDimension(
+      columnsOrRows: WorksheetDimension,
+      rangeIndexes: DimensionRangeIndexes,
+      inheritFromBefore?: boolean
+  ) {
     if (!columnsOrRows) throw new Error('You need to specify a dimension. i.e. COLUMNS|ROWS');
-    if (!_.isObject(range)) throw new Error('`range` must be an object containing `startIndex` and `endIndex`');
-    if (!_.isInteger(range.startIndex) || range.startIndex < 0) throw new Error('range.startIndex must be an integer >=0');
-    if (!_.isInteger(range.endIndex) || range.endIndex < 0) throw new Error('range.endIndex must be an integer >=0');
-    if (range.endIndex <= range.startIndex) throw new Error('range.endIndex must be greater than range.startIndex');
+    if (!_.isObject(rangeIndexes)) throw new Error('`range` must be an object containing `startIndex` and `endIndex`');
+    if (!_.isInteger(rangeIndexes.startIndex) || rangeIndexes.startIndex < 0) throw new Error('range.startIndex must be an integer >=0');
+    if (!_.isInteger(rangeIndexes.endIndex) || rangeIndexes.endIndex < 0) throw new Error('range.endIndex must be an integer >=0');
+    if (rangeIndexes.endIndex <= rangeIndexes.startIndex) throw new Error('range.endIndex must be greater than range.startIndex');
 
     // default inheritFromBefore to true - unless inserting in the first row/column
-    if (inheritFromBefore === null) {
-      inheritFromBefore = range.startIndex > 0;
+    if (inheritFromBefore === undefined) {
+      inheritFromBefore = rangeIndexes.startIndex > 0;
     }
 
     // do not allow inheritFromBefore if inserting at first row/column
-    if (inheritFromBefore && range.startIndex === 0) {
+    if (inheritFromBefore && rangeIndexes.startIndex === 0) {
       throw new Error('Cannot set inheritFromBefore to true if inserting in first row/column');
     }
 
@@ -676,8 +754,8 @@ class GoogleSpreadsheetWorksheet {
       range: {
         sheetId: this.sheetId,
         dimension: columnsOrRows,
-        startIndex: range.startIndex,
-        endIndex: range.endIndex,
+        startIndex: rangeIndexes.startIndex,
+        endIndex: rangeIndexes.endIndex,
       },
       inheritFromBefore,
     });
@@ -853,35 +931,51 @@ class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateSlicerSpecRequest
   }
 
-  // delete this worksheet
+  /** delete this worksheet */
   async delete() {
     return this._spreadsheet.deleteSheet(this.sheetId);
   }
-  async del() { return this.delete(); } // alias to mimic old interface
 
-  // copies this worksheet into another document/spreadsheet
-  async copyToSpreadsheet(destinationSpreadsheetId) {
-    return this._spreadsheet.axios.post(`/sheets/${this.sheetId}:copyTo`, {
+  /**
+   * copies this worksheet into another document/spreadsheet
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.sheets/copyTo
+   * */
+  async copyToSpreadsheet(destinationSpreadsheetId: SpreadsheetId) {
+    return this._spreadsheet.sheetsApi.post(`/sheets/${this.sheetId}:copyTo`, {
       destinationSpreadsheetId,
     });
   }
 
-  async clear(a1Range) {
-    // clears data in the sheet - defaults to entire sheet
+  /** clear data in the sheet - either the entire sheet or a specific range */
+  async clear(
+      /** optional A1 range to clear - defaults to entire sheet  */
+      a1Range?: A1Range
+  ) {
     const range = a1Range ? `!${a1Range}` : '';
     // sheet name without ie 'sheet1' rather than 'sheet1'!A1:B5 is all cells
-    await this._spreadsheet.axios.post(`/values/${this.encodedA1SheetName}${range}:clear`);
+    await this._spreadsheet.sheetsApi.post(`/values/${this.encodedA1SheetName}${range}:clear`);
     this.resetLocalCache(true);
   }
+
+  /** exports worksheet as CSV file (comma-separated values) */
+  async downloadAsCSV(): Promise<ArrayBuffer>;
+  async downloadAsCSV(returnStreamInsteadOfBuffer: false): Promise<ArrayBuffer>;
+  async downloadAsCSV(returnStreamInsteadOfBuffer: true): Promise<ReadableStream>;
   async downloadAsCSV(returnStreamInsteadOfBuffer = false) {
     return this._spreadsheet._downloadAs('csv', this.sheetId, returnStreamInsteadOfBuffer);
   }
+  /** exports worksheet as TSC file (tab-separated values) */
+  async downloadAsTSV(): Promise<ArrayBuffer>;
+  async downloadAsTSV(returnStreamInsteadOfBuffer: false): Promise<ArrayBuffer>;
+  async downloadAsTSV(returnStreamInsteadOfBuffer: true): Promise<ReadableStream>;
   async downloadAsTSV(returnStreamInsteadOfBuffer = false) {
     return this._spreadsheet._downloadAs('tsv', this.sheetId, returnStreamInsteadOfBuffer);
   }
+  /** exports worksheet as PDF */
+  async downloadAsPDF(): Promise<ArrayBuffer>;
+  async downloadAsPDF(returnStreamInsteadOfBuffer: false): Promise<ArrayBuffer>;
+  async downloadAsPDF(returnStreamInsteadOfBuffer: true): Promise<ReadableStream>;
   async downloadAsPDF(returnStreamInsteadOfBuffer = false) {
     return this._spreadsheet._downloadAs('pdf', this.sheetId, returnStreamInsteadOfBuffer);
   }
 }
-
-module.exports = GoogleSpreadsheetWorksheet;
