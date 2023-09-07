@@ -345,7 +345,7 @@ export class GoogleSpreadsheetWorksheet {
     if (!rows) {
       throw new Error('No values in the header row - fill the first row with header values before trying to interact with rows');
     }
-    this._headerValues = _.map(rows[0], (header) => header.trim());
+    this._headerValues = _.map(rows[0], (header) => header?.trim());
     if (!_.compact(this.headerValues).length) {
       throw new Error('All your header cells are blank - fill the first row with header values before trying to interact with rows');
     }
@@ -357,7 +357,7 @@ export class GoogleSpreadsheetWorksheet {
     if (headerValues.length > this.columnCount) {
       throw new Error(`Sheet is not large enough to fit ${headerValues.length} columns. Resize the sheet first.`);
     }
-    const trimmedHeaderValues = _.map(headerValues, (h) => h.trim());
+    const trimmedHeaderValues = _.map(headerValues, (h) => h?.trim());
     checkForDuplicateHeaders(trimmedHeaderValues);
 
     if (!_.compact(trimmedHeaderValues).length) {
