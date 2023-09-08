@@ -677,9 +677,29 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#ClearBasicFilterRequest
   }
 
-  async deleteDimension() {
-    // Request type = `deleteDimension`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDimensionRequest
+  /**
+   * Delete rows or columns at a particular index
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDimensionRequest
+   */  
+  
+  async deleteDimension(
+    columnsOrRows: WorksheetDimension,
+    rangeIndexes: DimensionRangeIndexes
+  ) {
+    if (!columnsOrRows) throw new Error('You need to specify a dimension. i.e. COLUMNS|ROWS');
+    if (!_.isObject(rangeIndexes)) throw new Error('`rangeIndexes` must be an object containing `startIndex` and `endIndex`');
+    if (!_.isInteger(rangeIndexes.startIndex) || rangeIndexes.startIndex < 0) throw new Error('rangeIndexes.startIndex must be an integer >= 0');
+    if (!_.isInteger(rangeIndexes.endIndex) || rangeIndexes.endIndex < 0) throw new Error('rangeIndexes.endIndex must be an integer >= 0');
+    if (rangeIndexes.endIndex <= rangeIndexes.startIndex) throw new Error('rangeIndexes.endIndex must be greater than rangeIndexes.startIndex');
+  
+    return this._makeSingleUpdateRequest('deleteDimension', {
+      range: {
+        sheetId: this.sheetId,
+        dimension: columnsOrRows,
+        startIndex: rangeIndexes.startIndex,
+        endIndex: rangeIndexes.endIndex,
+      },
+    });
   }
 
   async deleteEmbeddedObject() {
