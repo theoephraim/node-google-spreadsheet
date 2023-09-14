@@ -415,7 +415,7 @@ export type DataFilterWithoutWorksheetId = A1Range | GridRangeWithoutWorksheetId
 
 
 /** @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#colorstyle */
-export type ColorStyle = { Color: Color } | { themeColor: ThemeColorType };
+export type ColorStyle = { rgbColor: Color } | { themeColor: ThemeColorType };
 /** @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Color */
 export type Color = {
   red: number,
