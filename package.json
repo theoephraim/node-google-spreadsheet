@@ -52,7 +52,8 @@
     "changelog": "auto-changelog --commit-limit false --unreleased-only --stdout",
     "release": "pnpm run build && release-it",
     "runscript": "NODE_NO_WARNINGS=1 node --experimental-specifier-resolution=node --loader ts-node/esm",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "prepare": "npm run build"
   },
   "config": {
     "commitizen": {
