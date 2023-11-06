@@ -575,8 +575,6 @@ export class GoogleSpreadsheetWorksheet {
   ) {
     // Request type = `updateDimensionProperties`
 
-    Object.keys(properties);
-
     return this._makeSingleUpdateRequest('updateDimensionProperties', {
       range: {
         sheetId: this.sheetId,
@@ -844,9 +842,16 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteProtectedRangeRequest
   }
 
-  async autoResizeDimensions() {
+  async autoResizeDimensions(columnsOrRows: WorksheetDimension,
+    bounds: Partial<DimensionRangeIndexes>) {
     // Request type = `autoResizeDimensions`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AutoResizeDimensionsRequest
+    return this._makeSingleUpdateRequest('autoResizeDimensions', {
+      "dimensions": {
+        "sheetId": this.sheetId,
+        "dimension": columnsOrRows,
+        ...bounds,
+      }
+    });
   }
 
   async addChart() {
