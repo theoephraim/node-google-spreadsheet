@@ -1,6 +1,8 @@
 node_modules/
 src/ignore/
 .env
+.env.*
+!.env.vault
 .DS_Store
 examples/
 TODO
