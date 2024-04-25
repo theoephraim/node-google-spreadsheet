@@ -188,6 +188,36 @@ describe('Managing doc info and sheets', () => {
       await sheet.loadCells();
       expect(sheet.cellStats.nonEmpty).toBe(0);
     });
+
+    it('can set data validation', async () => {
+      // add a dropdown; ref: https://stackoverflow.com/a/43442775/3068233
+      await sheet.setDataValidation({
+        range: {
+          startRowIndex: 2,
+          endRowIndex: 100,
+          startColumnIndex: 3,
+          endColumnIndex: 4,
+        },
+        rule: {
+          condition: {
+            type: 'ONE_OF_LIST',
+            values: [
+              {
+                userEnteredValue: 'YES',
+              },
+              {
+                userEnteredValue: 'NO',
+              },
+              {
+                userEnteredValue: 'MAYBE',
+              },
+            ],
+          },
+          showCustomUi: true,
+          strict: true,
+        },
+      })
+    })
   });
 
   describe('deleting a sheet', () => {

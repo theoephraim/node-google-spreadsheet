@@ -11,7 +11,7 @@ import { GoogleSpreadsheet } from './GoogleSpreadsheet';
 import {
   A1Range, SpreadsheetId, DimensionRangeIndexes, WorksheetDimension, WorksheetId, WorksheetProperties, A1Address,
   RowIndex, ColumnIndex, DataFilterWithoutWorksheetId, DataFilter, GetValuesRequestOptions, WorksheetGridProperties,
-  WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId,
+  WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId, GridRange, DataValidationRule,
 } from './types/sheets-types';
 
 
@@ -819,9 +819,17 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SortRangeRequest
   }
 
-  async setDataValidation() {
-    // Request type = `setDataValidation`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SetDataValidationRequest
+  /**
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SetDataValidationRequest
+   */
+  async setDataValidation({ range, rule }:{ range: Omit<GridRange, 'sheetId'>, rule: DataValidationRule }) {
+    return this._makeSingleUpdateRequest('setDataValidation', {
+      range: {
+        sheetId: this.sheetId,
+        ...range,
+      },
+      rule
+    });
   }
 
   async setBasicFilter() {
