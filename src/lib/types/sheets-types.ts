@@ -526,3 +526,88 @@ export type AddRowOptions = {
   /** set to true to insert new rows in the sheet while adding this data */
   insert?: boolean,
 };
+
+/**
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ConditionType
+ */
+export type ConditionType =
+  | 'NUMBER_GREATER'
+  | 'NUMBER_GREATER_THAN_EQ'
+  | 'NUMBER_LESS'
+  | 'NUMBER_LESS_THAN_EQ'
+  | 'NUMBER_EQ'
+  | 'NUMBER_NOT_EQ'
+  | 'NUMBER_BETWEEN'
+  | 'NUMBER_NOT_BETWEEN'
+  | 'TEXT_CONTAINS'
+  | 'TEXT_NOT_CONTAINS'
+  | 'TEXT_STARTS_WITH'
+  | 'TEXT_ENDS_WITH'
+  | 'TEXT_EQ'
+  | 'TEXT_IS_EMAIL'
+  | 'TEXT_IS_URL'
+  | 'DATE_EQ'
+  | 'DATE_BEFORE'
+  | 'DATE_AFTER'
+  | 'DATE_ON_OR_BEFORE'
+  | 'DATE_ON_OR_AFTER'
+  | 'DATE_BETWEEN'
+  | 'DATE_NOT_BETWEEN'
+  | 'DATE_IS_VALID'
+  | 'ONE_OF_RANGE'
+  | 'ONE_OF_LIST'
+  | 'BLANK'
+  | 'NOT_BLANK'
+  | 'CUSTOM_FORMULA'
+  | 'BOOLEAN'
+  | 'TEXT_NOT_EQ'
+  | 'DATE_NOT_EQ'
+  | 'FILTER_EXPRESSION';
+
+/**
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#relativedate
+ */
+export type RelativeDate =
+  | 'PAST_YEAR'
+  | 'PAST_MONTH'
+  | 'PAST_WEEK'
+  | 'YESTERDAY'
+  | 'TODAY'
+  | 'TOMORROW';
+
+/**
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#ConditionValue
+ */
+export type ConditionValue =
+  | { relativeDate: RelativeDate, userEnteredValue?: undefined }
+  | { relativeDate?: undefined, userEnteredValue: string };
+
+/**
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#BooleanCondition
+ */
+export type BooleanCondition = {
+  /** The type of condition. */
+  type: ConditionType;
+  /**
+   * The values of the condition.
+   * The number of supported values depends on the condition type. Some support zero values, others one or two values, and ConditionType.ONE_OF_LIST supports an arbitrary number of values.
+   */
+  values: ConditionValue[];
+};
+
+/**
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#DataValidationRule
+ *
+ * example:
+ * - https://stackoverflow.com/a/43442775/3068233
+ */
+export type DataValidationRule = {
+  /** The condition that data in the cell must match. */
+  condition: BooleanCondition;
+  /** A message to show the user when adding data to the cell. */
+  inputMessage?: string;
+  /** True if invalid data should be rejected. */
+  strict: boolean;
+  /** True if the UI should be customized based on the kind of condition. If true, "List" conditions will show a dropdown. */
+  showCustomUi: boolean;
+};
