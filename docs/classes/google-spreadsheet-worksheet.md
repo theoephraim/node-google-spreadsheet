@@ -343,14 +343,6 @@ Param|Type|Required|Description
 `rule`|Object<br>[DataValidationRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#DataValidationRule)<br>or `false`|✅|Object describing the validation rule<br/>Or `false` to unset the rule
 
 
-- ✨ **Side Effects -** sheet is copied to the other doc
-
-?> The authentication method being used must have write access to the destination document as well
-
-
-
-
-
 ### Exports
 
 See [Exports guide](guides/exports) for more info.
