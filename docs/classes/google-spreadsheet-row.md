@@ -84,7 +84,7 @@ Param|Type|Required|Description
 `key`|String|-|header value
 
 #### `set(key, value)` :id=fn-set
-> Get value of specific cell using header key
+> Set value of specific cell using header key
 
 Param|Type|Required|Description
 ---|---|---|---
