@@ -586,16 +586,14 @@ export type ConditionValue =
  * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#BooleanCondition
  */
 export type BooleanCondition = {
-  /**
-   * The type of condition.
-   */
+  /** The type of condition. */
   type: ConditionType;
-
   /**
-   * The values of the condition. The number of supported values depends on the condition type. Some support zero values, others one or two values, and ConditionType.ONE_OF_LIST supports an arbitrary number of values.
+   * The values of the condition.
+   * The number of supported values depends on the condition type. Some support zero values, others one or two values, and ConditionType.ONE_OF_LIST supports an arbitrary number of values.
    */
   values: ConditionValue[];
-}
+};
 
 /**
  * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#DataValidationRule
@@ -604,23 +602,12 @@ export type BooleanCondition = {
  * - https://stackoverflow.com/a/43442775/3068233
  */
 export type DataValidationRule = {
-  /**
-   * The condition that data in the cell must match.
-   */
+  /** The condition that data in the cell must match. */
   condition: BooleanCondition;
-
-  /**
-   * A message to show the user when adding data to the cell.
-   */
+  /** A message to show the user when adding data to the cell. */
   inputMessage?: string;
-
-  /**
-   * True if invalid data should be rejected.
-   */
+  /** True if invalid data should be rejected. */
   strict: boolean;
-
-  /**
-   * True if the UI should be customized based on the kind of condition. If true, "List" conditions will show a dropdown.
-   */
+  /** True if the UI should be customized based on the kind of condition. If true, "List" conditions will show a dropdown. */
   showCustomUi: boolean;
-}
+};

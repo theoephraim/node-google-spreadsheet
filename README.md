@@ -25,7 +25,7 @@ Full docs available at [https://theoephraim.github.io/node-google-spreadsheet](h
 
 _The following examples are meant to give you an idea of just some of the things you can do_
 
-> **IMPORTANT NOTE** - To keep the examples concise, I'm calling await [at the top level](https://v8.dev/features/top-level-await) which is not allowed by default in most versions of node. If you need to call await in a script at the root level, you must instead wrap it in an async function like so:
+> **IMPORTANT NOTE** - To keep the examples concise, I'm calling await [at the top level](https://v8.dev/features/top-level-await) which is not allowed in some older versions of node. If you need to call await in a script at the root level and your environment does not support it, you must instead wrap it in an async function like so:
 
 ```javascript
 (async function () {

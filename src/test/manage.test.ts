@@ -188,17 +188,29 @@ describe('Managing doc info and sheets', () => {
       await sheet.loadCells();
       expect(sheet.cellStats.nonEmpty).toBe(0);
     });
+  });
+
+  describe.only('data validation rules', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({ title: 'validation rules test' });
+    });
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
 
     it('can set data validation', async () => {
       // add a dropdown; ref: https://stackoverflow.com/a/43442775/3068233
-      await sheet.setDataValidation({
-        range: {
+      await sheet.setDataValidation(
+        {
           startRowIndex: 2,
           endRowIndex: 100,
           startColumnIndex: 3,
           endColumnIndex: 4,
         },
-        rule: {
+        {
           condition: {
             type: 'ONE_OF_LIST',
             values: [
@@ -215,9 +227,21 @@ describe('Managing doc info and sheets', () => {
           },
           showCustomUi: true,
           strict: true,
+        }
+      );
+    });
+
+    it('can clear a data validation', async () => {
+      await sheet.setDataValidation(
+        {
+          startRowIndex: 2,
+          endRowIndex: 100,
+          startColumnIndex: 3,
+          endColumnIndex: 4,
         },
-      })
-    })
+        false
+      );
+    });
   });
 
   describe('deleting a sheet', () => {

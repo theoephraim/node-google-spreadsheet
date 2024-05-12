@@ -333,6 +333,24 @@ Param|Type|Required|Description
 
 ?> The authentication method being used must have write access to the destination document as well
 
+
+#### `setDataValidation(range, rule)` (async) :id=fn-setDataValidation
+> Sets a data validation rule to every cell in the range
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|Range of cells to apply the rule to, sheetId not required!
+`rule`|Object<br>[DataValidationRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#DataValidationRule)<br>or `false`|✅|Object describing the validation rule<br/>Or `false` to unset the rule
+
+
+- ✨ **Side Effects -** sheet is copied to the other doc
+
+?> The authentication method being used must have write access to the destination document as well
+
+
+
+
+
 ### Exports
 
 See [Exports guide](guides/exports) for more info.

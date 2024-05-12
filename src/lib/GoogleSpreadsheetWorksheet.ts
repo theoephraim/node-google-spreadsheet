@@ -11,7 +11,8 @@ import { GoogleSpreadsheet } from './GoogleSpreadsheet';
 import {
   A1Range, SpreadsheetId, DimensionRangeIndexes, WorksheetDimension, WorksheetId, WorksheetProperties, A1Address,
   RowIndex, ColumnIndex, DataFilterWithoutWorksheetId, DataFilter, GetValuesRequestOptions, WorksheetGridProperties,
-  WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId, GridRange, DataValidationRule,
+  WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId,
+  DataValidationRule,
 } from './types/sheets-types';
 
 
@@ -820,15 +821,20 @@ export class GoogleSpreadsheetWorksheet {
   }
 
   /**
+   * Sets (or unsets) a data validation rule to every cell in the range
    * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SetDataValidationRequest
    */
-  async setDataValidation({ range, rule }:{ range: Omit<GridRange, 'sheetId'>, rule: DataValidationRule }) {
+  async setDataValidation(
+    range: GridRangeWithOptionalWorksheetId,
+    /** data validation rule object, or set to false to clear an existing rule */
+    rule: DataValidationRule | false
+  ) {
     return this._makeSingleUpdateRequest('setDataValidation', {
       range: {
         sheetId: this.sheetId,
         ...range,
       },
-      rule
+      ...rule && { rule },
     });
   }
 
