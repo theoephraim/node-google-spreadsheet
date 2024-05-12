@@ -3,10 +3,11 @@
 _Welcome to the docs site for_
 
 # google-spreadsheet
+
 > The most popular [Google Sheets API](https://developers.google.com/sheets/api/guides/concepts) wrapper for javascript / typescript
 
 [![NPM version](https://img.shields.io/npm/v/google-spreadsheet)](https://www.npmjs.com/package/google-spreadsheet)
-[![CircleCI](https://circleci.com/gh/theoephraim/node-google-spreadsheet.svg?style=shield)](https://circleci.com/gh/theoephraim/node-google-spreadsheet)
+[![CI status](https://github.com/theoephraim/node-google-spreadsheet/actions/workflows/ci.yml/badge.svg)](https://github.com/theoephraim/node-google-spreadsheet/actions/workflows/ci.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/theoephraim/node-google-spreadsheet/badge.svg?targetFile=package.json)](https://snyk.io/test/github/theoephraim/node-google-spreadsheet?targetFile=package.json)
 [![NPM](https://img.shields.io/npm/dw/google-spreadsheet)](https://www.npmtrends.com/google-spreadsheet)
 
@@ -20,27 +21,27 @@ _Welcome to the docs site for_
 **Docs site -**
 Full docs available at [https://theoephraim.github.io/node-google-spreadsheet](https://theoephraim.github.io/node-google-spreadsheet)
 
--------------
+---
 
 > 🌈 **Installation** - `pnpm i google-spreadsheet`<br/>(or `npm i google-spreadsheet --save` or `yarn add google-spreadsheet`)
 
 ## Examples
+
 _The following examples are meant to give you an idea of just some of the things you can do_
 
-> **IMPORTANT NOTE** - To keep the examples concise, I'm calling await [at the top level](https://v8.dev/features/top-level-await) which is not allowed by default in most versions of node. If you need to call await in a script at the root level, you must instead wrap it in an async function like so:
+> **IMPORTANT NOTE** - To keep the examples concise, I'm calling await [at the top level](https://v8.dev/features/top-level-await) which is not allowed in some older versions of node. If you need to call await in a script at the root level and your environment does not support it, you must instead wrap it in an async function like so:
 
 ```javascript
-(async function() {
+(async function () {
   await someAsyncFunction();
-}());
+})();
 ```
 
-
 ### The Basics
+
 ```js
 import { GoogleSpreadsheet } from 'google-spreadsheet';
 import { JWT } from 'google-auth-library';
-
 
 // Initialize auth - see https://theoephraim.github.io/node-google-spreadsheet/#/guides/authentication
 const serviceAccountAuth = new JWT({
@@ -48,9 +49,7 @@ const serviceAccountAuth = new JWT({
   // see "Authentication" section in docs for more info
   email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
   key: process.env.GOOGLE_PRIVATE_KEY,
-  scopes: [
-    'https://www.googleapis.com/auth/spreadsheets',
-  ],
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
 });
 
 const doc = new GoogleSpreadsheet('<the sheet ID from the url>', serviceAccountAuth);
@@ -67,14 +66,15 @@ console.log(sheet.rowCount);
 const newSheet = await doc.addSheet({ title: 'another sheet' });
 await newSheet.delete();
 ```
+
 More info:
+
 - [GoogleSpreadsheet](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet)
 - [GoogleSpreadsheetWorksheet](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet)
 - [Authentication](https://theoephraim.github.io/node-google-spreadsheet/#/guides/authentication)
 
-
-
 ### Working with rows
+
 ```js
 // if creating a new sheet, you can set the header row
 const sheet = await doc.addSheet({ headerValues: ['name', 'email'] });
@@ -91,7 +91,7 @@ const rows = await sheet.getRows(); // can pass in { limit, offset }
 
 // read/write row values
 console.log(rows[0].get('name')); // 'Larry Page'
-rows[1].set('email') = 'sergey@abc.xyz'; // update a value
+rows[1].set('email', 'sergey@abc.xyz'); // update a value
 rows[2].assign({ name: 'Sundar Pichai', email: 'sundar@google.com' }); // set multiple values
 await rows[2].save(); // save updates on a row
 await rows[2].delete(); // delete a row
@@ -112,12 +112,12 @@ userRows[0].get('badColumn'); // <- will throw a type error
 ```
 
 More info:
+
 - [GoogleSpreadsheetWorksheet > Working With Rows](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet#working-with-rows)
 - [GoogleSpreadsheetRow](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-row)
 
-
-
 ### Working with cells
+
 ```js
 await sheet.loadCells('A1:E10'); // loads range of cells into local cache - DOES NOT RETURN THE CELLS
 console.log(sheet.cellStats); // total cells, loaded, how many non-empty
@@ -134,10 +134,11 @@ a1.textFormat = { bold: true };
 c6.note = 'This is a note!';
 await sheet.saveUpdatedCells(); // save all updates in one call
 ```
+
 More info:
+
 - [GoogleSpreadsheetWorksheet > Working With Cells](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-worksheet#working-with-cells)
 - [GoogleSpreadsheetCell](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet-cell)
-
 
 ### Managing docs and sharing
 
@@ -165,6 +166,7 @@ await newDoc.delete();
 ```
 
 ## Why?
+
 > **This module provides an intuitive wrapper around Google's API to simplify common interactions**
 
 While Google's v4 sheets API is much easier to use than v3 was, the official [googleapis npm module](https://www.npmjs.com/package/googleapis) is a giant autogenerated meta-tool that handles _every Google product_. The module and the API itself are awkward and the docs are pretty terrible, at least to get started.
@@ -172,7 +174,6 @@ While Google's v4 sheets API is much easier to use than v3 was, the official [go
 **In what situation should you use Google's API directly?**<br>
 This module makes trade-offs for simplicity of the interface.
 Google's API provides a mechanism to make many requests in parallel, so if speed and efficiency are extremely important to your use case, you may want to use their API directly. There are also many lesser-used features of their API that are not implemented here yet.
-
 
 ## Support & Contributions
 
@@ -193,4 +194,5 @@ The docs site is generated using [docsify](https://docsify.js.org). To preview a
 The content lives in markdown files in the docs folder.
 
 ## License
+
 This is free and unencumbered public domain software. For more info, see https://unlicense.org.
