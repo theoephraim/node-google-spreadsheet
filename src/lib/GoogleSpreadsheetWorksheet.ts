@@ -346,7 +346,7 @@ export class GoogleSpreadsheetWorksheet {
   async loadHeaderRow(headerRowIndex?: number) {
     if (headerRowIndex !== undefined) this._headerRowIndex = headerRowIndex;
     const rows = await this.getCellsInRange(this._headerRange);
-    this._processHeaderRow(rows);
+    await this._processHeaderRow(rows);
   }
 
   private async _processHeaderRow(rows: any[]) {
