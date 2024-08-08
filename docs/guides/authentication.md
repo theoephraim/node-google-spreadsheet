@@ -72,13 +72,20 @@ __Setup Instructions__
   - Click blue "+ CREATE CREDENTIALS" and select "Service account" option
   - Enter name, description, click "CREATE"
   - You can skip permissions, click "CONTINUE"
-  - Click "+ CREATE KEY" button
+  - Click "CREATE AND CONTINUE" button
+  - Step 2 and 3 are optional, you can skip it.
+  - Click "DONE" button
+3. Edit your new service account
+  - In the bottom of the page, you can see the "Service Account" tab with your new Service Account
+  - In column actions, click the pencil button to edit
+  - Select the "Keys" tab
+  - Click "ADD KEY" then "Create new key"
   - Select the "JSON" key type option
   - Click "Create" button
   - your JSON key file is generated and downloaded to your machine (__it is the only copy!__)
-  - click "DONE"
+  - click "CLOSE"
   - note your service account's email address (also available in the JSON key file)
-3. Share the doc (or docs) with your service account using the email noted above
+4. Share the doc (or docs) with your service account using the email noted above
 
 !> Be careful - never check your API keys / secrets into version control (git)
 
