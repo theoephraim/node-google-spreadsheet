@@ -346,10 +346,10 @@ export class GoogleSpreadsheetWorksheet {
   async loadHeaderRow(headerRowIndex?: number) {
     if (headerRowIndex !== undefined) this._headerRowIndex = headerRowIndex;
     const rows = await this.getCellsInRange(this._headerRange);
-    await this._processHeaderRow(rows);
+    this._processHeaderRow(rows);
   }
 
-  private async _processHeaderRow(rows: any[]) {
+  private _processHeaderRow(rows: any[]) {
     if (!rows) {
       throw new Error('No values in the header row - fill the first row with header values before trying to interact with rows');
     }

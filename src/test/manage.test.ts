@@ -194,7 +194,7 @@ describe('Managing doc info and sheets', () => {
     let sheet: GoogleSpreadsheetWorksheet;
 
     beforeAll(async () => {
-      sheet = await doc.addSheet({ title: 'validation rules test' });
+      sheet = await doc.addSheet({ title: `validation rules test ${+new Date()}` });
     });
     afterAll(async () => {
       await sheet.delete();
