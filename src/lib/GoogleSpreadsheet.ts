@@ -33,8 +33,9 @@ type ExportFileTypes = keyof typeof EXPORT_CONFIG;
 
 function getAuthMode(auth: GoogleApiAuth) {
   if ('getRequestHeaders' in auth) return AUTH_MODES.GOOGLE_AUTH_CLIENT;
-  if ('token' in auth) return AUTH_MODES.RAW_ACCESS_TOKEN;
-  if ('apiKey' in auth) return AUTH_MODES.API_KEY;
+  if ('token' in auth && auth.token) return AUTH_MODES.RAW_ACCESS_TOKEN;
+  // google-auth-library now has an empty `apiKey` property
+  if ('apiKey' in auth && auth.apiKey) return AUTH_MODES.API_KEY;
   throw new Error('Invalid auth');
 }
 
@@ -48,12 +49,12 @@ async function getRequestAuthConfig(auth: GoogleApiAuth) {
 
   // API key only access passes through the api key as a query param
   // (note this can only provide read-only access)
-  if ('apiKey' in auth) {
+  if ('apiKey' in auth && auth.apiKey) {
     return { params: { key: auth.apiKey } };
   }
 
   // RAW ACCESS TOKEN
-  if ('token' in auth) {
+  if ('token' in auth && auth.token) {
     return { headers: { Authorization: `Bearer ${auth.token}` } };
   }
 
@@ -606,7 +607,7 @@ export class GoogleSpreadsheet {
   static async createNewSpreadsheetDocument(auth: GoogleApiAuth, properties?: Partial<SpreadsheetProperties>) {
     // see updateProperties for more info about available properties
 
-    if ('apiKey' in auth) {
+    if (getAuthMode(auth) === AUTH_MODES.API_KEY) {
       throw new Error('Cannot use api key only to create a new spreadsheet - it is only usable for read-only access of public docs');
     }
 
