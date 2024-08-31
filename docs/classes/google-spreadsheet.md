@@ -76,7 +76,7 @@ The child worksheets (each an instance of [`GoogleSpreadsheetWorksheet`](classes
 
 Property|Type|Description
 ---|---|---
-`sheetsById`| `{ [sheetId: string]: GoogleSpreadsheetWorksheet }` | Child worksheets, keyed by their `sheetId`
+`sheetsById`| `{ [sheetId: number]: GoogleSpreadsheetWorksheet }` | Child worksheets, keyed by their `sheetId`
 `sheetsByTitle`| `{ [title: string]: GoogleSpreadsheetWorksheet }` | Child worksheets keyed by their `title`<br/>_⚠️ beware of title conflicts_
 `sheetsByIndex`| `GoogleSpreadsheetWorksheet[]` |Array of sheets, ordered by their index<br>_this is the order they appear in the Google sheets UI_
 `sheetCount`| `number` |Count of child worksheets<br>_same as `doc.sheetsByIndex.length`_
