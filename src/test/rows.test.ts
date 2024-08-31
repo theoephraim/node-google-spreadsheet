@@ -64,6 +64,17 @@ describe('Row-based operations', () => {
       expect(rows.length).toEqual(2);
       expect(rows[0].get('numbers')).toEqual(INITIAL_DATA[2][0]);
     });
+
+    it('it will fetch the same row content when the header is not populated', async () => {
+      sheet.resetLocalCache(true); // forget the header values
+      expect(() => sheet.headerValues).toThrowError('Header values are not yet loaded');
+      const rowsWithoutPrefetchHeaders = await sheet.getRows();
+
+      expect(sheet.headerValues).toBeDefined();
+      const rowsWithFetchedHeaders = await sheet.getRows();
+
+      expect(rowsWithoutPrefetchHeaders).toEqual(rowsWithFetchedHeaders);
+    });
   });
 
   describe('adding rows', () => {

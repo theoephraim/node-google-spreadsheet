@@ -166,6 +166,9 @@ export class GoogleSpreadsheetWorksheet {
   get hidden() { return this._getProp('hidden'); }
   get tabColor() { return this._getProp('tabColor'); }
   get rightToLeft() { return this._getProp('rightToLeft'); }
+  private get _headerRange() {
+    return `A${this._headerRowIndex}:${this.lastColumnLetter}${this._headerRowIndex}`;
+  }
 
   set sheetId(newVal: WorksheetProperties['sheetId']) { this._setProp('sheetId', newVal); }
   set title(newVal: WorksheetProperties['title']) { this._setProp('title', newVal); }
@@ -342,7 +345,11 @@ export class GoogleSpreadsheetWorksheet {
 
   async loadHeaderRow(headerRowIndex?: number) {
     if (headerRowIndex !== undefined) this._headerRowIndex = headerRowIndex;
-    const rows = await this.getCellsInRange(`A${this._headerRowIndex}:${this.lastColumnLetter}${this._headerRowIndex}`);
+    const rows = await this.getCellsInRange(this._headerRange);
+    await this._processHeaderRow(rows);
+  }
+
+  private async _processHeaderRow(rows: any[]) {
     if (!rows) {
       throw new Error('No values in the header row - fill the first row with header values before trying to interact with rows');
     }
@@ -489,14 +496,21 @@ export class GoogleSpreadsheetWorksheet {
     const offset = options?.offset || 0;
     const limit = options?.limit || this.rowCount - 1;
 
-    await this._ensureHeaderRowLoaded();
-
     const firstRow = 1 + this._headerRowIndex + offset;
     const lastRow = firstRow + limit - 1; // inclusive so we subtract 1
-    const lastColumn = columnToLetter(this.headerValues.length);
-    const rawRows = await this.getCellsInRange(
-      `A${firstRow}:${lastColumn}${lastRow}`
-    );
+
+    let rawRows;
+    if (this._headerValues) {
+      const lastColumn = columnToLetter(this.headerValues.length);
+      rawRows = await this.getCellsInRange(
+        `A${firstRow}:${lastColumn}${lastRow}`
+      );
+    } else {
+      const result = await this.batchGetCellsInRange([this._headerRange,
+        `A${firstRow}:${this.lastColumnLetter}${lastRow}`]);
+      this._processHeaderRow(result[0]);
+      rawRows = result[1];
+    }
 
     if (!rawRows) return [];
 
@@ -598,6 +612,14 @@ export class GoogleSpreadsheetWorksheet {
       params: options,
     });
     return response.data.values;
+  }
+
+  async batchGetCellsInRange(a1Ranges: A1Range[], options?: GetValuesRequestOptions) {
+    const ranges = a1Ranges.map((r) => `ranges=${this.encodedA1SheetName}!${r}`).join('&');
+    const response = await this._spreadsheet.sheetsApi.get(`/values:batchGet?${ranges}`, {
+      params: options,
+    });
+    return response.data.valueRanges.map((r: any) => r.values);
   }
 
   async updateNamedRange() {
