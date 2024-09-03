@@ -59,16 +59,9 @@ module.exports = {
 
   },
   overrides: [
-    { // extra jest related rules for tests
+    { // extra rules for tests
       files: 'test/*',
-      plugins: ['jest'],
-      extends: ['plugin:jest/recommended'],
-      env: {
-        'jest/globals': true,
-      },
       rules: {
-        'jest/consistent-test-it': 'error',
-        'jest/expect-expect': 0, // sometimes the lack of an error thrown is a good test
         'no-await-in-loop': 0,
       }
     },

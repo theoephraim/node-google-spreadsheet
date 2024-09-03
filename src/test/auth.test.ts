@@ -1,9 +1,12 @@
+import 'dmno/auto-inject-globals';
+import {
+  describe, expect, it, afterEach,
+} from 'vitest';
 import delay from 'delay';
 
 import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet, GoogleSpreadsheetCell } from '..';
 
 import { DOC_IDS, testServiceAccountAuth } from './auth/docs-and-auth';
-import apiKey from './auth/api-key';
 import { GoogleApiAuth } from '../lib/types/auth-types';
 
 function checkDocAccess(
@@ -56,9 +59,9 @@ function checkDocAccess(
 
 describe('Authentication', () => {
   // hitting rate limits when running tests on ci - so we add a short delay
-  if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
+  if (DMNO_CONFIG.TEST_DELAY) afterEach(async () => delay(DMNO_CONFIG.TEST_DELAY));
 
-  const apiKeyAuth = { apiKey };
+  const apiKeyAuth = { apiKey: process.env.GOOGLE_API_KEY! };
 
   describe('api key', () => {
     checkDocAccess('private', apiKeyAuth, {

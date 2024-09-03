@@ -1,16 +1,16 @@
 import * as _ from './lodash';
 
 export function getFieldMask(obj: Record<string, unknown>) {
-    let fromGrid = '';
-    let fromRoot = Object.keys(obj).filter((key) => key !== 'gridProperties').join(',');
+  let fromGrid = '';
+  const fromRoot = Object.keys(obj).filter((key) => key !== 'gridProperties').join(',');
 
-    if (obj.gridProperties) {
-        fromGrid = Object.keys(obj.gridProperties).map(key => `gridProperties.${key}`).join(',');
-        if (fromGrid.length && fromRoot.length) {
-            fromGrid = `${fromGrid},`
-        }
+  if (obj.gridProperties) {
+    fromGrid = Object.keys(obj.gridProperties).map((key) => `gridProperties.${key}`).join(',');
+    if (fromGrid.length && fromRoot.length) {
+      fromGrid = `${fromGrid},`;
     }
-    return fromGrid + fromRoot;
+  }
+  return fromGrid + fromRoot;
 }
 
 export function columnToLetter(column: number) {

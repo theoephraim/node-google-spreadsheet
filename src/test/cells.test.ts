@@ -1,3 +1,7 @@
+import 'dmno/auto-inject-globals';
+import {
+  describe, expect, it, beforeAll, beforeEach, afterAll, afterEach,
+} from 'vitest';
 import delay from 'delay';
 import * as _ from '../lib/lodash';
 
@@ -29,7 +33,7 @@ describe('Cell-based operations', () => {
     await sheet.delete();
   });
   // hitting rate limits when running tests on ci - so we add a short delay
-  if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
+  if (DMNO_CONFIG.TEST_DELAY) afterEach(async () => delay(DMNO_CONFIG.TEST_DELAY));
 
   describe('loading cells', () => {
     afterEach(() => {
@@ -246,7 +250,7 @@ describe('Cell-based operations', () => {
     });
   });
 
-  describe('cell formatting', () => {
+  describe.todo('cell formatting', () => {
     // TODO: add tests!
     // - set the background color twice, conflicts b/w backgroundColor and backgroundColorStyle
   });

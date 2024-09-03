@@ -1,5 +1,4 @@
 import { JWT } from 'google-auth-library';
-import creds from './service-account-creds.json' assert { type: 'json' };
 
 export const DOC_IDS = {
   public: '1LG6vqg6ezQpIXr-SIDDWQAc9mLNSXasboDR7MUbLvZw',
@@ -9,8 +8,8 @@ export const DOC_IDS = {
 };
 
 export const testServiceAccountAuth = new JWT({
-  email: creds.client_email,
-  key: creds.private_key,
+  email: DMNO_CONFIG.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  key: DMNO_CONFIG.GOOGLE_SERVICE_ACCOUNT_KEY,
   scopes: [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive.file',

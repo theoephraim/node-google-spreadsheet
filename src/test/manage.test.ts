@@ -1,4 +1,7 @@
-
+import 'dmno/auto-inject-globals';
+import {
+  describe, expect, it, beforeAll, afterAll, afterEach,
+} from 'vitest';
 import delay from 'delay';
 import * as _ from '../lib/lodash';
 
@@ -39,9 +42,8 @@ describe('Managing doc info and sheets', () => {
   // });
 
   // hitting rate limits when running tests on ci - so we add a short delay
-  if (process.env.NODE_ENV === 'ci') afterEach(async () => delay(500));
+  if (DMNO_CONFIG.TEST_DELAY) afterEach(async () => delay(DMNO_CONFIG.TEST_DELAY));
 
-  /* eslint-disable jest/no-commented-out-tests */
   // uncomment temporarily to clear out all the sheets in the test doc
   // it.only('clear out all the existing sheets', async () => {
   //   await doc.loadInfo();
