@@ -192,7 +192,7 @@ describe('Managing doc info and sheets', () => {
     });
   });
 
-  describe.only('data validation rules', () => {
+  describe('data validation rules', () => {
     let sheet: GoogleSpreadsheetWorksheet;
 
     beforeAll(async () => {

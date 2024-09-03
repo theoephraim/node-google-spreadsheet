@@ -31,7 +31,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         name: Install pnpm
         with:
-          version: 8
+          version: 9
           run_install: false
 
       - name: Get pnpm store directory
@@ -54,10 +54,12 @@ jobs:
         run: pnpm run lint --format junit -o reports/junit/js-lint-results.xml
 
       - name: Test
-        run: pnpm run test --ci --runInBand --reporters=default --reporters=jest-junit --coverage
+        run: pnpm run test
         env:
+          CI: 1
           NODE_ENV: ci
           JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
+          DMNO_VAULT_KEY: ${{ secrets.DMNO_VAULT_KEY }}
 
       - uses: actions/upload-artifact@v4
         with:
