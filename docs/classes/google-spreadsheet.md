@@ -9,17 +9,17 @@ _Class Reference_
 ## Initialization
 
 ### Existing documents
-#### `new GoogleSpreadsheet(id, auth)` :id=fn-newGoogleSpreadsheet
+#### `new GoogleSpreadsheet(id, auth, retryConfig)` :id=fn-newGoogleSpreadsheet
 > Work with an existing document
 
 >  You'll need the document ID, which you can find in your browser's URL when you navigate to the document.<br/>
 >  For example: `https://docs.google.com/spreadsheets/d/THIS-IS-THE-DOCUMENT-ID/edit#gid=123456789`
 
-Param|Type|Required|Description
----|---|---|---
-`spreadsheetId` | String | ✅ | Document ID
+Param| Type                                                                                                 |Required|Description
+---|------------------------------------------------------------------------------------------------------|---|---
+`spreadsheetId` | String                                                                                               | ✅ | Document ID
 `auth` | `GoogleAuth` \|<br/> `JWT` \|<br/> `OAuth2Client` \|<br/> `{ apiKey: string }` \|<br/> `{ token: string }` | ✅ | Authentication to use<br/>See [Authentication](guides/authentication) for more info
-
+`retryConfig`  | See the [ky docs](https://github.com/sindresorhus/ky#retry) | ❎ | Configure handling for rate limited responses
 
 ### Creating a new document
 
