@@ -363,9 +363,9 @@ export class GoogleSpreadsheetWorksheet {
     }
   }
 
-  async loadHeaderRow(headerRowIndex?: number) {
+  async loadHeaderRow(headerRowIndex?: number, options?: GetValuesRequestOptions) {
     if (headerRowIndex !== undefined) this._headerRowIndex = headerRowIndex;
-    const rows = await this.getCellsInRange(this._headerRange);
+    const rows = await this.getCellsInRange(this._headerRange, options);
     this._processHeaderRow(rows);
   }
 

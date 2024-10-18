@@ -6,7 +6,7 @@
 - DeveloperMetadata is supported
 - Retries are supported when rate limited
 - Safer handling of numeric headers
-- Support for providing valueRenderOption when loading rows
+- Support for providing valueRenderOption when loading rows & headers
 - Support for reading cell & row metadata
 
 [![NPM version](https://img.shields.io/npm/v/google-spreadsheet)](https://www.npmjs.com/package/google-spreadsheet)
