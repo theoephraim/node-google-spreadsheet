@@ -1,31 +1,29 @@
-import Axios, {
-  AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig,
-} from 'axios';
+import Axios, {AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig,} from 'axios';
 
-import { Stream } from 'stream';
+import {Stream} from 'stream';
 import * as _ from './lodash';
-import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
-import { axiosParamsSerializer, getFieldMask } from './utils';
+import {GoogleSpreadsheetWorksheet} from './GoogleSpreadsheetWorksheet';
+import {axiosParamsSerializer, getFieldMask} from './utils';
 import {
-  A1Range,
-  DataFilter,
-  DeveloperMetadataDataFilter,
-  DeveloperMetadataId,
-  DeveloperMetadataKey,
-  DeveloperMetadataLocation,
-  DeveloperMetadataValue,
-  DeveloperMetadataVisibility,
-  DimensionRange,
-  GridRange,
-  NamedRangeId,
-  SpreadsheetId,
-  SpreadsheetProperties,
-  WorksheetId,
-  WorksheetProperties,
+    A1Range,
+    DataFilter,
+    DeveloperMetadataDataFilter,
+    DeveloperMetadataId,
+    DeveloperMetadataKey,
+    DeveloperMetadataLocation,
+    DeveloperMetadataValue,
+    DeveloperMetadataVisibility,
+    DimensionRange,
+    GridRange,
+    NamedRangeId,
+    SpreadsheetId,
+    SpreadsheetProperties,
+    WorksheetId,
+    WorksheetProperties,
 } from './types/sheets-types';
-import { PermissionRoles, PermissionsList, PublicPermissionRoles } from './types/drive-types';
-import { RecursivePartial } from './types/util-types';
-import { AUTH_MODES, GoogleApiAuth } from './types/auth-types';
+import {PermissionRoles, PermissionsList, PublicPermissionRoles} from './types/drive-types';
+import {RecursivePartial} from './types/util-types';
+import {AUTH_MODES, GoogleApiAuth} from './types/auth-types';
 
 
 const SHEETS_API_BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets';
@@ -303,6 +301,10 @@ export class GoogleSpreadsheet {
         ...includeCells && { includeGridData: true },
       },
     });
+    if (!response.data?.spreadsheetUrl) {
+      throw new Error(`Failed to load document info. Status: ${response.status},  Status Text: ${response.statusText}, Data: ${JSON.stringify(response.data)}`);
+    }
+
     this._spreadsheetUrl = response.data.spreadsheetUrl;
     this._rawProperties = response.data.properties;
     _.each(response.data.sheets, (s) => this._updateOrCreateSheet(s));
