@@ -8,7 +8,14 @@ import { GoogleSpreadsheetCellErrorValue } from './GoogleSpreadsheetCellErrorVal
 
 import {
   CellData,
-  CellFormat, CellValueType, ColumnIndex, RowIndex,
+  CellFormat,
+  CellValueType,
+  ColumnIndex,
+  DeveloperMetadataId,
+  DeveloperMetadataKey,
+  DeveloperMetadataValue,
+  DeveloperMetadataVisibility,
+  RowIndex,
 } from './types/sheets-types';
 
 export class GoogleSpreadsheetCell {
@@ -239,6 +246,42 @@ export class GoogleSpreadsheetCell {
    * */
   async save() {
     await this._sheet.saveCells([this]);
+  }
+
+  /**
+   * Add developer metadata to the cell
+   */
+  async createDeveloperMetadata(
+    metadataKey: DeveloperMetadataKey,
+    metadataValue: DeveloperMetadataValue,
+    visibility?: DeveloperMetadataVisibility,
+    metadataId?: DeveloperMetadataId
+  ) {
+    return this._sheet._spreadsheet.createRangeDeveloperMetadata(
+      metadataKey,
+      metadataValue,
+      {
+        dimension: 'COLUMNS',
+        sheetId: this._sheet.sheetId,
+        startIndex: this._columnIndex,
+        endIndex: this._columnIndex + 1,
+      },
+      visibility,
+      metadataId
+    );
+  }
+
+  /**
+   * Get developer metadata from the cell
+   */
+  async getDeveloperMetadata() {
+    return this._sheet._spreadsheet.getDeveloperMetadataByGridRange(
+      {
+        sheetId: this._sheet.sheetId,
+        startColumnIndex: this._columnIndex,
+        endColumnIndex: this._columnIndex + 1,
+      }
+    );
   }
 
   /**

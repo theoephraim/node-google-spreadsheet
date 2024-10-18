@@ -19,6 +19,9 @@ export type A1Range = string;
 
 export type NamedRangeId = string;
 
+export type DeveloperMetadataId = number;
+export type DeveloperMetadataKey = string;
+export type DeveloperMetadataValue = string;
 
 
 /**
@@ -116,7 +119,15 @@ export type DeveloperMetadataVisibility =
 /** @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#developermetadatalocationtype */
 export type DeveloperMetadataLocationType = 'ROW' | 'COLUMN' | 'SHEET' | 'SPREADSHEET';
 
-
+export type DeveloperMetadataLookup = {
+  locationType: DeveloperMetadataLocationType,
+  metadataLocation: DeveloperMetadataLocation,
+  locationMatchingStrategy: 'EXACT_LOCATION' | 'INTERSECTING_LOCATION'
+  metadataId: DeveloperMetadataId,
+  metadataKey: DeveloperMetadataKey,
+  metadataValue: DeveloperMetadataValue,
+  visibility: DeveloperMetadataVisibility
+};
 
 // formatting types
 export type TextFormat = {
@@ -412,7 +423,11 @@ export type GridRangeWithoutWorksheetId = Omit<GridRange, 'sheetId'>;
 export type GridRangeWithOptionalWorksheetId = MakeOptional<GridRange, 'sheetId'>;
 export type DataFilter = A1Range | GridRange;
 export type DataFilterWithoutWorksheetId = A1Range | GridRangeWithoutWorksheetId;
-
+export type DeveloperMetadataDataFilter = {
+  a1Range?: A1Range,
+  gridRange?: GridRange,
+  developerMetadataLookup?: DeveloperMetadataLookup,
+};
 
 /** @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#colorstyle */
 export type ColorStyle = { rgbColor: Color } | { themeColor: ThemeColorType };

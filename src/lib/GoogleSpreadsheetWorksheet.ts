@@ -5,14 +5,32 @@ import { GoogleSpreadsheetRow } from './GoogleSpreadsheetRow';
 import { GoogleSpreadsheetCell } from './GoogleSpreadsheetCell';
 
 import {
-  getFieldMask, columnToLetter, letterToColumn, checkForDuplicateHeaders,
+  checkForDuplicateHeaders, columnToLetter, getFieldMask, letterToColumn,
 } from './utils';
 import { GoogleSpreadsheet } from './GoogleSpreadsheet';
 import {
-  A1Range, SpreadsheetId, DimensionRangeIndexes, WorksheetDimension, WorksheetId, WorksheetProperties, A1Address,
-  RowIndex, ColumnIndex, DataFilterWithoutWorksheetId, DataFilter, GetValuesRequestOptions, WorksheetGridProperties,
-  WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId,
+  A1Address,
+  A1Range,
+  AddRowOptions,
+  CellDataRange,
+  ColumnIndex,
+  DataFilter,
+  DataFilterWithoutWorksheetId,
   DataValidationRule,
+  DeveloperMetadataId,
+  DeveloperMetadataKey,
+  DeveloperMetadataValue,
+  DeveloperMetadataVisibility,
+  DimensionRangeIndexes,
+  GetValuesRequestOptions,
+  GridRangeWithOptionalWorksheetId,
+  RowIndex,
+  SpreadsheetId,
+  WorksheetDimension,
+  WorksheetDimensionProperties,
+  WorksheetGridProperties,
+  WorksheetId,
+  WorksheetProperties,
 } from './types/sheets-types';
 
 
@@ -166,6 +184,8 @@ export class GoogleSpreadsheetWorksheet {
   get hidden() { return this._getProp('hidden'); }
   get tabColor() { return this._getProp('tabColor'); }
   get rightToLeft() { return this._getProp('rightToLeft'); }
+  get rowMetadata(): any[] { return this._rowMetadata; }
+  get columnMetadata(): any[] { return this._columnMetadata; }
   private get _headerRange() {
     return `A${this._headerRowIndex}:${this.lastColumnLetter}${this._headerRowIndex}`;
   }
@@ -353,7 +373,7 @@ export class GoogleSpreadsheetWorksheet {
     if (!rows) {
       throw new Error('No values in the header row - fill the first row with header values before trying to interact with rows');
     }
-    this._headerValues = _.map(rows[0], (header) => header?.trim());
+    this._headerValues = _.map(rows[0], (header) => header?.toString()?.trim());
     if (!_.compact(this.headerValues).length) {
       throw new Error('All your header cells are blank - fill the first row with header values before trying to interact with rows');
     }
@@ -365,7 +385,7 @@ export class GoogleSpreadsheetWorksheet {
     if (headerValues.length > this.columnCount) {
       throw new Error(`Sheet is not large enough to fit ${headerValues.length} columns. Resize the sheet first.`);
     }
-    const trimmedHeaderValues = _.map(headerValues, (h) => h?.trim());
+    const trimmedHeaderValues = _.map(headerValues, (h) => h?.toString()?.trim());
     checkForDuplicateHeaders(trimmedHeaderValues);
 
     if (!_.compact(trimmedHeaderValues).length) {
@@ -484,7 +504,7 @@ export class GoogleSpreadsheetWorksheet {
       offset?: number,
       /** limit number of rows fetched */
       limit?: number,
-    }
+    } & GetValuesRequestOptions
   ) {
     // https://developers.google.com/sheets/api/guides/migration
     // v4 API does not have equivalents for the row-order query parameters provided
@@ -495,6 +515,19 @@ export class GoogleSpreadsheetWorksheet {
     // However, you can retrieve the relevant data and sort through it as needed in your application
     const offset = options?.offset || 0;
     const limit = options?.limit || this.rowCount - 1;
+    let valueRequestOptions: GetValuesRequestOptions | undefined;
+
+    if (options?.majorDimension) {
+      valueRequestOptions = { majorDimension: options.majorDimension };
+    }
+
+    if (options?.valueRenderOption) {
+      if (!valueRequestOptions) {
+        valueRequestOptions = { valueRenderOption: options.valueRenderOption };
+      } else {
+        valueRequestOptions.valueRenderOption = options.valueRenderOption;
+      }
+    }
 
     const firstRow = 1 + this._headerRowIndex + offset;
     const lastRow = firstRow + limit - 1; // inclusive so we subtract 1
@@ -503,11 +536,15 @@ export class GoogleSpreadsheetWorksheet {
     if (this._headerValues) {
       const lastColumn = columnToLetter(this.headerValues.length);
       rawRows = await this.getCellsInRange(
-        `A${firstRow}:${lastColumn}${lastRow}`
+        `A${firstRow}:${lastColumn}${lastRow}`,
+        valueRequestOptions
       );
     } else {
-      const result = await this.batchGetCellsInRange([this._headerRange,
-        `A${firstRow}:${this.lastColumnLetter}${lastRow}`]);
+      const result = await this.batchGetCellsInRange(
+        [this._headerRange,
+          `A${firstRow}:${this.lastColumnLetter}${lastRow}`],
+        valueRequestOptions
+      );
       this._processHeaderRow(result[0]);
       rawRows = result[1];
     }
@@ -910,9 +947,21 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteBandingRequest
   }
 
-  async createDeveloperMetadata() {
+  async createDeveloperMetadata(
+    metadataKey: DeveloperMetadataKey,
+    metadataValue: DeveloperMetadataValue,
+    visibility: DeveloperMetadataVisibility,
+    metadataId: DeveloperMetadataId
+  ) {
     // Request type = `createDeveloperMetadata`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#CreateDeveloperMetadataRequest
+    return this._spreadsheet.createSheetDeveloperMetadata(
+      metadataKey,
+      metadataValue,
+      this.sheetId,
+      visibility,
+      metadataId
+    );
   }
 
   async updateDeveloperMetadata() {

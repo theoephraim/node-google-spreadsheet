@@ -7,7 +7,21 @@ import * as _ from './lodash';
 import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
 import { axiosParamsSerializer, getFieldMask } from './utils';
 import {
-  DataFilter, GridRange, NamedRangeId, SpreadsheetId, SpreadsheetProperties, WorksheetId, WorksheetProperties,
+  A1Range,
+  DataFilter,
+  DeveloperMetadataDataFilter,
+  DeveloperMetadataId,
+  DeveloperMetadataKey,
+  DeveloperMetadataLocation,
+  DeveloperMetadataValue,
+  DeveloperMetadataVisibility,
+  DimensionRange,
+  GridRange,
+  NamedRangeId,
+  SpreadsheetId,
+  SpreadsheetProperties,
+  WorksheetId,
+  WorksheetProperties,
 } from './types/sheets-types';
 import { PermissionRoles, PermissionsList, PublicPermissionRoles } from './types/drive-types';
 import { RecursivePartial } from './types/util-types';
@@ -81,6 +95,8 @@ export class GoogleSpreadsheet {
   private _rawProperties = null as SpreadsheetProperties | null;
   private _spreadsheetUrl = null as string | null;
   private _deleted = false;
+  private _rateLimitedRetries = 0;
+  private _initialRateLimitedRetryDelay = 3000;
 
   /**
    * Sheets API [axios](https://axios-http.com) instance
@@ -142,6 +158,10 @@ export class GoogleSpreadsheet {
     );
   }
 
+  setRetryOptions(retries:number, retryDelay:number) {
+    this._rateLimitedRetries = retries;
+    this._initialRateLimitedRetryDelay = retryDelay;
+  }
 
   // AUTH RELATED FUNCTIONS ////////////////////////////////////////////////////////////////////////
 
@@ -160,25 +180,41 @@ export class GoogleSpreadsheet {
   /** @internal */
   async _handleAxiosResponse(response: AxiosResponse) { return response; }
   /** @internal */
-  async _handleAxiosErrors(error: AxiosError) {
-    // console.log(error);
-    const errorData = error.response?.data as any;
+  async _handleAxiosErrors(axiosInstance: AxiosInstance) {
+    return (error: AxiosError) => {
+      if (_.get(error, 'response.status') === 429) {
+        const config = error.config as InternalAxiosRequestConfig & { retryCount?: number };
+        const retryCount = config?.retryCount ?? 0;
 
-    if (errorData) {
-      // usually the error has a code and message, but occasionally not
-      if (!errorData.error) throw error;
+        if (this._rateLimitedRetries > 0 && retryCount < this._rateLimitedRetries) {
+          config.retryCount = retryCount + 1;
 
-      const { code, message } = errorData.error;
-      error.message = `Google API error - [${code}] ${message}`;
-      throw error;
-    }
-
-    if (_.get(error, 'response.status') === 403) {
-      if ('apiKey' in this.auth) {
-        throw new Error('Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)');
+          return new Promise((resolve) => {
+            setTimeout(() => {
+              resolve(axiosInstance(config));
+            }, this._initialRateLimitedRetryDelay * (retryCount + 1));
+          });
+        }
       }
-    }
-    throw error;
+      // console.log(error);
+      const errorData = error.response?.data as any;
+
+      if (errorData) {
+        // usually the error has a code and message, but occasionally not
+        if (!errorData.error) throw error;
+
+        const { code, message } = errorData.error;
+        error.message = `Google API error - [${code}] ${message}`;
+        throw error;
+      }
+
+      if (_.get(error, 'response.status') === 403) {
+        if ('apiKey' in this.auth) {
+          throw new Error('Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)');
+        }
+      }
+      throw error;
+    };
   }
 
   /** @internal */
@@ -633,5 +669,90 @@ export class GoogleSpreadsheet {
     _.each(response.data.sheets, (s) => newSpreadsheet._updateOrCreateSheet(s));
 
     return newSpreadsheet;
+  }
+
+  //
+  // DEVELOPER METADATA ////////////////////////////////////////////////////////////////////////////////
+
+  async _createDeveloperMetadata(
+    metadataKey: DeveloperMetadataKey,
+    metadataValue: DeveloperMetadataValue,
+    location: Partial<DeveloperMetadataLocation>,
+    visibility?: DeveloperMetadataVisibility,
+    metadataId?: DeveloperMetadataId
+  ) {
+    // Request type = `createDeveloperMetadata`
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata
+    return this._makeSingleUpdateRequest('createDeveloperMetadata', {
+      developerMetadata: {
+        metadataKey,
+        metadataValue,
+        location,
+        visibility: visibility || 'PROJECT',
+        metadataId,
+      },
+    }).then((data) => data.developerMetadata);
+  }
+
+  async _getDeveloperMetadata(dataFilter: DeveloperMetadataDataFilter) {
+    // Request type = `developerMetadata:search`
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata/search
+    return this.sheetsApi
+      .post('/developerMetadata:search', {
+        dataFilters: [dataFilter],
+      })
+      .then((response) => response.data.matchedDeveloperMetadata);
+  }
+
+  async getMetadataById(metadataId: DeveloperMetadataId) {
+    // Request type = `developerMetadata`
+    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata/get
+    return this.sheetsApi
+      .get(`/developerMetadata/${metadataId}`)
+      .then((response) => response.data);
+  }
+
+  async createSheetDeveloperMetadata(
+    metadataKey: DeveloperMetadataKey,
+    metadataValue: DeveloperMetadataValue,
+    sheetId: WorksheetId,
+    visibility?: DeveloperMetadataVisibility,
+    metadataId?: DeveloperMetadataId
+  ) {
+    return this._createDeveloperMetadata(
+      metadataKey,
+      metadataValue,
+      {
+        sheetId: sheetId ?? 0,
+      },
+      visibility,
+      metadataId
+    );
+  }
+
+  async createRangeDeveloperMetadata(
+    metadataKey: DeveloperMetadataKey,
+    metadataValue: DeveloperMetadataValue,
+    range: DimensionRange,
+    visibility?: DeveloperMetadataVisibility,
+    metadataId?: DeveloperMetadataId
+  ) {
+    return this._createDeveloperMetadata(
+      metadataKey,
+      metadataValue,
+      {
+        dimensionRange: range,
+      },
+      visibility,
+      metadataId
+    );
+  }
+
+  async getDeveloperMetadataByA1Range(a1Range: A1Range) {
+    return this._getDeveloperMetadata({ a1Range });
+  }
+
+  async getDeveloperMetadataByGridRange(gridRange: GridRange) {
+    return this._getDeveloperMetadata({ gridRange });
   }
 }

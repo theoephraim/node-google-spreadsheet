@@ -1,5 +1,11 @@
 import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
 import { columnToLetter } from './utils';
+import {
+  DeveloperMetadataId,
+  DeveloperMetadataKey,
+  DeveloperMetadataValue,
+  DeveloperMetadataVisibility,
+} from './types/sheets-types';
 
 
 // TODO: add type for possible row values (currently any)
@@ -102,6 +108,36 @@ export class GoogleSpreadsheetRow<T extends Record<string, any> = Record<string,
     this._worksheet._shiftRowCache(this.rowNumber);
 
     return result;
+  }
+
+  async createDeveloperMetadata(
+    metadataKey: DeveloperMetadataKey,
+    metadataValue: DeveloperMetadataValue,
+    visibility: DeveloperMetadataVisibility,
+    metadataId: DeveloperMetadataId
+  ) {
+    return this._worksheet._spreadsheet.createRangeDeveloperMetadata(
+      metadataKey,
+      metadataValue,
+      {
+        dimension: 'ROWS',
+        sheetId: this._worksheet.sheetId,
+        startIndex: this._rowNumber,
+        endIndex: this._rowNumber + 1,
+      },
+      visibility,
+      metadataId
+    );
+  }
+
+  async getDeveloperMetadata() {
+    return this._worksheet._spreadsheet.getDeveloperMetadataByGridRange(
+      {
+        sheetId: this._worksheet.sheetId,
+        startRowIndex: this._rowNumber,
+        endRowIndex: this._rowNumber + 1,
+      }
+    );
   }
 
   /**
