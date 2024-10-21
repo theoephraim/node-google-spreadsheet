@@ -69,6 +69,9 @@ importers:
       google-auth-library:
         specifier: ^9.14.0
         version: 9.14.0
+      nock:
+        specifier: ^13.5.5
+        version: 13.5.5
       release-it:
         specifier: ^15.11.0
         version: 15.11.0
@@ -2732,6 +2735,9 @@ packages:
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
+  json-stringify-safe@5.0.1:
+    resolution: {integrity: sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==}
+
   json5@1.0.2:
     resolution: {integrity: sha512-g1MWMLBiz8FKi1e4w0UyVL3w+iJceWAFBAaBnnGKOpNa5f8TLktkbre1+s6oICydWAm+HRUGTmI+//xv2hvXYA==}
     hasBin: true
@@ -3052,6 +3058,10 @@ packages:
     resolution: {integrity: sha512-NHDDGYudnvRutt/VhKFlX26IotXe1w0cmkDm6JGquh5bz/bDTw0LufSmH/GxTjEdpHEO+bVKFTwdrcGa/9XlKQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
+  nock@13.5.5:
+    resolution: {integrity: sha512-XKYnqUrCwXC8DGG1xX4YH5yNIrlh9c065uaMZZHUoeUUINTOyt+x/G+ezYk0Ft6ExSREVIs+qBJDK503viTfFA==}
+    engines: {node: '>= 10.13'}
+
   node-domexception@1.0.0:
     resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
     engines: {node: '>=10.5.0'}
@@ -3347,6 +3357,10 @@ packages:
   promise.allsettled@1.0.6:
     resolution: {integrity: sha512-22wJUOD3zswWFqgwjNHa1965LvqTX87WPu/lreY2KSd7SVcERfuZ4GfUaOnJNnvtoIv2yXT/W00YIGMetXtFXg==}
     engines: {node: '>= 0.4'}
+
+  propagate@2.0.1:
+    resolution: {integrity: sha512-vGrhOavPSTz4QVNuBNdcNXePNdNMaO1xj9yBeH1ScQPjk/rhg9sSlCXPhMkFuaNNW/syTvYqsnbIJxMBfRbbag==}
+    engines: {node: '>= 8'}
 
   proto-list@1.2.4:
     resolution: {integrity: sha512-vtK/94akxsTMhe0/cbfpR+syPuszcuwhqVjJq26CuNDgFGj682oRBXOP5MJpv2r7JtE8MsiepGIqvvOTBwn2vA==}
@@ -4238,7 +4252,7 @@ snapshots:
       '@babel/traverse': 7.22.1
       '@babel/types': 7.22.0
       convert-source-map: 1.9.0
-      debug: 4.3.4
+      debug: 4.3.6
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.0
@@ -4339,7 +4353,7 @@ snapshots:
       '@babel/helper-split-export-declaration': 7.18.6
       '@babel/parser': 7.22.0
       '@babel/types': 7.22.0
-      debug: 4.3.4
+      debug: 4.3.6
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -5213,7 +5227,7 @@ snapshots:
 
   agent-base@7.1.0:
     dependencies:
-      debug: 4.3.4
+      debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
 
@@ -6551,7 +6565,7 @@ snapshots:
     dependencies:
       basic-ftp: 5.0.3
       data-uri-to-buffer: 5.0.1
-      debug: 4.3.4
+      debug: 4.3.6
       fs-extra: 8.1.0
     transitivePeerDependencies:
       - supports-color
@@ -6769,7 +6783,7 @@ snapshots:
   http-proxy-agent@7.0.0:
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4
+      debug: 4.3.6
     transitivePeerDependencies:
       - supports-color
 
@@ -7090,6 +7104,8 @@ snapshots:
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
+  json-stringify-safe@5.0.1: {}
+
   json5@1.0.2:
     dependencies:
       minimist: 1.2.8
@@ -7366,6 +7382,14 @@ snapshots:
     dependencies:
       type-fest: 2.19.0
 
+  nock@13.5.5:
+    dependencies:
+      debug: 4.3.6
+      json-stringify-safe: 5.0.1
+      propagate: 2.0.1
+    transitivePeerDependencies:
+      - supports-color
+
   node-domexception@1.0.0: {}
 
   node-fetch@2.6.11:
@@ -7546,7 +7570,7 @@ snapshots:
   pac-proxy-agent@6.0.3:
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4
+      debug: 4.3.6
       get-uri: 6.0.1
       http-proxy-agent: 7.0.0
       https-proxy-agent: 7.0.2
@@ -7660,6 +7684,8 @@ snapshots:
       es-abstract: 1.21.2
       get-intrinsic: 1.2.1
       iterate-value: 1.0.2
+
+  propagate@2.0.1: {}
 
   proto-list@1.2.4: {}
 
@@ -7992,7 +8018,7 @@ snapshots:
   socks-proxy-agent@8.0.1:
     dependencies:
       agent-base: 7.1.0
-      debug: 4.3.4
+      debug: 4.3.6
       socks: 2.7.1
     transitivePeerDependencies:
       - supports-color
