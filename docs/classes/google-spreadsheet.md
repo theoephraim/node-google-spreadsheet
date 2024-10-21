@@ -9,7 +9,7 @@ _Class Reference_
 ## Initialization
 
 ### Existing documents
-#### `new GoogleSpreadsheet(id, auth)` :id=fn-newGoogleSpreadsheet
+#### `new GoogleSpreadsheet(id, auth, rateLimitedRetryConfig)` :id=fn-newGoogleSpreadsheet
 > Work with an existing document
 
 >  You'll need the document ID, which you can find in your browser's URL when you navigate to the document.<br/>
@@ -19,7 +19,7 @@ Param|Type|Required|Description
 ---|---|---|---
 `spreadsheetId` | String | ✅ | Document ID
 `auth` | `GoogleAuth` \|<br/> `JWT` \|<br/> `OAuth2Client` \|<br/> `{ apiKey: string }` \|<br/> `{ token: string }` | ✅ | Authentication to use<br/>See [Authentication](guides/authentication) for more info
-
+`rateLimitedRetryConfig`  | `{` <br/>`maxRetries: number,`<br/>`retryStrategy: (retryCount: number) => number`<br/> `}`  | ❎ | Configure handling for rate limited responses
 
 ### Creating a new document
 
