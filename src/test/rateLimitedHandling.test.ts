@@ -1,5 +1,5 @@
 import {
-  describe, expect, it, beforeAll, beforeEach, afterAll, afterEach,
+  describe, expect, it,
 } from 'vitest';
 import nock from 'nock';
 import axios from 'axios';
@@ -47,7 +47,7 @@ const sheetRetryTests = (doc: GoogleSpreadsheet) => {
 
 describe('Rate limited handling configured with custom implementation', async () => {
   const doc = new GoogleSpreadsheet(
-    '123456',
+    SPREADSHEET_ID,
     {
       getRequestHeaders: async () => ({
         Authorization: 'Bearer fake-access-token',
@@ -66,7 +66,7 @@ describe('Rate limited handling configured with custom implementation', async ()
 
 describe('Rate limited handling configured with default implementation', async () => {
   const doc = new GoogleSpreadsheet(
-    '123456',
+    SPREADSHEET_ID,
     {
       getRequestHeaders: async () => ({
         Authorization: 'Bearer fake-access-token',
@@ -82,7 +82,7 @@ describe('Rate limited handling configured with default implementation', async (
 
 describe('Rate limited handling not enabled', async () => {
   const doc = new GoogleSpreadsheet(
-    '123456',
+    SPREADSHEET_ID,
     {
       getRequestHeaders: async () => ({
         Authorization: 'Bearer fake-access-token',
