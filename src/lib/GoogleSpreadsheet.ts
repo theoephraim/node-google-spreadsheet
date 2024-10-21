@@ -40,6 +40,18 @@ type RateLimitedRetryConfig = {
   retryStrategy: (retryCount: number) => number,
 };
 
+/**
+ * Default rate limited retry configuration based on the Google Sheets API example algorithm.
+ * The wait time is min(((2^n)+random_number_milliseconds), maximum_backoff), with n incremented by 1 for each iteration (request).
+ * random_number_milliseconds is a random number of milliseconds less than or equal to 1,000.
+ * maximum_backoff is typically 32 or 64 seconds. The appropriate value depends on the use case.
+ * @see https://developers.google.com/sheets/api/limits#example-algorithm
+ */
+const DEFAULT_RATE_LIMITED_RETRY_CONFIG: RateLimitedRetryConfig = {
+  maxRetries: 3,
+  retryStrategy: (retryCount) => Math.min(2 ** retryCount + Math.random() * 100, 32 * 1000),
+};
+
 function getAuthMode(auth: GoogleApiAuth) {
   if ('getRequestHeaders' in auth) return AUTH_MODES.GOOGLE_AUTH_CLIENT;
   if ('token' in auth && auth.token) return AUTH_MODES.RAW_ACCESS_TOKEN;
@@ -119,7 +131,9 @@ export class GoogleSpreadsheet {
     spreadsheetId: SpreadsheetId,
     /** authentication to use with Google Sheets API */
     auth: GoogleApiAuth,
-    rateLimitedRetryConfig?: RateLimitedRetryConfig
+    options?: {
+      retryOnRateLimit?: true | RateLimitedRetryConfig
+    }
   ) {
     this.spreadsheetId = spreadsheetId;
     this.auth = auth;
@@ -152,8 +166,9 @@ export class GoogleSpreadsheet {
       this._handleAxiosErrors(this.driveApi).bind(this)
     );
 
-    if (rateLimitedRetryConfig) {
-      this._rateLimitedRetryConfig = rateLimitedRetryConfig;
+    if (options?.retryOnRateLimit) {
+      const retryOptions = options.retryOnRateLimit;
+      this._rateLimitedRetryConfig = retryOptions === true ? DEFAULT_RATE_LIMITED_RETRY_CONFIG : retryOptions;
     }
   }
 
