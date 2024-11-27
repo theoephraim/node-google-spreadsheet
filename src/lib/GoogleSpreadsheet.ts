@@ -1,29 +1,31 @@
-import Axios, {AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig,} from 'axios';
+import Axios, {
+  AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig,
+} from 'axios';
 
-import {Stream} from 'stream';
+import { Stream } from 'stream';
 import * as _ from './lodash';
-import {GoogleSpreadsheetWorksheet} from './GoogleSpreadsheetWorksheet';
-import {axiosParamsSerializer, getFieldMask} from './utils';
+import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
+import { axiosParamsSerializer, getFieldMask } from './utils';
 import {
-    A1Range,
-    DataFilter,
-    DeveloperMetadataDataFilter,
-    DeveloperMetadataId,
-    DeveloperMetadataKey,
-    DeveloperMetadataLocation,
-    DeveloperMetadataValue,
-    DeveloperMetadataVisibility,
-    DimensionRange,
-    GridRange,
-    NamedRangeId,
-    SpreadsheetId,
-    SpreadsheetProperties,
-    WorksheetId,
-    WorksheetProperties,
+  A1Range,
+  DataFilter,
+  DeveloperMetadataDataFilter,
+  DeveloperMetadataId,
+  DeveloperMetadataKey,
+  DeveloperMetadataLocation,
+  DeveloperMetadataValue,
+  DeveloperMetadataVisibility,
+  DimensionRange,
+  GridRange,
+  NamedRangeId,
+  SpreadsheetId,
+  SpreadsheetProperties,
+  WorksheetId,
+  WorksheetProperties,
 } from './types/sheets-types';
-import {PermissionRoles, PermissionsList, PublicPermissionRoles} from './types/drive-types';
-import {RecursivePartial} from './types/util-types';
-import {AUTH_MODES, GoogleApiAuth} from './types/auth-types';
+import { PermissionRoles, PermissionsList, PublicPermissionRoles } from './types/drive-types';
+import { RecursivePartial } from './types/util-types';
+import { AUTH_MODES, GoogleApiAuth } from './types/auth-types';
 
 
 const SHEETS_API_BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets';
@@ -147,12 +149,12 @@ export class GoogleSpreadsheet {
     this.sheetsApi.interceptors.request.use(this._setAxiosRequestAuth.bind(this));
     this.sheetsApi.interceptors.response.use(
       this._handleAxiosResponse.bind(this),
-      this._handleAxiosErrors.bind(this)
+      this._handleAxiosErrors(this.sheetsApi).bind(this)
     );
     this.driveApi.interceptors.request.use(this._setAxiosRequestAuth.bind(this));
     this.driveApi.interceptors.response.use(
       this._handleAxiosResponse.bind(this),
-      this._handleAxiosErrors.bind(this)
+      this._handleAxiosErrors(this.driveApi).bind(this)
     );
   }
 
@@ -178,8 +180,8 @@ export class GoogleSpreadsheet {
   /** @internal */
   async _handleAxiosResponse(response: AxiosResponse) { return response; }
   /** @internal */
-  async _handleAxiosErrors(axiosInstance: AxiosInstance) {
-    return (error: AxiosError) => {
+  _handleAxiosErrors(axiosInstance: AxiosInstance) {
+    return async (error: AxiosError) => {
       if (_.get(error, 'response.status') === 429) {
         const config = error.config as InternalAxiosRequestConfig & { retryCount?: number };
         const retryCount = config?.retryCount ?? 0;
