@@ -191,4 +191,4 @@ The content lives in markdown files in the docs folder.
 
 ## License
 
-This is free and unencumbered public domain software. For more info, see https://unlicense.org.
+This project is released under the MIT license. Previously it was using the "Unlicense". TLDR do whatever you want with it.

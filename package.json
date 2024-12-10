@@ -21,7 +21,7 @@
     "type": "git",
     "url": "git://github.com/theoephraim/node-google-spreadsheet.git"
   },
-  "license": "Unlicense",
+  "license": "MIT",
   "author": "Theo Ephraim <theozero@gmail.com> (https://theoephraim.com)",
   "type": "module",
   "exports": {
