@@ -413,6 +413,41 @@ export type GridRangeWithOptionalWorksheetId = MakeOptional<GridRange, 'sheetId'
 export type DataFilter = A1Range | GridRange;
 export type DataFilterWithoutWorksheetId = A1Range | GridRangeWithoutWorksheetId;
 
+/**
+ * object describing the ediors of a protected range in a sheet
+ * see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#editors
+ * */
+export type Editors = {
+  /** The email addresses of users with edit access to the protected range. */
+  users?: string[],
+  /** The email addresses of groups with edit access to the protected range. */
+  groups?: string[],
+  /** True if anyone in the document's domain has edit access to the protected range. */
+  domainUsersCanEdit?: boolean
+};
+
+/**
+ * object describing a protected range in a sheet
+ * see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#protectedrange
+ * */
+export type ProtectedRange = {
+  /** The ID of the protected range. This field is read-only. */
+  protectedRangeId?: Integer,
+  /** The range that is being protected. */
+  range?: GridRange,
+  /** The named range this protected range is backed by, if any. */
+  namedRangeId?: NamedRangeId,
+  /** The description of this protected range. */
+  description: string,
+  /** True if this protected range will show a warning when editing. */
+  warningOnly: boolean,
+  /** True if the user who requested this protected range can edit the protected area. This field is read-only. */
+  requestingUserCanEdit?: boolean,
+  /** The list of unprotected ranges within a protected sheet. */
+  unprotectedRanges?: GridRange[];
+  /** The users and groups with edit access to the protected range. */
+  editors: Editors
+}
 
 /** @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#colorstyle */
 export type ColorStyle = { rgbColor: Color } | { themeColor: ThemeColorType };

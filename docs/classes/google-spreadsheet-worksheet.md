@@ -289,6 +289,30 @@ Param|Type|Required|Description
 - ✨ **Side effects** - new row(s) or column(s) are inserted into the sheet
 - 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to make any updates to sheet contents
 
+### Protected Ranges
+
+#### `addProtectedRange(protectedRange)` (async) :id=fn-addProtectedRange
+> Adds a new protected range.
+
+Param|Type|Required|Description
+---|---|---|---
+`protectedRange`|Object<br>[ProtectedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#protectedrange)|✅|The protected range to be added. The protectedRangeId field is optional; if one is not set, an id will be randomly generated. (It is an error to specify the ID of a range that already exists.)
+
+#### `updateProtectedRange(protectedRange, fields)` (async) :id=fn-updateProtectedRange
+> Updates an existing protected range with the specified protectedRangeId.
+
+Param|Type|Required|Description
+---|---|---|---
+`protectedRange`|Object<br>[ProtectedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#protectedrange)|✅|The protected range to update with the new properties.
+`fields`|String|✅|The fields that should be updated. At least one field must be specified. The root protectedRange is implied and should not be specified. A single "*" can be used as short-hand for listing every field.
+
+#### `deleteProtectedRange(protectedRangeId)` (async) :id=fn-deleteProtectedRange
+> Deletes the protected range with the given ID.
+
+Param|Type|Required|Description
+---|---|---|---
+`protectedRangeId`|Number|✅|The ID of the protected range to delete.
+
 ### Other
 
 #### `clear(a1Range)` (async) :id=fn-clear
