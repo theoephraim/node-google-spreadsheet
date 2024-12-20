@@ -28,8 +28,29 @@ const EXPORT_CONFIG: Record<string, { singleWorksheet?: boolean }> = {
 };
 type ExportFileTypes = keyof typeof EXPORT_CONFIG;
 
+type RateLimitedRetryConfig = {
+  /**
+   * The maximum number of times to retry the request. 0 means no retries.
+   */
+  maxRetries: number,
+  /**
+   * A function that takes the current retry count and returns the number of milliseconds to wait before the next retry.
+   * @see https://developers.google.com/sheets/api/limits#example-algorithm
+   */
+  retryStrategy: (retryCount: number) => number,
+};
 
-
+/**
+ * Default rate limited retry configuration based on the Google Sheets API example algorithm.
+ * The wait time is min(((2^n)+random_number_milliseconds), maximum_backoff), with n incremented by 1 for each iteration (request).
+ * random_number_milliseconds is a random number of milliseconds less than or equal to 1,000.
+ * maximum_backoff is typically 32 or 64 seconds. The appropriate value depends on the use case.
+ * @see https://developers.google.com/sheets/api/limits#example-algorithm
+ */
+const DEFAULT_RATE_LIMITED_RETRY_CONFIG: RateLimitedRetryConfig = {
+  maxRetries: 3,
+  retryStrategy: (retryCount) => Math.min(2 ** retryCount + Math.random() * 100, 32 * 1000),
+};
 
 function getAuthMode(auth: GoogleApiAuth) {
   if ('getRequestHeaders' in auth) return AUTH_MODES.GOOGLE_AUTH_CLIENT;
@@ -81,6 +102,7 @@ export class GoogleSpreadsheet {
   private _rawProperties = null as SpreadsheetProperties | null;
   private _spreadsheetUrl = null as string | null;
   private _deleted = false;
+  private _rateLimitedRetryConfig: RateLimitedRetryConfig | undefined;
 
   /**
    * Sheets API [axios](https://axios-http.com) instance
@@ -108,7 +130,10 @@ export class GoogleSpreadsheet {
     /** id of google spreadsheet doc */
     spreadsheetId: SpreadsheetId,
     /** authentication to use with Google Sheets API */
-    auth: GoogleApiAuth
+    auth: GoogleApiAuth,
+    options?: {
+      retryOnRateLimit?: true | RateLimitedRetryConfig
+    }
   ) {
     this.spreadsheetId = spreadsheetId;
     this.auth = auth;
@@ -133,15 +158,19 @@ export class GoogleSpreadsheet {
     this.sheetsApi.interceptors.request.use(this._setAxiosRequestAuth.bind(this));
     this.sheetsApi.interceptors.response.use(
       this._handleAxiosResponse.bind(this),
-      this._handleAxiosErrors.bind(this)
+      this._handleAxiosErrors(this.sheetsApi).bind(this)
     );
     this.driveApi.interceptors.request.use(this._setAxiosRequestAuth.bind(this));
     this.driveApi.interceptors.response.use(
       this._handleAxiosResponse.bind(this),
-      this._handleAxiosErrors.bind(this)
+      this._handleAxiosErrors(this.driveApi).bind(this)
     );
-  }
 
+    if (options?.retryOnRateLimit) {
+      const retryOptions = options.retryOnRateLimit;
+      this._rateLimitedRetryConfig = retryOptions === true ? DEFAULT_RATE_LIMITED_RETRY_CONFIG : retryOptions;
+    }
+  }
 
   // AUTH RELATED FUNCTIONS ////////////////////////////////////////////////////////////////////////
 
@@ -160,25 +189,48 @@ export class GoogleSpreadsheet {
   /** @internal */
   async _handleAxiosResponse(response: AxiosResponse) { return response; }
   /** @internal */
-  async _handleAxiosErrors(error: AxiosError) {
-    // console.log(error);
-    const errorData = error.response?.data as any;
+  _handleAxiosErrors(axiosInstance: AxiosInstance) {
+    return async (error: AxiosError) => {
+      const responseStatusCode = _.get(error, 'response.status');
 
-    if (errorData) {
-      // usually the error has a code and message, but occasionally not
-      if (!errorData.error) throw error;
+      // Handle rate limited responses by retrying based on the rate limited retry config
+      if (responseStatusCode === 429) {
+        const config = error.config as InternalAxiosRequestConfig & { retryCount?: number };
+        const retryCount = config?.retryCount ?? 0;
 
-      const { code, message } = errorData.error;
-      error.message = `Google API error - [${code}] ${message}`;
-      throw error;
-    }
-
-    if (_.get(error, 'response.status') === 403) {
-      if ('apiKey' in this.auth) {
-        throw new Error('Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)');
+        const rateLimitedRetryConfig = this._rateLimitedRetryConfig;
+        if (rateLimitedRetryConfig && retryCount < rateLimitedRetryConfig.maxRetries) {
+          config.retryCount = retryCount + 1;
+          const backoff = rateLimitedRetryConfig.retryStrategy(retryCount);
+          return new Promise((resolve) => {
+            setTimeout(
+              () => {
+                resolve(axiosInstance(config));
+              },
+              backoff
+            );
+          });
+        }
       }
-    }
-    throw error;
+      // console.log(error);
+      const errorData = error.response?.data as any;
+
+      if (errorData) {
+      // usually the error has a code and message, but occasionally not
+        if (!errorData.error) throw error;
+
+        const { code, message } = errorData.error;
+        error.message = `Google API error - [${code}] ${message}`;
+        throw error;
+      }
+
+      if (responseStatusCode === 403) {
+        if ('apiKey' in this.auth) {
+          throw new Error('Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)');
+        }
+      }
+      throw error;
+    };
   }
 
   /** @internal */
