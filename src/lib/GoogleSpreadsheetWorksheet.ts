@@ -13,6 +13,8 @@ import {
   RowIndex, ColumnIndex, DataFilterWithoutWorksheetId, DataFilter, GetValuesRequestOptions, WorksheetGridProperties,
   WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId,
   DataValidationRule,
+  ProtectedRange,
+  Integer,
 } from './types/sheets-types';
 
 
@@ -29,6 +31,7 @@ export class GoogleSpreadsheetWorksheet {
   private _cells: GoogleSpreadsheetCell[][] = [];
   private _rowMetadata: any[] = [];
   private _columnMetadata: any[] = [];
+  private _protectedRanges: ProtectedRange[] | null = null;
 
   private _headerValues: string[] | undefined;
   get headerValues() {
@@ -42,7 +45,8 @@ export class GoogleSpreadsheetWorksheet {
     /** parent GoogleSpreadsheet instance */
     readonly _spreadsheet: GoogleSpreadsheet,
     rawProperties: WorksheetProperties,
-    rawCellData?: CellDataRange[]
+    rawCellData?: CellDataRange[],
+    protectedRanges?: ProtectedRange[]
   ) {
     this._headerRowIndex = 1;
 
@@ -53,6 +57,7 @@ export class GoogleSpreadsheetWorksheet {
 
     this._rowMetadata = []; // 1d sparse array
     this._columnMetadata = [];
+    if(protectedRanges) this._protectedRanges = protectedRanges;
 
     if (rawCellData) this._fillCellData(rawCellData);
   }
@@ -166,6 +171,7 @@ export class GoogleSpreadsheetWorksheet {
   get hidden() { return this._getProp('hidden'); }
   get tabColor() { return this._getProp('tabColor'); }
   get rightToLeft() { return this._getProp('rightToLeft'); }
+  get protectedRanges() { return this._protectedRanges; }
   private get _headerRange() {
     return `A${this._headerRowIndex}:${this.lastColumnLetter}${this._headerRowIndex}`;
   }
@@ -864,20 +870,43 @@ export class GoogleSpreadsheetWorksheet {
     // Request type = `setBasicFilter`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SetBasicFilterRequest
   }
+  
+  /**
+   * Adds a new protected range.
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddProtectedRangeRequest
+   */
+  async addProtectedRange(protectedRange: ProtectedRange) {
 
-  async addProtectedRange() {
-    // Request type = `addProtectedRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddProtectedRangeRequest
+
+    // check of range definition
+    if (!protectedRange.range && !protectedRange.namedRangeId) {
+      throw new Error('No range specified: range or namedRangeId required');
+    }
+
+    return this._makeSingleUpdateRequest('addProtectedRange', {
+      protectedRange: protectedRange
+    });
   }
 
-  async updateProtectedRange() {
-    // Request type = `updateProtectedRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateProtectedRangeRequest
+  /**
+   * Updates an existing protected range with the specified protectedRangeId.
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateProtectedRangeRequest
+   */
+  async updateProtectedRange(protectedRange: ProtectedRange, fields: string) {
+    return this._makeSingleUpdateRequest('updateProtectedRange', {
+      protectedRange: protectedRange,
+      fields: fields
+    });
   }
 
-  async deleteProtectedRange() {
-    // Request type = `deleteProtectedRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteProtectedRangeRequest
+  /**
+   * Deletes the protected range with the given ID.
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteProtectedRangeRequest
+   */
+  async deleteProtectedRange(protectedRangeId: Integer) {
+    return this._makeSingleUpdateRequest('deleteProtectedRange', {
+      protectedRangeId: protectedRangeId
+    });
   }
 
   async autoResizeDimensions() {
