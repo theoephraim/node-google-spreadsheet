@@ -165,6 +165,7 @@ export class GoogleSpreadsheetCell {
   // CELL FORMATTING ///////////////////////////////////////////////////////////////////////////////
   get userEnteredFormat() { return Object.freeze(this._rawData?.userEnteredFormat); }
   get effectiveFormat() { return Object.freeze(this._rawData?.effectiveFormat); }
+  get dataValidation() { return Object.freeze(this._rawData?.dataValidation); }
 
   private _getFormatParam<T extends keyof CellFormat>(param: T): Readonly<CellFormat[T]> {
     // we freeze the object so users don't change nested props accidentally

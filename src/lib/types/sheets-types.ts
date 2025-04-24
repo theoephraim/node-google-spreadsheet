@@ -499,6 +499,8 @@ export type CellData = {
   userEnteredFormat: CellFormat,
   /** The effective format being used by the cell. This includes the results of applying any conditional formatting and, if the cell contains a formula, the computed number format. If the effective format is the default format, effective format will not be written. This field is read-only. */
   effectiveFormat: CellFormat,
+  /** The data validation rule applied to the cell. */
+  dataValidation: DataValidationRule,
   /** hyperlink in the cell if any */
   hyperlink?: string,
   /** note on the cell */
