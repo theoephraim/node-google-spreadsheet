@@ -74,6 +74,7 @@ Property|Type|Description
 ---|---|---
 `userEnteredFormat`|Object<br>[CellFormat](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#CellFormat)|The format the user entered for the cell
 `effectiveFormat`|Object<br>[CellFormat](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#CellFormat)|the "effective format" being used by the cell<br>_This includes the results of applying any conditional formatting and, if the cell contains a formula, the computed number format. If the effective format is the default format, effective format will not be written._
+`dataValidation`|Object<br>[DataValidationRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#DataValidationRule)|The data validation rule applied to the cell.
 
 However, to make reading and updating format easier, this class provides the follow **read/write** properties that reach into the `userEnteredFormat`. There is also a `clearAllFormatting()` method that will clear all format settings.
 
