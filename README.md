@@ -8,6 +8,7 @@
 - Safer handling of numeric headers
 - Support for providing valueRenderOption when loading rows & headers
 - Support for reading cell & row metadata
+- Support for reading cell data validation rules
 
 [![NPM version](https://img.shields.io/npm/v/google-spreadsheet)](https://www.npmjs.com/package/google-spreadsheet)
 [![CI status](https://github.com/theoephraim/node-google-spreadsheet/actions/workflows/ci.yml/badge.svg)](https://github.com/theoephraim/node-google-spreadsheet/actions/workflows/ci.yml)
