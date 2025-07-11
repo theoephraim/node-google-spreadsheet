@@ -460,7 +460,8 @@ export class GoogleSpreadsheet {
       params: {
         id: this.spreadsheetId,
         format: fileType,
-        ...worksheetId && { gid: worksheetId },
+        // worksheetId can be 0
+        ...worksheetId !== undefined && { gid: worksheetId },
       },
       responseType: returnStreamInsteadOfBuffer ? 'stream' : 'arraybuffer',
     });
