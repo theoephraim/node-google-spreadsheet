@@ -3,11 +3,10 @@ import { DmnoBaseTypes, defineDmnoService, configPath } from 'dmno';
 import { EncryptedVaultDmnoPlugin, EncryptedVaultTypes } from '@dmno/encrypted-vault-plugin';
 
 const SecretsVault = new EncryptedVaultDmnoPlugin('vault', {
-  key: configPath('DMNO_VAULT_KEY'),
+  key: configPath('..', 'DMNO_VAULT_KEY'),
 });
 
 export default defineDmnoService({
-  isRoot: true,
   settings: {
     redactSensitiveLogs: true,
     interceptSensitiveLeakRequests: true,

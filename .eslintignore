@@ -1,5 +1,5 @@
 .eslintrc.cjs
 build.config.js
-jest.config.cjs
+vitest.config.ts
 dist
 examples
