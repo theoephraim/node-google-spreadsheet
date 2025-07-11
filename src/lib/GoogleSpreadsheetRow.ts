@@ -50,9 +50,9 @@ export class GoogleSpreadsheetRow<T extends Record<string, any> = Record<string,
     this._rawData[index] = val;
   }
   /** set multiple values in the row at once from an object */
-  assign(obj: T) {
+  assign(obj: Partial<T>) {
     // eslint-disable-next-line no-restricted-syntax, guard-for-in
-    for (const key in obj) this.set(key, obj[key]);
+    for (const key in obj) this.set(key, obj[key] as any);
   }
 
   /** return raw object of row data */
