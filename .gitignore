@@ -17,3 +17,4 @@ dist
 **/.dmno/.icon-cache
 # local config overrides
 **/.dmno/.env.local
+**/.dmno/certs
