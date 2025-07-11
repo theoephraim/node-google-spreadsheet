@@ -146,7 +146,7 @@ export class GoogleSpreadsheetCell {
 
   /** a note attached to the cell */
   get note(): string {
-    return this._draftData.note !== undefined ? this._draftData.note : this._rawData?.note;
+    return this._draftData.note !== undefined ? this._draftData.note : this._rawData?.note || '';
   }
   set note(newVal: string | null | undefined | false) {
     if (newVal === null || newVal === undefined || newVal === false) newVal = '';

@@ -157,7 +157,7 @@ export class GoogleSpreadsheet {
         : authConfig.headers;
 
       Object.entries(headers).forEach(([key, val]) => {
-        config.headers.set(key, val);
+        config.headers.set(key, String(val));
       });
     }
 
