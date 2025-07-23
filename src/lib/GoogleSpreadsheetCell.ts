@@ -128,10 +128,8 @@ export class GoogleSpreadsheetCell {
     return this.value as string;
   }
   set stringValue(val: string | undefined) {
-    if (val?.startsWith('=')) {
-      throw new Error('Use cell.formula to set formula values');
-    }
-    this.value = val;
+    this._draftData.valueType = 'stringValue';
+    this._draftData.value = val || '';
   }
 
   /**
