@@ -1,4 +1,5 @@
 import { JWT } from 'google-auth-library';
+import { ENV } from 'varlock/env';
 
 export const DOC_IDS = {
   public: '1LG6vqg6ezQpIXr-SIDDWQAc9mLNSXasboDR7MUbLvZw',
@@ -8,8 +9,8 @@ export const DOC_IDS = {
 };
 
 export const testServiceAccountAuth = new JWT({
-  email: DMNO_CONFIG.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-  key: DMNO_CONFIG.GOOGLE_SERVICE_ACCOUNT_KEY,
+  email: ENV.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+  key: ENV.GOOGLE_SERVICE_ACCOUNT_KEY,
   scopes: [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive.file',

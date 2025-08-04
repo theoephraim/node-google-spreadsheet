@@ -1,8 +1,8 @@
-import 'dmno/auto-inject-globals';
 import {
   describe, expect, it, beforeAll, afterAll, afterEach,
 } from 'vitest';
 import delay from 'delay';
+import { ENV } from 'varlock/env';
 import * as _ from '../lib/lodash';
 
 import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet, GoogleSpreadsheetRow } from '..';
@@ -37,7 +37,7 @@ describe('Row-based operations', () => {
     await sheet.delete();
   });
   // hitting rate limits when running tests on ci - so we add a short delay
-  if (DMNO_CONFIG.TEST_DELAY) afterEach(async () => delay(DMNO_CONFIG.TEST_DELAY));
+  if (ENV.TEST_DELAY) afterEach(async () => delay(ENV.TEST_DELAY));
 
   describe('fetching rows', () => {
     let rows: GoogleSpreadsheetRow[];

@@ -2,6 +2,15 @@
 
 > The most popular [Google Sheets API](https://developers.google.com/sheets/api/guides/concepts) wrapper for javascript / typescript
 
+<a href="https://varlock.dev?ref=gsheets"><img
+  src="https://varlock-pixel-art.dmno.workers.dev/characters/warlock1.gif"
+  alt="wizard pixel art"
+/></a>
+<a href="https://varlock.dev?ref=gsheets"><img
+  src="https://varlock-pixel-art.dmno.workers.dev/other/github-gsheets-banner.png"
+  alt="varlock banner"
+/></a>
+
 [![NPM version](https://img.shields.io/npm/v/google-spreadsheet)](https://www.npmjs.com/package/google-spreadsheet)
 [![CI status](https://github.com/theoephraim/node-google-spreadsheet/actions/workflows/ci.yml/badge.svg)](https://github.com/theoephraim/node-google-spreadsheet/actions/workflows/ci.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/theoephraim/node-google-spreadsheet/badge.svg?targetFile=package.json)](https://snyk.io/test/github/theoephraim/node-google-spreadsheet?targetFile=package.json)

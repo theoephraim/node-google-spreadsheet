@@ -1,8 +1,8 @@
-import 'dmno/auto-inject-globals';
 import {
   describe, expect, it, beforeAll, afterAll, afterEach,
 } from 'vitest';
 import delay from 'delay';
+import { ENV } from 'varlock/env';
 import * as _ from '../lib/lodash';
 
 import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } from '..';
@@ -42,7 +42,7 @@ describe('Managing doc info and sheets', () => {
   // });
 
   // hitting rate limits when running tests on ci - so we add a short delay
-  if (DMNO_CONFIG.TEST_DELAY) afterEach(async () => delay(DMNO_CONFIG.TEST_DELAY));
+  if (ENV.TEST_DELAY) afterEach(async () => delay(ENV.TEST_DELAY));
 
   // uncomment temporarily to clear out all the sheets in the test doc
   // it.only('clear out all the existing sheets', async () => {

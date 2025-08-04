@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "sourceMap": true,
     "outDir": "dist",
     "declaration": true,
@@ -15,7 +15,8 @@
     "resolveJsonModule": true
   },
   "include": [
-    "src"
+    "src",
+    "env.d.ts"
   ],
   "ts-node": {
     "swc": true
