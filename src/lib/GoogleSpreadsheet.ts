@@ -1,11 +1,7 @@
-import Axios, {
-  AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig,
-} from 'axios';
-
-import { Stream } from 'stream';
-import * as _ from './lodash';
+import ky, { HTTPError, KyInstance } from 'ky'; // eslint-disable-line import/no-extraneous-dependencies
+import * as _ from './toolkit';
 import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
-import { axiosParamsSerializer, getFieldMask } from './utils';
+import { getFieldMask } from './utils';
 import {
   DataFilter, GridRange, NamedRangeId, SpreadsheetId, SpreadsheetProperties, WorksheetId, WorksheetProperties,
 } from './types/sheets-types';
@@ -39,7 +35,10 @@ function getAuthMode(auth: GoogleApiAuth) {
   throw new Error('Invalid auth');
 }
 
-async function getRequestAuthConfig(auth: GoogleApiAuth) {
+async function getRequestAuthConfig(auth: GoogleApiAuth): Promise<{
+  headers?: Record<string, string>;
+  searchParams?: Record<string, string>
+}> {
   // google-auth-libary methods all can call this method to get the right headers
   // JWT | OAuth2Client | GoogleAuth | Impersonate | AuthClient
   if ('getRequestHeaders' in auth) {
@@ -50,7 +49,7 @@ async function getRequestAuthConfig(auth: GoogleApiAuth) {
   // API key only access passes through the api key as a query param
   // (note this can only provide read-only access)
   if ('apiKey' in auth && auth.apiKey) {
-    return { params: { key: auth.apiKey } };
+    return { searchParams: { key: auth.apiKey } };
   }
 
   // RAW ACCESS TOKEN
@@ -83,21 +82,21 @@ export class GoogleSpreadsheet {
   private _deleted = false;
 
   /**
-   * Sheets API [axios](https://axios-http.com) instance
+   * Sheets API [ky](https://github.com/sindresorhus/ky?tab=readme-ov-file#kycreatedefaultoptions) instance
    * authentication is automatically attached
    * can be used if unsupported sheets calls need to be made
    * @see https://developers.google.com/sheets/api/reference/rest
    * */
-  readonly sheetsApi: AxiosInstance;
+  readonly sheetsApi: KyInstance;
 
   /**
-   * Drive API [axios](https://axios-http.com) instance
+   * Drive API [ky](https://github.com/sindresorhus/ky?tab=readme-ov-file#kycreatedefaultoptions) instance
    * authentication automatically attached
    * can be used if unsupported drive calls need to be made
    * @topic permissions
    * @see https://developers.google.com/drive/api/v3/reference
    * */
-  readonly driveApi: AxiosInstance;
+  readonly driveApi: KyInstance;
 
 
   /**
@@ -116,69 +115,69 @@ export class GoogleSpreadsheet {
     this._rawSheets = {};
     this._spreadsheetUrl = null;
 
-    // create an axios instance with sheet root URL and interceptors to handle auth
-    this.sheetsApi = Axios.create({
-      baseURL: `${SHEETS_API_BASE_URL}/${spreadsheetId}`,
-      paramsSerializer: axiosParamsSerializer,
-      // removing limits in axios for large requests
-      // https://stackoverflow.com/questions/56868023/error-request-body-larger-than-maxbodylength-limit-when-sending-base64-post-req
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
+    // create a ky instance with sheet root URL and hooks to handle auth
+    this.sheetsApi = ky.create({
+      prefixUrl: `${SHEETS_API_BASE_URL}/${spreadsheetId}`,
+      hooks: {
+        beforeRequest: [(r) => this._setAuthRequestHook(r)],
+        beforeError: [(e) => this._errorHook(e)],
+      },
     });
-    this.driveApi = Axios.create({
-      baseURL: `${DRIVE_API_BASE_URL}/${spreadsheetId}`,
-      paramsSerializer: axiosParamsSerializer,
+    this.driveApi = ky.create({
+      prefixUrl: `${DRIVE_API_BASE_URL}/${spreadsheetId}`,
+      hooks: {
+        beforeRequest: [(r) => this._setAuthRequestHook(r)],
+        beforeError: [(e) => this._errorHook(e)],
+      },
     });
-    // have to use bind here or the functions dont have access to `this` :(
-    this.sheetsApi.interceptors.request.use(this._setAxiosRequestAuth.bind(this));
-    this.sheetsApi.interceptors.response.use(
-      this._handleAxiosResponse.bind(this),
-      this._handleAxiosErrors.bind(this)
-    );
-    this.driveApi.interceptors.request.use(this._setAxiosRequestAuth.bind(this));
-    this.driveApi.interceptors.response.use(
-      this._handleAxiosResponse.bind(this),
-      this._handleAxiosErrors.bind(this)
-    );
   }
 
-
-  // AUTH RELATED FUNCTIONS ////////////////////////////////////////////////////////////////////////
 
   // INTERNAL UTILITY FUNCTIONS ////////////////////////////////////////////////////////////////////
 
   /** @internal */
-  async _setAxiosRequestAuth(config: InternalAxiosRequestConfig) {
+  async _setAuthRequestHook(req: Request) {
     const authConfig = await getRequestAuthConfig(this.auth);
     if (authConfig.headers) {
       // google-auth-library v10 uses a Headers object
       const headers = 'entries' in authConfig.headers
         ? Object.fromEntries((authConfig.headers as any).entries())
         : authConfig.headers;
-
       Object.entries(headers).forEach(([key, val]) => {
-        config.headers.set(key, String(val));
+        req.headers.set(key, String(val));
       });
     }
 
-    config.params = { ...config.params, ...authConfig.params };
-    return config;
+    if (authConfig.searchParams) {
+      const url = new URL(req.url);
+      Object.entries(authConfig.searchParams).forEach(([key, val]) => {
+        url.searchParams.set(key, String(val));
+      });
+      // cannot change the URL with ky, so have to return a new request
+      return new Request(url, req);
+    }
+
+    return req;
   }
 
   /** @internal */
-  async _handleAxiosResponse(response: AxiosResponse) { return response; }
-  /** @internal */
-  async _handleAxiosErrors(error: AxiosError) {
-    // console.log(error);
-    const errorData = error.response?.data as any;
+  async _errorHook(error: HTTPError) {
+    const { response } = error;
+    const errorDataText = await response?.text();
+    let errorData;
+    try {
+      errorData = JSON.parse(errorDataText);
+    } catch (e) {
+      // console.log('parsing json failed', errorDataText);
+    }
 
     if (errorData) {
       // usually the error has a code and message, but occasionally not
-      if (!errorData.error) throw error;
+      if (!errorData.error) return error;
 
       const { code, message } = errorData.error;
       error.message = `Google API error - [${code}] ${message}`;
-      throw error;
+      return error;
     }
 
     if (_.get(error, 'response.status') === 403) {
@@ -186,22 +185,25 @@ export class GoogleSpreadsheet {
         throw new Error('Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)');
       }
     }
-    throw error;
+    return error;
   }
 
   /** @internal */
   async _makeSingleUpdateRequest(requestType: string, requestParams: any) {
     const response = await this.sheetsApi.post(':batchUpdate', {
-      requests: [{ [requestType]: requestParams }],
-      includeSpreadsheetInResponse: true,
-      // responseRanges: [string]
-      // responseIncludeGridData: true
+      json: {
+        requests: [{ [requestType]: requestParams }],
+        includeSpreadsheetInResponse: true,
+        // responseRanges: [string]
+        // responseIncludeGridData: true
+      },
     });
+    const data = await response.json<any>();
 
-    this._updateRawProperties(response.data.updatedSpreadsheet.properties);
-    _.each(response.data.updatedSpreadsheet.sheets, (s) => this._updateOrCreateSheet(s));
+    this._updateRawProperties(data.updatedSpreadsheet.properties);
+    _.each(data.updatedSpreadsheet.sheets, (s: any) => this._updateOrCreateSheet(s));
     // console.log('API RESPONSE', response.data.replies[0][requestType]);
-    return response.data.replies[0][requestType];
+    return data.replies[0][requestType];
   }
 
   // TODO: review these types
@@ -210,16 +212,19 @@ export class GoogleSpreadsheet {
   async _makeBatchUpdateRequest(requests: any[], responseRanges?: string | string[]) {
     // this is used for updating batches of cells
     const response = await this.sheetsApi.post(':batchUpdate', {
-      requests,
-      includeSpreadsheetInResponse: true,
-      ...responseRanges && {
-        responseIncludeGridData: true,
-        ...responseRanges !== '*' && { responseRanges },
+      json: {
+        requests,
+        includeSpreadsheetInResponse: true,
+        ...responseRanges && {
+          responseIncludeGridData: true,
+          ...responseRanges !== '*' && { responseRanges },
+        },
       },
     });
 
-    this._updateRawProperties(response.data.updatedSpreadsheet.properties);
-    _.each(response.data.updatedSpreadsheet.sheets, (s) => this._updateOrCreateSheet(s));
+    const data = await response.json<any>();
+    this._updateRawProperties(data.updatedSpreadsheet.properties);
+    _.each(data.updatedSpreadsheet.sheets, (s: any) => this._updateOrCreateSheet(s));
   }
 
   /** @internal */
@@ -270,14 +275,15 @@ export class GoogleSpreadsheet {
 
   // BASIC INFO ////////////////////////////////////////////////////////////////////////////////////
   async loadInfo(includeCells = false) {
-    const response = await this.sheetsApi.get('/', {
-      params: {
+    const response = await this.sheetsApi.get('', {
+      searchParams: {
         ...includeCells && { includeGridData: true },
       },
     });
-    this._spreadsheetUrl = response.data.spreadsheetUrl;
-    this._rawProperties = response.data.properties;
-    _.each(response.data.sheets, (s) => this._updateOrCreateSheet(s));
+    const data = await response.json<any>();
+    this._spreadsheetUrl = data.spreadsheetUrl;
+    this._rawProperties = data.properties;
+    data.sheets?.forEach((s: any) => this._updateOrCreateSheet(s));
   }
 
   resetLocalCache() {
@@ -413,22 +419,29 @@ export class GoogleSpreadsheet {
     // when using an API key only, we must use the regular get endpoint
     // because :getByDataFilter requires higher access
     if (this.authMode === AUTH_MODES.API_KEY) {
-      result = await this.sheetsApi.get('/', {
-        params: {
-          includeGridData: true,
-          ranges: dataFilters,
-        },
+      const params = new URLSearchParams();
+      params.append('includeGridData', 'true');
+      dataFilters.forEach((singleFilter) => {
+        if (!_.isString(singleFilter)) {
+          throw new Error('Only A1 ranges are supported when fetching cells with read-only access (using only an API key)');
+        }
+        params.append('ranges', singleFilter);
+      });
+      result = await this.sheetsApi.get('', {
+        searchParams: params,
       });
     // otherwise we use the getByDataFilter endpoint because it is more flexible
     } else {
       result = await this.sheetsApi.post(':getByDataFilter', {
-        includeGridData: true,
-        dataFilters,
+        json: {
+          includeGridData: true,
+          dataFilters,
+        },
       });
     }
 
-    const { sheets } = result.data;
-    _.each(sheets, (sheet) => { this._updateOrCreateSheet(sheet); });
+    const data = await result?.json<any>();
+    _.each(data.sheets, (sheet: any) => { this._updateOrCreateSheet(sheet); });
   }
 
   // EXPORTING /////////////////////////////////////////////////////////////
@@ -454,18 +467,20 @@ export class GoogleSpreadsheet {
 
     if (!this._spreadsheetUrl) throw new Error('Cannot export sheet that is not fully loaded');
 
-    const exportUrl = this._spreadsheetUrl.replace('/edit', '/export');
+    const exportUrl = this._spreadsheetUrl.replace('edit', 'export');
     const response = await this.sheetsApi.get(exportUrl, {
-      baseURL: '', // unset baseUrl since we're not hitting the normal sheets API
-      params: {
+      prefixUrl: '', // unset baseUrl since we're not hitting the normal sheets API
+      searchParams: {
         id: this.spreadsheetId,
         format: fileType,
         // worksheetId can be 0
         ...worksheetId !== undefined && { gid: worksheetId },
       },
-      responseType: returnStreamInsteadOfBuffer ? 'stream' : 'arraybuffer',
     });
-    return response.data;
+    if (returnStreamInsteadOfBuffer) {
+      return response.body;
+    }
+    return response.arrayBuffer();
   }
 
   /**
@@ -474,7 +489,7 @@ export class GoogleSpreadsheet {
    * */
   async downloadAsZippedHTML(): Promise<ArrayBuffer>;
   async downloadAsZippedHTML(returnStreamInsteadOfBuffer: false): Promise<ArrayBuffer>;
-  async downloadAsZippedHTML(returnStreamInsteadOfBuffer: true): Promise<Stream>;
+  async downloadAsZippedHTML(returnStreamInsteadOfBuffer: true): Promise<ReadableStream>;
   async downloadAsZippedHTML(returnStreamInsteadOfBuffer?: boolean) {
     return this._downloadAs('html', undefined, returnStreamInsteadOfBuffer);
   }
@@ -493,7 +508,7 @@ export class GoogleSpreadsheet {
    * */
   async downloadAsXLSX(): Promise<ArrayBuffer>;
   async downloadAsXLSX(returnStreamInsteadOfBuffer: false): Promise<ArrayBuffer>;
-  async downloadAsXLSX(returnStreamInsteadOfBuffer: true): Promise<Stream>;
+  async downloadAsXLSX(returnStreamInsteadOfBuffer: true): Promise<ReadableStream>;
   async downloadAsXLSX(returnStreamInsteadOfBuffer = false) {
     return this._downloadAs('xlsx', undefined, returnStreamInsteadOfBuffer);
   }
@@ -503,16 +518,16 @@ export class GoogleSpreadsheet {
   */
   async downloadAsODS(): Promise<ArrayBuffer>;
   async downloadAsODS(returnStreamInsteadOfBuffer: false): Promise<ArrayBuffer>;
-  async downloadAsODS(returnStreamInsteadOfBuffer: true): Promise<Stream>;
+  async downloadAsODS(returnStreamInsteadOfBuffer: true): Promise<ReadableStream>;
   async downloadAsODS(returnStreamInsteadOfBuffer = false) {
     return this._downloadAs('ods', undefined, returnStreamInsteadOfBuffer);
   }
 
 
   async delete() {
-    const response = await this.driveApi.delete('');
+    await this.driveApi.delete('');
     this._deleted = true;
-    return response.data;
+    // endpoint returns nothing when successful
   }
 
   // PERMISSIONS ///////////////////////////////////////////////////////////////////////////////////
@@ -521,14 +536,13 @@ export class GoogleSpreadsheet {
    * list all permissions entries for doc
    */
   async listPermissions(): Promise<PermissionsList> {
-    const listReq = await this.driveApi.request({
-      method: 'GET',
-      url: '/permissions',
-      params: {
+    const listReq = await this.driveApi.get('permissions', {
+      searchParams: {
         fields: 'permissions(id,type,emailAddress,domain,role,displayName,photoLink,deleted)',
       },
     });
-    return listReq.data.permissions as PermissionsList;
+    const data = await listReq.json<{ permissions: PermissionsList }>();
+    return data.permissions;
   }
 
   async setPublicAccessLevel(role: PublicPermissionRoles | false) {
@@ -540,17 +554,10 @@ export class GoogleSpreadsheet {
         // doc is already not public... could throw an error or just do nothing
         return;
       }
-      await this.driveApi.request({
-        method: 'DELETE',
-        url: `/permissions/${existingPublicPermission.id}`,
-      });
+      await this.driveApi.delete(`permissions/${existingPublicPermission.id}`);
     } else {
-      const _shareReq = await this.driveApi.request({
-        method: 'POST',
-        url: '/permissions',
-        params: {
-        },
-        data: {
+      const _shareReq = await this.driveApi.post('permissions', {
+        json: {
           role: role || 'viewer',
           type: 'anyone',
         },
@@ -587,15 +594,13 @@ export class GoogleSpreadsheet {
     }
 
 
-    const shareReq = await this.driveApi.request({
-      method: 'POST',
-      url: '/permissions',
-      params: {
+    const shareReq = await this.driveApi.post('permissions', {
+      searchParams: {
         ...opts?.emailMessage === false && { sendNotificationEmail: false },
         ..._.isString(opts?.emailMessage) && { emailMessage: opts?.emailMessage },
         ...opts?.role === 'owner' && { transferOwnership: true },
       },
-      data: {
+      json: {
         role: opts?.role || 'writer',
         ...emailAddress && {
           type: opts?.isGroup ? 'group' : 'user',
@@ -608,7 +613,7 @@ export class GoogleSpreadsheet {
       },
     });
 
-    return shareReq.data;
+    return shareReq.json();
   }
 
   //
@@ -624,22 +629,20 @@ export class GoogleSpreadsheet {
 
     const authConfig = await getRequestAuthConfig(auth);
 
-    const response = await Axios.request({
-      method: 'POST',
-      url: SHEETS_API_BASE_URL,
-      paramsSerializer: axiosParamsSerializer,
+    const response = await ky.post(SHEETS_API_BASE_URL, {
       ...authConfig, // has the auth header
-      data: {
+      json: {
         properties,
       },
     });
 
-    const newSpreadsheet = new GoogleSpreadsheet(response.data.spreadsheetId, auth);
+    const data = await response.json<any>();
+    const newSpreadsheet = new GoogleSpreadsheet(data.spreadsheetId, auth);
 
     // TODO ideally these things aren't public, might want to refactor anyway
-    newSpreadsheet._spreadsheetUrl = response.data.spreadsheetUrl;
-    newSpreadsheet._rawProperties = response.data.properties;
-    _.each(response.data.sheets, (s) => newSpreadsheet._updateOrCreateSheet(s));
+    newSpreadsheet._spreadsheetUrl = data.spreadsheetUrl;
+    newSpreadsheet._rawProperties = data.properties;
+    _.each(data.sheets, (s: any) => newSpreadsheet._updateOrCreateSheet(s));
 
     return newSpreadsheet;
   }

@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import * as _ from './lodash';
+import * as _ from './toolkit';
 
 import { columnToLetter } from './utils';
 

@@ -1,5 +1,5 @@
-import { ReadableStream } from 'node:stream/web';
-import * as _ from './lodash';
+import { type ReadableStream } from 'stream/web';
+import * as _ from './toolkit';
 
 import { GoogleSpreadsheetRow } from './GoogleSpreadsheetRow';
 import { GoogleSpreadsheetCell } from './GoogleSpreadsheetCell';
@@ -374,24 +374,26 @@ export class GoogleSpreadsheetWorksheet {
 
     if (headerRowIndex) this._headerRowIndex = headerRowIndex;
 
-    const response = await this._spreadsheet.sheetsApi.request({
-      method: 'put',
-      url: `/values/${this.encodedA1SheetName}!${this._headerRowIndex}:${this._headerRowIndex}`,
-      params: {
-        valueInputOption: 'USER_ENTERED', // other option is RAW
-        includeValuesInResponse: true,
-      },
-      data: {
-        range: `${this.a1SheetName}!${this._headerRowIndex}:${this._headerRowIndex}`,
-        majorDimension: 'ROWS',
-        values: [[
-          ...trimmedHeaderValues,
-          // pad the rest of the row with empty values to clear them all out
-          ..._.times(this.columnCount - trimmedHeaderValues.length, () => ''),
-        ]],
-      },
-    });
-    this._headerValues = response.data.updatedData.values[0];
+    const response = await this._spreadsheet.sheetsApi.put(
+      `values/${this.encodedA1SheetName}!${this._headerRowIndex}:${this._headerRowIndex}`,
+      {
+        searchParams: {
+          valueInputOption: 'USER_ENTERED', // other option is RAW
+          includeValuesInResponse: true,
+        },
+        json: {
+          range: `${this.a1SheetName}!${this._headerRowIndex}:${this._headerRowIndex}`,
+          majorDimension: 'ROWS',
+          values: [[
+            ...trimmedHeaderValues,
+            // pad the rest of the row with empty values to clear them all out
+            ..._.times(this.columnCount - trimmedHeaderValues.length, () => ''),
+          ]],
+        },
+      }
+    );
+    const data = await response.json<any>();
+    this._headerValues = data.updatedData.values[0];
   }
 
   // TODO: look at these types
@@ -435,22 +437,24 @@ export class GoogleSpreadsheetWorksheet {
       rowsAsArrays.push(rowAsArray);
     });
 
-    const response = await this._spreadsheet.sheetsApi.request({
-      method: 'post',
-      url: `/values/${this.encodedA1SheetName}!A${this._headerRowIndex}:append`,
-      params: {
-        valueInputOption: options.raw ? 'RAW' : 'USER_ENTERED',
-        insertDataOption: options.insert ? 'INSERT_ROWS' : 'OVERWRITE',
-        includeValuesInResponse: true,
-      },
-      data: {
-        values: rowsAsArrays,
-      },
-    });
+    const response = await this._spreadsheet.sheetsApi.post(
+      `values/${this.encodedA1SheetName}!A${this._headerRowIndex}:append`,
+      {
+        searchParams: {
+          valueInputOption: options.raw ? 'RAW' : 'USER_ENTERED',
+          insertDataOption: options.insert ? 'INSERT_ROWS' : 'OVERWRITE',
+          includeValuesInResponse: true,
+        },
+        json: {
+          values: rowsAsArrays,
+        },
+      }
+    );
 
     // extract the new row number from the A1-notation data range in the response
     // ex: in "'Sheet8!A2:C2" -- we want the `2`
-    const { updatedRange } = response.data.updates;
+    const data = await response.json<any>();
+    const { updatedRange } = data.updates;
     let rowNumber = updatedRange.match(/![A-Z]+([0-9]+):?/)[1];
     rowNumber = parseInt(rowNumber);
 
@@ -464,7 +468,7 @@ export class GoogleSpreadsheetWorksheet {
       this._rawProperties!.gridProperties.rowCount = rowNumber + rows.length - 1;
     }
 
-    return _.map(response.data.updates.updatedData.values, (rowValues) => {
+    return _.map(data.updates.updatedData.values, (rowValues) => {
       const row = new GoogleSpreadsheetRow(this, rowNumber++, rowValues);
       return row;
     });
@@ -547,7 +551,7 @@ export class GoogleSpreadsheetWorksheet {
     // default to first row after header
     const startRowIndex = options?.start || this._headerRowIndex + 1;
     const endRowIndex = options?.end || this.rowCount;
-    await this._spreadsheet.sheetsApi.post(`/values/${this.encodedA1SheetName}!${startRowIndex}:${endRowIndex}:clear`);
+    await this._spreadsheet.sheetsApi.post(`values/${this.encodedA1SheetName}!${startRowIndex}:${endRowIndex}:clear`);
     this._rowCache.forEach((row) => {
       if (row.rowNumber >= startRowIndex && row.rowNumber <= endRowIndex) row._clearRowData();
     });
@@ -608,18 +612,20 @@ export class GoogleSpreadsheetWorksheet {
   // this uses the "values" getter and does not give all the info about the cell contents
   // it is used internally when loading header cells
   async getCellsInRange(a1Range: A1Range, options?: GetValuesRequestOptions) {
-    const response = await this._spreadsheet.sheetsApi.get(`/values/${this.encodedA1SheetName}!${a1Range}`, {
-      params: options,
+    const response = await this._spreadsheet.sheetsApi.get(`values/${this.encodedA1SheetName}!${a1Range}`, {
+      searchParams: options,
     });
-    return response.data.values;
+    const data = await response.json<any>();
+    return data.values;
   }
 
   async batchGetCellsInRange(a1Ranges: A1Range[], options?: GetValuesRequestOptions) {
     const ranges = a1Ranges.map((r) => `ranges=${this.encodedA1SheetName}!${r}`).join('&');
-    const response = await this._spreadsheet.sheetsApi.get(`/values:batchGet?${ranges}`, {
-      params: options,
+    const response = await this._spreadsheet.sheetsApi.get(`values:batchGet?${ranges}`, {
+      searchParams: options,
     });
-    return response.data.valueRanges.map((r: any) => r.values);
+    const data = await response.json<any>();
+    return data.valueRanges.map((r: any) => r.values);
   }
 
   async updateNamedRange() {
@@ -975,9 +981,13 @@ export class GoogleSpreadsheetWorksheet {
    * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.sheets/copyTo
    * */
   async copyToSpreadsheet(destinationSpreadsheetId: SpreadsheetId) {
-    return this._spreadsheet.sheetsApi.post(`/sheets/${this.sheetId}:copyTo`, {
-      destinationSpreadsheetId,
+    const req = this._spreadsheet.sheetsApi.post(`sheets/${this.sheetId}:copyTo`, {
+      json: {
+        destinationSpreadsheetId,
+      },
     });
+    const data = await req.json<any>();
+    return data;
   }
 
   /** clear data in the sheet - either the entire sheet or a specific range */
@@ -987,7 +997,7 @@ export class GoogleSpreadsheetWorksheet {
   ) {
     const range = a1Range ? `!${a1Range}` : '';
     // sheet name without ie 'sheet1' rather than 'sheet1'!A1:B5 is all cells
-    await this._spreadsheet.sheetsApi.post(`/values/${this.encodedA1SheetName}${range}:clear`);
+    await this._spreadsheet.sheetsApi.post(`values/${this.encodedA1SheetName}${range}:clear`);
     this.resetLocalCache(true);
   }
 

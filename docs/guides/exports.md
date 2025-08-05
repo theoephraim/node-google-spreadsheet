@@ -36,11 +36,13 @@ Dealing with [streams](https://developer.mozilla.org/en-US/docs/Web/API/Streams_
 This example doesn't get into the details of using streams, but this simple example should at least get you started:
 
 ```javascript
+  import { Readable } from 'node:stream';
+
+  // ...
   const doc = new GoogleSpreadsheet('<YOUR-DOC-ID>', auth);
 
   const csvStream = await doc.downloadAsCSV(true); // this `true` arg toggles to stream mode
   const writableStream = fs.createWriteStream('./my-export-stream.csv');
-  
   writableStream.on('finish', () => {
     console.log('done');
   });
@@ -48,6 +50,8 @@ This example doesn't get into the details of using streams, but this simple exam
     console.log(err);
   });
 
-  csvStream.pipe(writableStream);
+  // convert the ReadableStream (web response) to a normal Node.js stream
+  // and pipe to the fs writable stream
+  Readable.fromWeb(csvStream).pipe(writableStream);
 ```
 

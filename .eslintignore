@@ -1,5 +1,6 @@
 .eslintrc.cjs
-build.config.js
+tsup.config.ts
 vitest.config.ts
 dist
 examples
+ignore
