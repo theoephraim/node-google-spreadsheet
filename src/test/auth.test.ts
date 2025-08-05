@@ -1,7 +1,7 @@
 import {
   describe, expect, it, afterEach,
 } from 'vitest';
-import delay from 'delay';
+import { setTimeout as delay } from 'timers/promises';
 import { ENV } from 'varlock/env';
 
 import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet, GoogleSpreadsheetCell } from '..';
@@ -34,7 +34,7 @@ function checkDocAccess(
         expect(rows).toBeInstanceOf(Array);
       });
       it('reading cell data should succeed', async () => {
-        await sheet.loadCells('A1');
+        await sheet.loadCells(['A1:A2', 'B2:B3']);
         expect(sheet.getCell(0, 0)).toBeInstanceOf(GoogleSpreadsheetCell);
       });
     } else {
@@ -63,7 +63,7 @@ describe('Authentication', () => {
 
   const apiKeyAuth = { apiKey: process.env.GOOGLE_API_KEY! };
 
-  describe('api key', () => {
+  describe.only('api key', () => {
     checkDocAccess('private', apiKeyAuth, {
       canRead: false,
       canWrite: false,

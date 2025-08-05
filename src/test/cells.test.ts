@@ -1,7 +1,7 @@
 import {
   describe, expect, it, beforeAll, beforeEach, afterAll, afterEach,
 } from 'vitest';
-import delay from 'delay';
+import { setTimeout as delay } from 'timers/promises';
 import { ENV } from 'varlock/env';
 import * as _ from '../lib/toolkit';
 
@@ -62,6 +62,19 @@ describe('Cell-based operations', () => {
       expect(sheet.cellStats).toMatchObject({
         nonEmpty: 2,
         loaded: 6,
+      });
+    });
+
+    it('can load multiple ranges (mix of A1 and object style)', async () => {
+      await sheet.loadCells([
+        'A1:A3',
+        {
+          startRowIndex: 0, endRowIndex: 3, startColumnIndex: 2, endColumnIndex: 5,
+        },
+      ]);
+      expect(sheet.cellStats).toMatchObject({
+        nonEmpty: 2,
+        loaded: 12,
       });
     });
 
@@ -247,6 +260,17 @@ describe('Cell-based operations', () => {
           expect(c1.valueType).toBe(spec.valueType);
         });
       });
+    });
+  });
+
+  describe('read-only (API key) access', () => {
+    it('cannot load cells using object style range', async () => {
+      const doc2 = new GoogleSpreadsheet(DOC_IDS.public, { apiKey: process.env.GOOGLE_API_KEY! });
+      await doc2.loadInfo();
+      const sheet2 = doc2.sheetsByIndex[0];
+      await expect(
+        sheet2.loadCells({ startRowIndex: 0, startColumnIndex: 2 })
+      ).rejects.toThrow('read-only access');
     });
   });
 

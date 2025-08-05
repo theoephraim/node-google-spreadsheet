@@ -70,20 +70,19 @@ export class GoogleSpreadsheetRow<T extends Record<string, any> = Record<string,
   async save(options?: { raw?: boolean }) {
     if (this._deleted) throw new Error('This row has been deleted - call getRows again before making updates.');
 
-    const response = await this._worksheet._spreadsheet.sheetsApi.request({
-      method: 'put',
-      url: `/values/${encodeURIComponent(this.a1Range)}`,
-      params: {
+    const response = await this._worksheet._spreadsheet.sheetsApi.put(`values/${encodeURIComponent(this.a1Range)}`, {
+      searchParams: {
         valueInputOption: options?.raw ? 'RAW' : 'USER_ENTERED',
         includeValuesInResponse: true,
       },
-      data: {
+      json: {
         range: this.a1Range,
         majorDimension: 'ROWS',
         values: [this._rawData],
       },
     });
-    this._rawData = response.data.updatedData.values[0];
+    const data = await response.json<any>();
+    this._rawData = data.updatedData.values[0];
   }
 
   /** delete this row */

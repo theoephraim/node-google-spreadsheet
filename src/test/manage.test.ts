@@ -1,7 +1,7 @@
 import {
   describe, expect, it, beforeAll, afterAll, afterEach,
 } from 'vitest';
-import delay from 'delay';
+import { setTimeout as delay } from 'timers/promises';
 import { ENV } from 'varlock/env';
 import * as _ from '../lib/toolkit';
 

@@ -34,25 +34,6 @@ export function letterToColumn(letter: string) {
   return column;
 }
 
-// send arrays in params with duplicate keys - ie `?thing=1&thing=2` vs `?thing[]=1...`
-// solution taken from https://github.com/axios/axios/issues/604
-export function axiosParamsSerializer(params: Record<PropertyKey, any>) {
-  let options = '';
-  Object.keys(params).forEach((key) => {
-    const isParamTypeObject = typeof params[key] === 'object';
-    const isParamTypeArray = isParamTypeObject && (params[key].length >= 0);
-    if (!isParamTypeObject) options += `${key}=${encodeURIComponent(params[key])}&`;
-    if (isParamTypeObject && isParamTypeArray) {
-      // eslint-disable-next-line no-restricted-syntax
-      for (const val of params[key]) {
-        options += `${key}=${encodeURIComponent(val)}&`;
-      }
-    }
-  });
-  return options ? options.slice(0, -1) : options;
-}
-
-
 export function checkForDuplicateHeaders(headers: string[]) {
   // check for duplicate headers
   const checkForDupes = _.groupBy(headers); // { c1: ['c1'], c2: ['c2', 'c2' ]}

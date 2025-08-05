@@ -21,5 +21,5 @@ export default defineConfig({
   keepNames: true, // stops build from prefixing our class names with `_` in some cases
 
   platform: 'node',
-  target: 'node22',
+  target: 'node20',
 });
