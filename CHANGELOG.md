@@ -1,5 +1,11 @@
 # `google-spreadsheet` changelog
 
+## 5.0.2
+
+### Patch Changes
+
+- 20f1f31: do not bundle runtime deps
+
 ## 5.0.1
 
 ### Patch Changes
