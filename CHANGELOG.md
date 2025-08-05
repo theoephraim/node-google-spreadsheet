@@ -1,5 +1,11 @@
 # `google-spreadsheet` changelog
 
+## 5.0.1
+
+### Patch Changes
+
+- a39cdd8: fix type issue with google-auth-library (fixes #726)
+
 ## 5.0.0
 
 ### Major Changes
@@ -16,7 +22,6 @@
 
 - 45229e4: add changesets
 - 4f92ef9: swap lodash for es-toolkit
-
 
 ## [4.1.5](https://github.com/theoephraim/node-google-spreadsheet/compare/v4.1.5...HEAD)
 

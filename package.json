@@ -1,6 +1,6 @@
 {
   "name": "google-spreadsheet",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Google Sheets API -- simple interface to read/write data and manage sheets",
   "keywords": [
     "google spreadsheets",
@@ -50,7 +50,7 @@
     "test": "vitest",
     "test:ci": "vitest run"
   },
-  "dependencies": { },
+  "dependencies": {},
   "devDependencies": {
     "@changesets/cli": "^2.29.5",
     "@types/node": "^24.2.0",
