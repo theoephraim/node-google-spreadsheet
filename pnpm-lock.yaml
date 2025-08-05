@@ -7,6 +7,13 @@ settings:
 importers:
 
   .:
+    dependencies:
+      es-toolkit:
+        specifier: ^1.39.8
+        version: 1.39.8
+      ky:
+        specifier: ^1.8.2
+        version: 1.8.2
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.5
@@ -26,9 +33,6 @@ importers:
       docsify-cli:
         specifier: ^4.4.4
         version: 4.4.4
-      es-toolkit:
-        specifier: ^1.39.8
-        version: 1.39.8
       eslint:
         specifier: ^8.41.0
         version: 8.57.1
@@ -47,9 +51,6 @@ importers:
       google-auth-library:
         specifier: ^10.2.1
         version: 10.2.1
-      ky:
-        specifier: ^1.8.2
-        version: 1.8.2
       tsup:
         specifier: ^8.5.0
         version: 8.5.0(@swc/core@1.12.11)(postcss@8.4.42)(typescript@5.8.3)
