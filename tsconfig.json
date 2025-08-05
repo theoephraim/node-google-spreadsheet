@@ -16,6 +16,7 @@
   },
   "include": [
     "src",
+    "examples",
     "env.d.ts"
   ]
 }
