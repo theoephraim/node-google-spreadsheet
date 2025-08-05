@@ -50,7 +50,7 @@
     "test": "vitest",
     "test:ci": "vitest run"
   },
-  "dependencies": {},
+  "dependencies": { },
   "devDependencies": {
     "@changesets/cli": "^2.29.5",
     "@types/node": "^24.2.0",
@@ -64,7 +64,7 @@
     "eslint-config-airbnb-typescript": "^17.0.0",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-no-floating-promise": "^1.0.2",
-    "google-auth-library": "^10.1.0",
+    "google-auth-library": "^10.2.1",
     "ky": "^1.8.2",
     "tsup": "^8.5.0",
     "typescript": "^5.5.4",

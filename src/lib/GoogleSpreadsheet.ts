@@ -43,7 +43,14 @@ async function getRequestAuthConfig(auth: GoogleApiAuth): Promise<{
   // JWT | OAuth2Client | GoogleAuth | Impersonate | AuthClient
   if ('getRequestHeaders' in auth) {
     const headers = await auth.getRequestHeaders();
-    return { headers };
+
+    // google-auth-library v10 uses a Headers object rather than a plain object
+    if ('entries' in headers) {
+      return { headers: Object.fromEntries(headers.entries()) };
+    } if (_.isObject(headers)) {
+      return { headers: headers as Record<string, string> };
+    }
+    throw new Error('unexpected headers returned from getRequestHeaders');
   }
 
   // API key only access passes through the api key as a query param
@@ -139,11 +146,7 @@ export class GoogleSpreadsheet {
   async _setAuthRequestHook(req: Request) {
     const authConfig = await getRequestAuthConfig(this.auth);
     if (authConfig.headers) {
-      // google-auth-library v10 uses a Headers object
-      const headers = 'entries' in authConfig.headers
-        ? Object.fromEntries((authConfig.headers as any).entries())
-        : authConfig.headers;
-      Object.entries(headers).forEach(([key, val]) => {
+      Object.entries(authConfig.headers).forEach(([key, val]) => {
         req.headers.set(key, String(val));
       });
     }
