@@ -1,4 +1,4 @@
-import * as _ from './lodash';
+import * as _ from './toolkit';
 
 export function getFieldMask(obj: Record<string, unknown>) {
   let fromGrid = '';

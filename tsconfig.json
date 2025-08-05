@@ -17,8 +17,5 @@
   "include": [
     "src",
     "env.d.ts"
-  ],
-  "ts-node": {
-    "swc": true
-  }
+  ]
 }

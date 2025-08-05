@@ -1,5 +1,5 @@
-import { ReadableStream } from 'node:stream/web';
-import * as _ from './lodash';
+import { type ReadableStream } from 'stream/web';
+import * as _ from './toolkit';
 
 import { GoogleSpreadsheetRow } from './GoogleSpreadsheetRow';
 import { GoogleSpreadsheetCell } from './GoogleSpreadsheetCell';

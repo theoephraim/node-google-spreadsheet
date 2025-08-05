@@ -4,6 +4,7 @@ src/ignore/
 examples/
 TODO
 dist
+ignore
 
 .env.local
 .env.*.local

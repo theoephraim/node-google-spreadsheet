@@ -3,7 +3,7 @@ import {
 } from 'vitest';
 import delay from 'delay';
 import { ENV } from 'varlock/env';
-import * as _ from '../lib/lodash';
+import * as _ from '../lib/toolkit';
 
 import { GoogleSpreadsheet, GoogleSpreadsheetWorksheet } from '..';
 

@@ -3,7 +3,7 @@ import Axios, {
 } from 'axios';
 
 import { Stream } from 'stream';
-import * as _ from './lodash';
+import * as _ from './toolkit';
 import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
 import { axiosParamsSerializer, getFieldMask } from './utils';
 import {
@@ -199,7 +199,7 @@ export class GoogleSpreadsheet {
     });
 
     this._updateRawProperties(response.data.updatedSpreadsheet.properties);
-    _.each(response.data.updatedSpreadsheet.sheets, (s) => this._updateOrCreateSheet(s));
+    _.each(response.data.updatedSpreadsheet.sheets, (s: any) => this._updateOrCreateSheet(s));
     // console.log('API RESPONSE', response.data.replies[0][requestType]);
     return response.data.replies[0][requestType];
   }
@@ -219,7 +219,7 @@ export class GoogleSpreadsheet {
     });
 
     this._updateRawProperties(response.data.updatedSpreadsheet.properties);
-    _.each(response.data.updatedSpreadsheet.sheets, (s) => this._updateOrCreateSheet(s));
+    _.each(response.data.updatedSpreadsheet.sheets, (s: any) => this._updateOrCreateSheet(s));
   }
 
   /** @internal */
@@ -277,7 +277,7 @@ export class GoogleSpreadsheet {
     });
     this._spreadsheetUrl = response.data.spreadsheetUrl;
     this._rawProperties = response.data.properties;
-    _.each(response.data.sheets, (s) => this._updateOrCreateSheet(s));
+    _.each(response.data.sheets, (s: any) => this._updateOrCreateSheet(s));
   }
 
   resetLocalCache() {
@@ -428,7 +428,7 @@ export class GoogleSpreadsheet {
     }
 
     const { sheets } = result.data;
-    _.each(sheets, (sheet) => { this._updateOrCreateSheet(sheet); });
+    _.each(sheets, (sheet: any) => { this._updateOrCreateSheet(sheet); });
   }
 
   // EXPORTING /////////////////////////////////////////////////////////////
@@ -639,7 +639,7 @@ export class GoogleSpreadsheet {
     // TODO ideally these things aren't public, might want to refactor anyway
     newSpreadsheet._spreadsheetUrl = response.data.spreadsheetUrl;
     newSpreadsheet._rawProperties = response.data.properties;
-    _.each(response.data.sheets, (s) => newSpreadsheet._updateOrCreateSheet(s));
+    _.each(response.data.sheets, (s: any) => newSpreadsheet._updateOrCreateSheet(s));
 
     return newSpreadsheet;
   }
