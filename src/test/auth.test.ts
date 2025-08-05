@@ -63,7 +63,7 @@ describe('Authentication', () => {
 
   const apiKeyAuth = { apiKey: process.env.GOOGLE_API_KEY! };
 
-  describe.only('api key', () => {
+  describe('api key', () => {
     checkDocAccess('private', apiKeyAuth, {
       canRead: false,
       canWrite: false,
