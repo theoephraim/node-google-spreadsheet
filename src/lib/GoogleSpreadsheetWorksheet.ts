@@ -922,9 +922,23 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async autoResizeDimensions() {
-    // Request type = `autoResizeDimensions`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AutoResizeDimensionsRequest
+  /**
+   * auto-resize rows or columns to fit their contents
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AutoResizeDimensionsRequest
+   */
+  async autoResizeDimensions(
+    /** which dimension to auto-resize */
+    columnsOrRows: WorksheetDimension,
+    /** start and end indexes (optional, defaults to all) */
+    rangeIndexes?: DimensionRangeIndexes
+  ) {
+    return this._makeSingleUpdateRequest('autoResizeDimensions', {
+      dimensions: {
+        sheetId: this.sheetId,
+        dimension: columnsOrRows,
+        ...rangeIndexes,
+      },
+    });
   }
 
   async addChart() {

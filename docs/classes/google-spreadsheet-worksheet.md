@@ -300,6 +300,18 @@ Param|Type|Required|Description
 - ✨ **Side effects** - new empty cells are inserted and existing cells are shifted
 - 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to make any updates to sheet contents
 
+#### `autoResizeDimensions(columnsOrRows, rangeIndexes?)` (async) :id=fn-autoResizeDimensions
+> Auto-resize rows or columns to fit their contents (equivalent to "Fit to data" in the UI)
+
+Param|Type|Required|Description
+---|---|---|---
+`columnsOrRows`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Which dimension to auto-resize
+`rangeIndexes`|Object|-|Optional start/end indexes to limit which rows/columns are resized
+`rangeIndexes.startIndex`|Number<br>_int >= 0_|-|Start row/column (inclusive)
+`rangeIndexes.endIndex`|Number<br>_int >= 1_|-|End row/column (exclusive)
+
+- ✨ **Side effects** - rows or columns are resized to fit their content
+
 ### Other
 
 #### `clear(a1Range)` (async) :id=fn-clear

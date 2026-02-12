@@ -416,6 +416,31 @@ describe('Managing doc info and sheets', () => {
     });
   });
 
+  describe('autoResizeDimensions - auto-resize columns/rows to fit content', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Auto resize test ${+new Date()}`,
+        headerValues: ['short', 'a much longer column header value'],
+      });
+    });
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can auto-resize all columns', async () => {
+      await sheet.autoResizeDimensions('COLUMNS');
+    });
+
+    it('can auto-resize a specific range of columns', async () => {
+      await sheet.autoResizeDimensions('COLUMNS', {
+        startIndex: 0,
+        endIndex: 1,
+      });
+    });
+  });
+
   describe('insertRange - inserting empty cells into a range', () => {
     let sheet: GoogleSpreadsheetWorksheet;
 
