@@ -32,6 +32,10 @@ Goal of the project is to provide a simplified, more ergonomic interface compare
   - `src/test/` — test files (`*.test.ts`)
 - `docs/` — docsify documentation site
 
+## Workflow
+- Always run `bun run lint` before committing to catch lint errors.
+- Always add a changeset (`bun changeset`) for new features and bug fixes.
+
 ## Testing
 - Tests hit real Google APIs against test documents — they are integration tests, not mocked.
 - Tests run sequentially (`fileParallelism: false` in vitest config).
