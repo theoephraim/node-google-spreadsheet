@@ -487,6 +487,36 @@ describe('Managing doc info and sheets', () => {
     });
   });
 
+  describe('permissions', () => {
+    let newDoc: GoogleSpreadsheet;
+
+    beforeAll(async () => {
+      newDoc = await GoogleSpreadsheet.createNewSpreadsheetDocument(
+        testServiceAccountAuth,
+        { title: `Permission test ${+new Date()}` }
+      );
+    });
+    afterAll(async () => {
+      await newDoc.delete();
+    });
+
+    it('can delete a permission', async () => {
+      // make doc public so we have a permission to delete
+      await newDoc.setPublicAccessLevel('reader');
+
+      const permissions = await newDoc.listPermissions();
+      const publicPerm = permissions.find((p) => p.type === 'anyone');
+      expect(publicPerm).toBeTruthy();
+
+      await newDoc.deletePermission(publicPerm!.id);
+
+      // verify it's gone
+      const permissionsAfter = await newDoc.listPermissions();
+      const found = permissionsAfter.find((p) => p.type === 'anyone');
+      expect(found).toBeFalsy();
+    });
+  });
+
   describe('protected ranges', () => {
     let sheet: GoogleSpreadsheetWorksheet;
     let protectedRangeId: number;

@@ -252,3 +252,10 @@ Possible roles:
 - `writer` - allows writing, commenting, reading
 - `commenter` - allows reading and commenting
 - `reader` - allows reading only
+
+#### `deletePermission(permissionId)` (async) :id=fn-deletePermission
+> Delete a permission entry, revoking access for that user/group/domain
+
+Param|Type|Required|Description
+---|---|---|---
+`permissionId`|String|✅|ID of the permission to delete (from `listPermissions()`)

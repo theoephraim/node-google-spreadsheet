@@ -3,7 +3,8 @@ import * as _ from './toolkit';
 import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
 import { getFieldMask } from './utils';
 import {
-  DataFilter, GridRange, NamedRangeId, ProtectedRange, SpreadsheetId, SpreadsheetProperties, WorksheetId, WorksheetProperties,
+  DataFilter, GridRange, NamedRangeId, ProtectedRange,
+  SpreadsheetId, SpreadsheetProperties, WorksheetId, WorksheetProperties,
 } from './types/sheets-types';
 import { PermissionRoles, PermissionsList, PublicPermissionRoles } from './types/drive-types';
 import { RecursivePartial } from './types/util-types';
@@ -620,6 +621,14 @@ export class GoogleSpreadsheet {
     });
 
     return shareReq.json();
+  }
+
+  /**
+   * delete a permission by its ID
+   * @see https://developers.google.com/drive/api/v3/reference/permissions/delete
+   */
+  async deletePermission(permissionId: string) {
+    await this.driveApi.delete(`permissions/${permissionId}`);
   }
 
   //
