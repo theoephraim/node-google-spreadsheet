@@ -125,6 +125,7 @@ export class GoogleSpreadsheet {
     // create a ky instance with sheet root URL and hooks to handle auth
     this.sheetsApi = ky.create({
       prefixUrl: `${SHEETS_API_BASE_URL}/${spreadsheetId}`,
+      timeout: 180_000,
       hooks: {
         beforeRequest: [(r) => this._setAuthRequestHook(r)],
         beforeError: [(e) => this._errorHook(e)],
