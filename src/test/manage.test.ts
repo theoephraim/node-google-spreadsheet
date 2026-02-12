@@ -420,4 +420,51 @@ describe('Managing doc info and sheets', () => {
       await doc.deleteNamedRange(namedRangeId);
     });
   });
+
+  describe('protected ranges', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+    let protectedRangeId: number;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Protected range test ${+new Date()}`,
+      });
+    });
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('throws when adding without range or namedRangeId', async () => {
+      await expect(sheet.addProtectedRange({
+        description: 'should fail',
+      })).rejects.toThrow('No range specified');
+    });
+
+    it('can add a protected range', async () => {
+      const result = await sheet.addProtectedRange({
+        range: {
+          sheetId: sheet.sheetId,
+          startRowIndex: 0,
+          endRowIndex: 5,
+          startColumnIndex: 0,
+          endColumnIndex: 3,
+        },
+        description: 'test protected range',
+        warningOnly: true,
+      });
+      expect(result).toBeTruthy();
+      protectedRangeId = result.protectedRange.protectedRangeId;
+      expect(protectedRangeId).toBeTruthy();
+    });
+
+    it('can update a protected range', async () => {
+      await sheet.updateProtectedRange(protectedRangeId, {
+        description: 'updated description',
+      });
+    });
+
+    it('can delete a protected range', async () => {
+      await sheet.deleteProtectedRange(protectedRangeId);
+    });
+  });
 });

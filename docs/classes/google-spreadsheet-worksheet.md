@@ -343,6 +343,40 @@ Param|Type|Required|Description
 `rule`|Object<br>[DataValidationRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#DataValidationRule)<br>or `false`|✅|Object describing the validation rule<br/>Or `false` to unset the rule
 
 
+### Protected Ranges
+
+#### `protectedRanges` :id=prop-protectedRanges
+> The list of protected ranges on this sheet, populated after calling `loadInfo()`
+
+- ↩️ **Returns** - Array of [ProtectedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ProtectedRange) objects, or `null` if not yet loaded
+
+#### `addProtectedRange(protectedRange)` (async) :id=fn-addProtectedRange
+> Add a new protected range to the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`protectedRange`|Object<br>[ProtectedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ProtectedRange)|✅|The protected range to add. Must include either `range` or `namedRangeId`. The `protectedRangeId` field is optional; if not set, an ID will be auto-generated.
+
+- ↩️ **Returns** - response from the API including the created protected range
+
+#### `updateProtectedRange(protectedRangeId, protectedRange)` (async) :id=fn-updateProtectedRange
+> Update an existing protected range
+
+Param|Type|Required|Description
+---|---|---|---
+`protectedRangeId`|Number|✅|ID of the protected range to update
+`protectedRange`|Object<br>Partial [ProtectedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ProtectedRange)|✅|The properties to update (field mask is auto-generated)
+
+- ↩️ **Returns** - response from the API including the updated protected range
+
+#### `deleteProtectedRange(protectedRangeId)` (async) :id=fn-deleteProtectedRange
+> Delete a protected range by ID
+
+Param|Type|Required|Description
+---|---|---|---
+`protectedRangeId`|Number|✅|ID of the protected range to delete
+
+
 ### Exports
 
 See [Exports guide](guides/exports) for more info.

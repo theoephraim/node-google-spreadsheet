@@ -3,7 +3,7 @@ import * as _ from './toolkit';
 import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
 import { getFieldMask } from './utils';
 import {
-  DataFilter, GridRange, NamedRangeId, SpreadsheetId, SpreadsheetProperties, WorksheetId, WorksheetProperties,
+  DataFilter, GridRange, NamedRangeId, ProtectedRange, SpreadsheetId, SpreadsheetProperties, WorksheetId, WorksheetProperties,
 } from './types/sheets-types';
 import { PermissionRoles, PermissionsList, PublicPermissionRoles } from './types/drive-types';
 import { RecursivePartial } from './types/util-types';
@@ -240,13 +240,13 @@ export class GoogleSpreadsheet {
   _updateRawProperties(newProperties: SpreadsheetProperties) { this._rawProperties = newProperties; }
 
   /** @internal */
-  _updateOrCreateSheet(sheetInfo: { properties: WorksheetProperties, data: any }) {
-    const { properties, data } = sheetInfo;
+  _updateOrCreateSheet(sheetInfo: { properties: WorksheetProperties, data: any, protectedRanges?: ProtectedRange[] }) {
+    const { properties, data, protectedRanges } = sheetInfo;
     const { sheetId } = properties;
     if (!this._rawSheets[sheetId]) {
-      this._rawSheets[sheetId] = new GoogleSpreadsheetWorksheet(this, properties, data);
+      this._rawSheets[sheetId] = new GoogleSpreadsheetWorksheet(this, properties, data, protectedRanges);
     } else {
-      this._rawSheets[sheetId].updateRawData(properties, data);
+      this._rawSheets[sheetId].updateRawData(properties, data, protectedRanges);
     }
   }
 
