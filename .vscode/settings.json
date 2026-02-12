@@ -8,6 +8,5 @@
   },
   "editor.rulers": [
     120
-  ],
-  "eslint.packageManager": "pnpm"
+  ]
 }

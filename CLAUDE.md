@@ -10,16 +10,16 @@ Goal of the project is to provide a simplified, more ergonomic interface compare
 - Built with `tsup` (outputs CJS + ESM to `dist/`)
 - Tested with `vitest`
 - Linted with `eslint`
-- Uses `pnpm` as package manager
+- Uses `bun` as package manager
 - Versioning/releases managed with `changesets`
 
 ## Common Commands
-- `pnpm test` — run tests (vitest in watch mode)
-- `pnpm run test:ci` — run tests once
-- `pnpm run build` — build with tsup
-- `pnpm run lint` — run eslint
-- `pnpm run lint:fix` — run eslint with auto-fix
-- `pnpm changeset` — create a changeset for version bumps
+- `bun test` — run tests (vitest in watch mode)
+- `bun run test:ci` — run tests once
+- `bun run build` — build with tsup
+- `bun run lint` — run eslint
+- `bun run lint:fix` — run eslint with auto-fix
+- `bun changeset` — create a changeset for version bumps
 
 ## Project Structure
 - `src/` — source code
