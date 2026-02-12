@@ -289,6 +289,17 @@ Param|Type|Required|Description
 - ✨ **Side effects** - new row(s) or column(s) are inserted into the sheet
 - 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to make any updates to sheet contents
 
+#### `insertRange(range, shiftDimension)` (async) :id=fn-insertRange
+> Insert empty cells in a range, shifting existing cells in the specified direction
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to insert new cells into, sheetId not required
+`shiftDimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Which direction to shift existing cells - ROWS shifts down, COLUMNS shifts right
+
+- ✨ **Side effects** - new empty cells are inserted and existing cells are shifted
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to make any updates to sheet contents
+
 ### Other
 
 #### `clear(a1Range)` (async) :id=fn-clear

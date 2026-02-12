@@ -794,9 +794,20 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async insertRange() {
-    // Request type = `insertRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#InsertRangeRequest
+  /**
+   * insert empty cells in a range, shifting existing cells in the specified direction
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#InsertRangeRequest
+   */
+  async insertRange(
+    /** the range to insert new cells into */
+    range: GridRangeWithOptionalWorksheetId,
+    /** which direction to shift existing cells - ROWS (shift down) or COLUMNS (shift right) */
+    shiftDimension: WorksheetDimension
+  ) {
+    return this._makeSingleUpdateRequest('insertRange', {
+      range: this._addSheetIdToRange(range),
+      shiftDimension,
+    });
   }
 
   async moveDimension() {
