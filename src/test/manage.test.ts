@@ -182,6 +182,30 @@ describe('Managing doc info and sheets', () => {
       expect(sheet.rowCount).toBe(77);
     });
 
+    it('can freeze and unfreeze rows and columns', async () => {
+      await sheet.updateGridProperties({
+        frozenRowCount: 2,
+        frozenColumnCount: 1,
+      });
+      expect(sheet.gridProperties.frozenRowCount).toBe(2);
+      expect(sheet.gridProperties.frozenColumnCount).toBe(1);
+
+      // unfreeze
+      await sheet.updateGridProperties({
+        frozenRowCount: 0,
+        frozenColumnCount: 0,
+      });
+      // Google API omits 0/default values from responses, so these come back as undefined
+      expect(sheet.gridProperties.frozenRowCount).toBeFalsy();
+      expect(sheet.gridProperties.frozenColumnCount).toBeFalsy();
+
+      // verify it persisted
+      sheet.resetLocalCache();
+      await doc.loadInfo();
+      expect(sheet.gridProperties.frozenRowCount).toBeFalsy();
+      expect(sheet.gridProperties.frozenColumnCount).toBeFalsy();
+    });
+
     it('can clear sheet data', async () => {
       await sheet.setHeaderRow(['some', 'data', 'to', 'clear']);
       await sheet.loadCells();
