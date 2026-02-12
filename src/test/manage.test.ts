@@ -391,4 +391,33 @@ describe('Managing doc info and sheets', () => {
       expect(rows[3].get('b')).toEqual('b2');
     });
   });
+
+  describe('named ranges', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Named range test ${+new Date()}`,
+      });
+    });
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can add and delete a named range', async () => {
+      const result = await doc.addNamedRange('testRange', {
+        sheetId: sheet.sheetId,
+        startRowIndex: 0,
+        endRowIndex: 5,
+        startColumnIndex: 0,
+        endColumnIndex: 3,
+      });
+      expect(result).toBeTruthy();
+      const namedRangeId = result.namedRange?.namedRangeId;
+      expect(namedRangeId).toBeTruthy();
+
+      // clean up
+      await doc.deleteNamedRange(namedRangeId);
+    });
+  });
 });

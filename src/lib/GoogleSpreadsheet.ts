@@ -368,9 +368,11 @@ export class GoogleSpreadsheet {
   ) {
     // TODO: add named range to local cache
     return this._makeSingleUpdateRequest('addNamedRange', {
-      name,
-      namedRangeId,
-      range,
+      namedRange: {
+        name,
+        namedRangeId,
+        range,
+      },
     });
   }
 
