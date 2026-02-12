@@ -1,5 +1,5 @@
 .eslintrc.cjs
-tsup.config.ts
+tsdown.config.ts
 vitest.config.ts
 dist
 examples

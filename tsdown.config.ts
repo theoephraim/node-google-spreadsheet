@@ -1,4 +1,4 @@
-import { defineConfig } from 'tsup';
+import { defineConfig } from 'tsdown';
 
 export default defineConfig({
   entry: [ // Entry point(s)
@@ -19,6 +19,8 @@ export default defineConfig({
 
   splitting: false,
   keepNames: true, // stops build from prefixing our class names with `_` in some cases
+
+  fixedExtension: false, // use .js/.cjs based on package type instead of .mjs/.cjs
 
   platform: 'node',
   target: 'node20',

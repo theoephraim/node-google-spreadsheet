@@ -145,7 +145,7 @@ export class GoogleSpreadsheet {
   // INTERNAL UTILITY FUNCTIONS ////////////////////////////////////////////////////////////////////
 
   /** @internal */
-  async _setAuthRequestHook(req: Request) {
+  async _setAuthRequestHook(req: Request): Promise<Request> {
     const authConfig = await getRequestAuthConfig(this.auth);
     if (authConfig.headers) {
       Object.entries(authConfig.headers).forEach(([key, val]) => {

@@ -7,7 +7,7 @@ Goal of the project is to provide a simplified, more ergonomic interface compare
 
 ## Tech Stack
 - TypeScript (strict mode), ESM module
-- Built with `tsup` (outputs CJS + ESM to `dist/`)
+- Built with `tsdown` (outputs CJS + ESM to `dist/`)
 - Tested with `vitest`
 - Linted with `eslint`
 - Uses `bun` as package manager
@@ -16,7 +16,7 @@ Goal of the project is to provide a simplified, more ergonomic interface compare
 ## Common Commands
 - `bun test` — run tests (vitest in watch mode)
 - `bun run test:ci` — run tests once
-- `bun run build` — build with tsup
+- `bun run build` — build with tsdown
 - `bun run lint` — run eslint
 - `bun run lint:fix` — run eslint with auto-fix
 - `bun changeset` — create a changeset for version bumps
