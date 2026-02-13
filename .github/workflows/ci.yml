@@ -38,7 +38,6 @@ jobs:
           CI: 1
           NODE_ENV: ci
           JEST_JUNIT_OUTPUT: "reports/junit/js-test-results.xml"
-          TEST_DELAY: 1000
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_EMAIL }}
           GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
