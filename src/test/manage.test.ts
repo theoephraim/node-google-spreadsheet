@@ -576,6 +576,54 @@ describe('Managing doc info and sheets', () => {
       const cellAfter = sheet.getCell(1, 1);
       expect(cellAfter).toBe(cellBefore);
     });
+
+    it('should mark deleted rows as deleted', async () => {
+      // Get cached rows from previous test
+      const rows = await sheet.getRows<Record<string, string>>();
+      const firstRow = rows[0];
+      expect(firstRow.deleted).toBeFalsy();
+
+      // Delete the first row (index 1 since header is row 0)
+      await sheet.deleteRows(1, 2);
+
+      // The row should now be marked as deleted
+      expect(firstRow.deleted).toBeTruthy();
+
+      // Trying to save the deleted row should throw an error
+      await expect(firstRow.save()).rejects.toThrow('This row has been deleted');
+    });
+
+    it('should mark deleted cells as deleted', async () => {
+      // Load cells
+      await sheet.loadCells('A1:E5');
+      const cell = sheet.getCell(1, 0); // row 1, column A
+      expect(cell.deleted).toBeFalsy();
+
+      // Delete the row containing this cell
+      await sheet.deleteRows(1, 2);
+
+      // The cell should now be marked as deleted
+      expect(cell.deleted).toBeTruthy();
+
+      // Trying to set value on deleted cell should throw an error
+      expect(() => { cell.value = 'test'; }).toThrow('This cell has been deleted');
+    });
+
+    it('should mark deleted cells in deleted columns as deleted', async () => {
+      // Reload cells
+      await sheet.loadCells('A1:E5');
+      const cell = sheet.getCell(1, 0); // row 1, column A (index 0)
+      expect(cell.deleted).toBeFalsy();
+
+      // Delete column A (index 0)
+      await sheet.deleteColumns(0, 1);
+
+      // The cell should now be marked as deleted
+      expect(cell.deleted).toBeTruthy();
+
+      // Trying to set value on deleted cell should throw an error
+      expect(() => { cell.value = 'test'; }).toThrow('This cell has been deleted');
+    });
   });
 
   describe('autoResizeDimensions - auto-resize columns/rows to fit content', () => {

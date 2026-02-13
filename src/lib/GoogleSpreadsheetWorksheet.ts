@@ -559,9 +559,13 @@ export class GoogleSpreadsheetWorksheet {
     const startRow = startIndex + 1;
     const endRow = endIndex;
 
-    // Delete rows in the deleted range
-    for (let i = startRow; i <= endRow; i++) {
-      delete this._rowCache[i];
+    // Mark rows in the deleted range as deleted, then remove from cache
+    for (let rowNum = startRow; rowNum <= endRow; rowNum++) {
+      const row = this._rowCache[rowNum];
+      if (row) {
+        (row as any)._deleted = true; // Mark as deleted
+      }
+      delete this._rowCache[rowNum];
     }
 
     // Shift rows after the deleted range
@@ -580,15 +584,24 @@ export class GoogleSpreadsheetWorksheet {
   _shiftCellCacheRows(startIndex: number, endIndex: number) {
     const numDeleted = endIndex - startIndex;
 
-    // Delete cells in the deleted row range
-    _.range(startIndex, endIndex).forEach((rowIndex) => {
+    // Mark cells in the deleted row range as deleted, then remove from cache
+    for (let rowIndex = startIndex; rowIndex < endIndex; rowIndex++) {
+      const row = this._cells[rowIndex];
+      if (row) {
+        row.forEach((cell) => {
+          if (cell) cell._markDeleted();
+        });
+      }
       delete this._cells[rowIndex];
-    });
+    }
 
     // Collect rows that need to be shifted
-    const rowsToShift = _.range(endIndex, this._cells.length)
-      .filter((rowIndex) => this._cells[rowIndex])
-      .map((rowIndex) => ({ oldRowIndex: rowIndex, cells: this._cells[rowIndex] }));
+    const rowsToShift: Array<{ oldRowIndex: number, cells: any[] }> = [];
+    for (let rowIndex = endIndex; rowIndex < this._cells.length; rowIndex++) {
+      if (this._cells[rowIndex]) {
+        rowsToShift.push({ oldRowIndex: rowIndex, cells: this._cells[rowIndex] });
+      }
+    }
 
     // Clear old positions and update to new positions
     rowsToShift.forEach(({ oldRowIndex, cells }) => {
@@ -614,15 +627,20 @@ export class GoogleSpreadsheetWorksheet {
     this._cells.forEach((row, rowIndex) => {
       if (!row) return;
 
-      // Delete cells in the deleted column range
-      _.range(startIndex, endIndex).forEach((colIndex) => {
+      // Mark cells in the deleted column range as deleted, then remove from cache
+      for (let colIndex = startIndex; colIndex < endIndex; colIndex++) {
+        const cell = row[colIndex];
+        if (cell) cell._markDeleted();
         delete row[colIndex];
-      });
+      }
 
       // Collect cells that need to be shifted
-      const cellsToShift = _.range(endIndex, row.length)
-        .filter((colIndex) => row[colIndex])
-        .map((colIndex) => ({ oldColIndex: colIndex, cell: row[colIndex] }));
+      const cellsToShift: Array<{ oldColIndex: number, cell: any }> = [];
+      for (let colIndex = endIndex; colIndex < row.length; colIndex++) {
+        if (row[colIndex]) {
+          cellsToShift.push({ oldColIndex: colIndex, cell: row[colIndex] });
+        }
+      }
 
       // Clear old positions and update to new positions
       cellsToShift.forEach(({ oldColIndex, cell }) => {
