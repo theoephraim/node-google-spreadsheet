@@ -505,4 +505,107 @@ describe('Managing doc info and sheets', () => {
       await sheet.deleteProtectedRange(protectedRangeId);
     });
   });
+
+  describe('pasteData - insert data from delimited string', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Paste data test ${+new Date()}`,
+        headerValues: ['a', 'b', 'c'],
+        gridProperties: { rowCount: 10, columnCount: 5 },
+      });
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can paste comma-delimited data at a coordinate', async () => {
+      const data = 'value1,value2,value3\nvalue4,value5,value6';
+      await sheet.pasteData(
+        { rowIndex: 1, columnIndex: 0 },
+        data,
+        ','
+      );
+
+      await sheet.loadCells('A2:C3');
+      expect(sheet.getCellByA1('A2').value).toEqual('value1');
+      expect(sheet.getCellByA1('B2').value).toEqual('value2');
+      expect(sheet.getCellByA1('C2').value).toEqual('value3');
+      expect(sheet.getCellByA1('A3').value).toEqual('value4');
+      expect(sheet.getCellByA1('B3').value).toEqual('value5');
+      expect(sheet.getCellByA1('C3').value).toEqual('value6');
+    });
+
+    it('can paste tab-delimited data at a coordinate', async () => {
+      const data = 'tab1\ttab2\ttab3\ntab4\ttab5\ttab6';
+      await sheet.pasteData(
+        { rowIndex: 4, columnIndex: 0 },
+        data,
+        '\t'
+      );
+
+      await sheet.loadCells('A5:C6');
+      expect(sheet.getCellByA1('A5').value).toEqual('tab1');
+      expect(sheet.getCellByA1('B5').value).toEqual('tab2');
+      expect(sheet.getCellByA1('C5').value).toEqual('tab3');
+      expect(sheet.getCellByA1('A6').value).toEqual('tab4');
+      expect(sheet.getCellByA1('B6').value).toEqual('tab5');
+      expect(sheet.getCellByA1('C6').value).toEqual('tab6');
+    });
+
+    it('can paste data with PASTE_VALUES type', async () => {
+      const data = '=SUM(1,2),plain text';
+      await sheet.pasteData(
+        { rowIndex: 7, columnIndex: 0 },
+        data,
+        ',',
+        'PASTE_VALUES'
+      );
+
+      await sheet.loadCells('A8:B8');
+      // With PASTE_VALUES, formulas are pasted as text/values, not as formulas
+      expect(sheet.getCellByA1('A8').value).toEqual('=SUM(1,2)');
+      expect(sheet.getCellByA1('B8').value).toEqual('plain text');
+    });
+  });
+
+  describe('appendDimension - append rows or columns to sheet', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+    const initialRowCount = 10;
+    const initialColumnCount = 5;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Append dimension test ${+new Date()}`,
+        headerValues: ['a', 'b', 'c'],
+        gridProperties: { rowCount: initialRowCount, columnCount: initialColumnCount },
+      });
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can append rows to the sheet', async () => {
+      const rowsToAppend = 5;
+      await sheet.appendDimension('ROWS', rowsToAppend);
+
+      // Reload sheet info to get updated properties
+      await doc.loadInfo();
+      const updatedSheet = doc.sheetsById[sheet.sheetId];
+      expect(updatedSheet.rowCount).toEqual(initialRowCount + rowsToAppend);
+    });
+
+    it('can append columns to the sheet', async () => {
+      const columnsToAppend = 3;
+      await sheet.appendDimension('COLUMNS', columnsToAppend);
+
+      // Reload sheet info to get updated properties
+      await doc.loadInfo();
+      const updatedSheet = doc.sheetsById[sheet.sheetId];
+      expect(updatedSheet.columnCount).toEqual(initialColumnCount + columnsToAppend);
+    });
+  });
 });

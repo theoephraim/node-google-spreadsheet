@@ -13,7 +13,7 @@ import {
   RowIndex, ColumnIndex, DataFilterWithoutWorksheetId, DataFilter, GetValuesRequestOptions, WorksheetGridProperties,
   WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId,
   DataValidationRule,
-  ProtectedRange, Integer,
+  ProtectedRange, Integer, GridCoordinateWithOptionalWorksheetId, PasteType,
 } from './types/sheets-types';
 
 
@@ -972,9 +972,32 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateEmbeddedObjectPositionRequest
   }
 
-  async pasteData() {
-    // Request type = `pasteData`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteDataRequest
+  /**
+   * Inserts data into the spreadsheet starting at the specified coordinate
+   *
+   * @param coordinate - The coordinate at which the data should start being inserted (sheetId optional)
+   * @param data - The data to insert
+   * @param delimiter - The delimiter in the data
+   * @param type - How the data should be pasted (defaults to PASTE_NORMAL)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteDataRequest
+   */
+  async pasteData(
+    coordinate: GridCoordinateWithOptionalWorksheetId,
+    data: string,
+    delimiter: string,
+    type: PasteType = 'PASTE_NORMAL'
+  ) {
+    await this._makeSingleUpdateRequest('pasteData', {
+      coordinate: {
+        sheetId: this.sheetId,
+        rowIndex: coordinate.rowIndex,
+        columnIndex: coordinate.columnIndex,
+      },
+      data,
+      delimiter,
+      type,
+    });
   }
 
   async textToColumns() {
@@ -992,9 +1015,20 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteRangeRequest
   }
 
-  async appendDimension() {
-    // Request type = `appendDimension`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AppendDimensionRequest
+  /**
+   * Appends rows or columns to the end of a sheet
+   *
+   * @param dimension - Whether rows or columns should be appended
+   * @param length - The number of rows or columns to append
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AppendDimensionRequest
+   */
+  async appendDimension(dimension: WorksheetDimension, length: number) {
+    await this._makeSingleUpdateRequest('appendDimension', {
+      sheetId: this.sheetId,
+      dimension,
+      length,
+    });
   }
 
   async addConditionalFormatRule() {

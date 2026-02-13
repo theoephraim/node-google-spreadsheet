@@ -414,6 +414,33 @@ export type DataFilter = A1Range | GridRange;
 export type DataFilterWithoutWorksheetId = A1Range | GridRangeWithoutWorksheetId;
 
 /**
+ * A coordinate in a sheet. All indexes are zero-based.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridCoordinate
+ */
+export type GridCoordinate = {
+  /** The sheet this coordinate is on */
+  sheetId: WorksheetId,
+  /** The row index of the coordinate */
+  rowIndex: RowIndex,
+  /** The column index of the coordinate */
+  columnIndex: ColumnIndex
+};
+export type GridCoordinateWithOptionalWorksheetId = MakeOptional<GridCoordinate, 'sheetId'>;
+
+/**
+ * How a paste operation should be applied.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteType
+ */
+export type PasteType =
+  | 'PASTE_NORMAL'
+  | 'PASTE_VALUES'
+  | 'PASTE_FORMAT'
+  | 'PASTE_NO_BORDERS'
+  | 'PASTE_FORMULA'
+  | 'PASTE_DATA_VALIDATION'
+  | 'PASTE_CONDITIONAL_FORMATTING';
+
+/**
  * object describing the editors of a protected range
  * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#Editors
  * */

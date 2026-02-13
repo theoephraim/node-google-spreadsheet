@@ -348,6 +348,31 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - rows or columns are resized to fit their content
 
+#### `pasteData(coordinate, data, delimiter, type)` (async) :id=fn-pasteData
+> Inserts data into the spreadsheet starting at the specified coordinate
+
+Param|Type|Required|Description
+---|---|---|---
+`coordinate`|Object<br>[GridCoordinate](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridCoordinate)|✅|The coordinate at which the data should start being inserted, sheetId not required
+`coordinate.rowIndex`|Number<br>_int >= 0_|✅|The row index (0-based)
+`coordinate.columnIndex`|Number<br>_int >= 0_|✅|The column index (0-based)
+`data`|String|✅|The data to insert
+`delimiter`|String|✅|The delimiter in the data (e.g., ',' for CSV, '\t' for TSV)
+`type`|String (enum)<br>[PasteType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteType)|-|How the data should be pasted. _defaults to `PASTE_NORMAL`_
+
+- ✨ **Side effects** - data is inserted into the sheet at the specified coordinate
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to access the newly pasted data
+
+#### `appendDimension(dimension, length)` (async) :id=fn-appendDimension
+> Appends rows or columns to the end of a sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`dimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Whether rows or columns should be appended
+`length`|Number<br>_int >= 1_|✅|The number of rows or columns to append
+
+- ✨ **Side effects** - rows or columns are appended to the end of the sheet
+
 ### Other
 
 #### `clear(a1Range)` (async) :id=fn-clear
