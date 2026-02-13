@@ -548,6 +548,93 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
+  /**
+   * @internal
+   * Used internally to update row numbers after deleting multiple rows.
+   * Should not be called directly.
+   * */
+  _shiftRowCacheBulk(startIndex: number, endIndex: number) {
+    const numDeleted = endIndex - startIndex;
+    // Convert from 0-based indices to 1-based row numbers
+    const startRow = startIndex + 1;
+    const endRow = endIndex;
+
+    // Delete rows in the deleted range
+    for (let i = startRow; i <= endRow; i++) {
+      delete this._rowCache[i];
+    }
+
+    // Shift rows after the deleted range
+    this._rowCache.forEach((row) => {
+      if (row.rowNumber > endRow) {
+        row._updateRowNumber(row.rowNumber - numDeleted);
+      }
+    });
+  }
+
+  /**
+   * @internal
+   * Used internally to shift cell cache after deleting rows.
+   * Should not be called directly.
+   * */
+  _shiftCellCacheRows(startIndex: number, endIndex: number) {
+    const numDeleted = endIndex - startIndex;
+
+    // Delete cells in the deleted row range
+    _.range(startIndex, endIndex).forEach((rowIndex) => {
+      delete this._cells[rowIndex];
+    });
+
+    // Collect rows that need to be shifted
+    const rowsToShift = _.range(endIndex, this._cells.length)
+      .filter((rowIndex) => this._cells[rowIndex])
+      .map((rowIndex) => ({ oldRowIndex: rowIndex, cells: this._cells[rowIndex] }));
+
+    // Clear old positions and update to new positions
+    rowsToShift.forEach(({ oldRowIndex, cells }) => {
+      delete this._cells[oldRowIndex];
+      const newRowIndex = oldRowIndex - numDeleted;
+      this._cells[newRowIndex] = cells;
+      // Update each cell's internal row index
+      cells.forEach((cell, colIndex) => {
+        if (cell) cell._updateIndices(newRowIndex, colIndex);
+      });
+    });
+  }
+
+  /**
+   * @internal
+   * Used internally to shift cell cache after deleting columns.
+   * Should not be called directly.
+   * */
+  _shiftCellCacheColumns(startIndex: number, endIndex: number) {
+    const numDeleted = endIndex - startIndex;
+
+    // For each row, delete cells in the deleted column range and shift remaining
+    this._cells.forEach((row, rowIndex) => {
+      if (!row) return;
+
+      // Delete cells in the deleted column range
+      _.range(startIndex, endIndex).forEach((colIndex) => {
+        delete row[colIndex];
+      });
+
+      // Collect cells that need to be shifted
+      const cellsToShift = _.range(endIndex, row.length)
+        .filter((colIndex) => row[colIndex])
+        .map((colIndex) => ({ oldColIndex: colIndex, cell: row[colIndex] }));
+
+      // Clear old positions and update to new positions
+      cellsToShift.forEach(({ oldColIndex, cell }) => {
+        delete row[oldColIndex];
+        const newColIndex = oldColIndex - numDeleted;
+        row[newColIndex] = cell;
+        // Update cell's internal column index
+        cell._updateIndices(rowIndex, newColIndex);
+      });
+    });
+  }
+
   async clearRows(
     options?: {
       start?: number,
@@ -726,7 +813,7 @@ export class GoogleSpreadsheetWorksheet {
     if (!_.isInteger(rangeIndexes.endIndex) || rangeIndexes.endIndex < 0) throw new Error('range.endIndex must be an integer >=0');
     if (rangeIndexes.endIndex <= rangeIndexes.startIndex) throw new Error('range.endIndex must be greater than range.startIndex');
 
-    return this._makeSingleUpdateRequest('deleteDimension', {
+    const result = await this._makeSingleUpdateRequest('deleteDimension', {
       range: {
         sheetId: this.sheetId,
         dimension: columnsOrRows,
@@ -734,6 +821,16 @@ export class GoogleSpreadsheetWorksheet {
         endIndex: rangeIndexes.endIndex,
       },
     });
+
+    // Update cached rows and cells
+    if (columnsOrRows === 'ROWS') {
+      this._shiftRowCacheBulk(rangeIndexes.startIndex, rangeIndexes.endIndex);
+      this._shiftCellCacheRows(rangeIndexes.startIndex, rangeIndexes.endIndex);
+    } else {
+      this._shiftCellCacheColumns(rangeIndexes.startIndex, rangeIndexes.endIndex);
+    }
+
+    return result;
   }
 
   /**

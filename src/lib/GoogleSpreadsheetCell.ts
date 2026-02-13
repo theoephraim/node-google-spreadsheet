@@ -49,6 +49,16 @@ export class GoogleSpreadsheetCell {
   get a1Row() { return this._rowIndex + 1; } // a1 row numbers start at 1 instead of 0
   get a1Address() { return `${this.a1Column}${this.a1Row}`; }
 
+  /**
+   * @internal
+   * Used internally to update cell indices after deleting rows/columns.
+   * Should not be called directly.
+   */
+  _updateIndices(rowIndex: RowIndex, columnIndex: ColumnIndex) {
+    this._rowIndex = rowIndex;
+    this._columnIndex = columnIndex;
+  }
+
   // CELL CONTENTS - VALUE/FORMULA/NOTES ///////////////////////////////////////////////////////////
   get value(): number | boolean | string | null | GoogleSpreadsheetCellErrorValue {
     // const typeKey = _.keys(this._rawData.effectiveValue)[0];
