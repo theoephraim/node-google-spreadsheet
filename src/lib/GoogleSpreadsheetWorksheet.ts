@@ -843,8 +843,8 @@ export class GoogleSpreadsheetWorksheet {
   /**
    * Updates borders for a range
    *
-   * @param range - The range whose borders should be updated (sheetId not required)
-   * @param borders - Border styles to apply
+   * @param range - The range whose borders should be updated (sheetId optional)
+   * @param borders - Border styles for top, bottom, left, right, innerHorizontal, innerVertical
    *
    * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateBordersRequest
    */

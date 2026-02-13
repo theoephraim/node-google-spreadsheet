@@ -632,6 +632,80 @@ Param|Type|Required|Description
 ---|---|---|---
 `protectedRangeId`|Number|✅|ID of the protected range to delete
 
+### Named Ranges
+
+#### `addNamedRange(name, range, namedRangeId)` (async) :id=fn-addNamedRange
+> Create a new named range in this worksheet (convenience method that auto-fills sheetId)
+
+Param|Type|Required|Description
+---|---|---|---
+`name`|String|✅|Name of the new named range
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|Range for the named range, sheetId not required
+`namedRangeId`|String|-|Optional ID for the named range
+
+- ↩️ **Returns** - response from the API including the created named range
+- ✨ **Side effects** - named range is added to the document
+
+#### `updateNamedRange(namedRangeId, namedRange, fields)` (async) :id=fn-updateNamedRange
+> Update an existing named range
+
+Param|Type|Required|Description
+---|---|---|---
+`namedRangeId`|String|✅|ID of the named range to update
+`namedRange`|Object|-|Properties to update
+`namedRange.name`|String|-|New name for the named range
+`namedRange.range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|New range, sheetId not required
+`fields`|String (FieldMask)|✅|Which fields to update (e.g., "name", "range", or "*" for all)
+
+- ↩️ **Returns** - response from the API
+- ✨ **Side effects** - named range is updated
+
+#### `deleteNamedRange(namedRangeId)` (async) :id=fn-deleteNamedRange
+> Delete a named range (convenience wrapper)
+
+Param|Type|Required|Description
+---|---|---|---
+`namedRangeId`|String|✅|ID of the named range to delete
+
+- ✨ **Side effects** - named range is removed from the document
+
+### Filters
+
+#### `setBasicFilter(filter)` (async) :id=fn-setBasicFilter
+> Sets the basic filter on this sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`filter`|Object|-|Basic filter configuration
+`filter.range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|Range to filter, sheetId not required
+`filter.sortSpecs`|Array of [SortSpec](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#sortspec)|-|Sort specifications
+`filter.filterSpecs`|Array|-|Filter specifications per column
+
+- ✨ **Side effects** - basic filter is applied to the sheet
+
+#### `clearBasicFilter()` (async) :id=fn-clearBasicFilter
+> Clears the basic filter on this sheet
+
+- ✨ **Side effects** - basic filter is removed from the sheet
+
+### Formatting
+
+#### `updateBorders(range, borders)` (async) :id=fn-updateBorders
+> Updates borders for a range
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range whose borders should be updated, sheetId not required
+`borders`|Object|-|Border styles
+`borders.top`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Top border style
+`borders.bottom`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Bottom border style
+`borders.left`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Left border style
+`borders.right`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Right border style
+`borders.innerHorizontal`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Inner horizontal border style
+`borders.innerVertical`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Inner vertical border style
+
+- ✨ **Side effects** - borders are updated on the sheet
+
 
 ### Exports
 

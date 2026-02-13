@@ -1011,4 +1011,117 @@ describe('Managing doc info and sheets', () => {
       // In theory could be the same order, but very unlikely with 5 items
     });
   });
+
+  describe('named ranges - convenience methods', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+    let namedRangeId: string;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Named ranges test ${+new Date()}`,
+        headerValues: ['a', 'b'],
+      });
+      await sheet.addRows([
+        { a: '1', b: '2' },
+        { a: '3', b: '4' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can add a named range using worksheet convenience method', async () => {
+      const result = await sheet.addNamedRange('TestRange', {
+        startRowIndex: 0,
+        endRowIndex: 2,
+        startColumnIndex: 0,
+        endColumnIndex: 2,
+      });
+      expect(result).toBeTruthy();
+      namedRangeId = result.namedRange.namedRangeId;
+    });
+
+    it('can update a named range', async () => {
+      await sheet.updateNamedRange(
+        namedRangeId,
+        { name: 'UpdatedTestRange' },
+        'name'
+      );
+    });
+
+    it('can delete a named range using worksheet convenience method', async () => {
+      await sheet.deleteNamedRange(namedRangeId);
+    });
+  });
+
+  describe('basic filter - convenience methods', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Basic filter test ${+new Date()}`,
+        headerValues: ['name', 'age'],
+      });
+      await sheet.addRows([
+        { name: 'Alice', age: 25 },
+        { name: 'Bob', age: 30 },
+        { name: 'Charlie', age: 35 },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can set a basic filter', async () => {
+      await sheet.setBasicFilter({
+        range: {
+          startRowIndex: 0,
+          endRowIndex: 4,
+          startColumnIndex: 0,
+          endColumnIndex: 2,
+        },
+      });
+    });
+
+    it('can clear a basic filter', async () => {
+      await sheet.clearBasicFilter();
+    });
+  });
+
+  describe('borders - convenience methods', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Borders test ${+new Date()}`,
+        headerValues: ['a', 'b'],
+      });
+      await sheet.addRows([
+        { a: '1', b: '2' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can update borders', async () => {
+      await sheet.updateBorders(
+        {
+          startRowIndex: 0,
+          endRowIndex: 2,
+          startColumnIndex: 0,
+          endColumnIndex: 2,
+        },
+        {
+          top: { style: 'SOLID', width: 1, color: { red: 0, green: 0, blue: 0 } },
+          bottom: { style: 'SOLID', width: 1, color: { red: 0, green: 0, blue: 0 } },
+          left: { style: 'SOLID', width: 1, color: { red: 0, green: 0, blue: 0 } },
+          right: { style: 'SOLID', width: 1, color: { red: 0, green: 0, blue: 0 } },
+        }
+      );
+    });
+  });
 });
