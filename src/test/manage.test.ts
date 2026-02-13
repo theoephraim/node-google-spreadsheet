@@ -608,4 +608,407 @@ describe('Managing doc info and sheets', () => {
       expect(updatedSheet.columnCount).toEqual(initialColumnCount + columnsToAppend);
     });
   });
+
+  describe('textToColumns - split delimited text into columns', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Text to columns test ${+new Date()}`,
+        headerValues: ['data', 'other'],
+        gridProperties: { rowCount: 10, columnCount: 10 },
+      });
+      // Add some comma-separated data in column A
+      await sheet.addRows([
+        { data: 'a,b,c', other: 'x' },
+        { data: 'd,e,f', other: 'y' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can split comma-delimited text into multiple columns', async () => {
+      await sheet.textToColumns(
+        {
+          startColumnIndex: 0, endColumnIndex: 1, startRowIndex: 1, endRowIndex: 3,
+        },
+        'COMMA'
+      );
+
+      await sheet.loadCells('A2:C3');
+      expect(sheet.getCellByA1('A2').value).toEqual('a');
+      expect(sheet.getCellByA1('B2').value).toEqual('b');
+      expect(sheet.getCellByA1('C2').value).toEqual('c');
+      expect(sheet.getCellByA1('A3').value).toEqual('d');
+      expect(sheet.getCellByA1('B3').value).toEqual('e');
+      expect(sheet.getCellByA1('C3').value).toEqual('f');
+    });
+  });
+
+  describe('deleteRange - delete cells and shift remaining', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Delete range test ${+new Date()}`,
+        headerValues: ['a', 'b', 'c'],
+      });
+      await sheet.addRows([
+        { a: '1', b: '2', c: '3' },
+        { a: '4', b: '5', c: '6' },
+        { a: '7', b: '8', c: '9' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can delete a range and shift cells up', async () => {
+      await sheet.deleteRange(
+        {
+          startRowIndex: 2, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: 3,
+        },
+        'ROWS'
+      );
+
+      const rows = await sheet.getRows<{ a: string, b: string, c: string }>();
+      expect(rows.length).toEqual(2);
+      expect(rows[0].get('a')).toEqual('1');
+      expect(rows[1].get('a')).toEqual('7');
+    });
+  });
+
+  describe('deleteDimension - delete rows or columns', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Delete dimension test ${+new Date()}`,
+        headerValues: ['a', 'b', 'c'],
+      });
+      await sheet.addRows([
+        { a: '1', b: '2', c: '3' },
+        { a: '4', b: '5', c: '6' },
+        { a: '7', b: '8', c: '9' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can delete rows', async () => {
+      await sheet.deleteDimension('ROWS', { startIndex: 2, endIndex: 3 });
+
+      const rows = await sheet.getRows<{ a: string, b: string, c: string }>();
+      expect(rows.length).toEqual(2);
+      expect(rows[0].get('a')).toEqual('1');
+      expect(rows[1].get('a')).toEqual('7');
+    });
+  });
+
+  describe('moveDimension - move rows or columns', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Move dimension test ${+new Date()}`,
+        headerValues: ['a', 'b', 'c'],
+      });
+      await sheet.addRows([
+        { a: '1', b: '2', c: '3' },
+        { a: '4', b: '5', c: '6' },
+        { a: '7', b: '8', c: '9' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can move rows to a different position', async () => {
+      // Move row at index 1 (first data row) to after row at index 3
+      await sheet.moveDimension('ROWS', { startIndex: 1, endIndex: 2 }, 4);
+
+      const rows = await sheet.getRows<{ a: string, b: string, c: string }>();
+      expect(rows[0].get('a')).toEqual('4');
+      expect(rows[1].get('a')).toEqual('7');
+      expect(rows[2].get('a')).toEqual('1');
+    });
+  });
+
+  describe('sortRange - sort data in a range', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Sort range test ${+new Date()}`,
+        headerValues: ['name', 'age'],
+      });
+      await sheet.addRows([
+        { name: 'Charlie', age: 30 },
+        { name: 'Alice', age: 25 },
+        { name: 'Bob', age: 35 },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can sort a range by column', async () => {
+      await sheet.sortRange(
+        {
+          startRowIndex: 1, endRowIndex: 4, startColumnIndex: 0, endColumnIndex: 2,
+        },
+        [{ dimensionIndex: 0, sortOrder: 'ASCENDING' }]
+      );
+
+      const rows = await sheet.getRows<{ name: string, age: string }>();
+      expect(rows[0].get('name')).toEqual('Alice');
+      expect(rows[1].get('name')).toEqual('Bob');
+      expect(rows[2].get('name')).toEqual('Charlie');
+    });
+  });
+
+  describe('trimWhitespace - remove leading/trailing spaces', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Trim whitespace test ${+new Date()}`,
+        headerValues: ['text'],
+      });
+      await sheet.addRows([
+        { text: '  hello  ' },
+        { text: '  world  ' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can trim whitespace from cells', async () => {
+      await sheet.trimWhitespace({
+        startRowIndex: 1, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: 1,
+      });
+
+      const rows = await sheet.getRows<{ text: string }>();
+      expect(rows[0].get('text')).toEqual('hello');
+      expect(rows[1].get('text')).toEqual('world');
+    });
+  });
+
+  describe('deleteDuplicates - remove duplicate rows', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Delete duplicates test ${+new Date()}`,
+        headerValues: ['name', 'city'],
+      });
+      await sheet.addRows([
+        { name: 'Alice', city: 'NYC' },
+        { name: 'Bob', city: 'LA' },
+        { name: 'Alice', city: 'NYC' },
+        { name: 'Charlie', city: 'Chicago' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can remove duplicate rows', async () => {
+      await sheet.deleteDuplicates({
+        startRowIndex: 1, endRowIndex: 5, startColumnIndex: 0, endColumnIndex: 2,
+      });
+
+      const rows = await sheet.getRows<{ name: string, city: string }>();
+      expect(rows.length).toEqual(3);
+      expect(rows[0].get('name')).toEqual('Alice');
+      expect(rows[1].get('name')).toEqual('Bob');
+      expect(rows[2].get('name')).toEqual('Charlie');
+    });
+  });
+
+  describe('copyPaste - copy and paste cells', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Copy paste test ${+new Date()}`,
+        headerValues: ['a', 'b', 'c', 'd'],
+      });
+      await sheet.addRows([
+        {
+          a: '1', b: '2', c: '', d: '',
+        },
+        {
+          a: '3', b: '4', c: '', d: '',
+        },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can copy and paste a range', async () => {
+      await sheet.copyPaste(
+        {
+          startRowIndex: 1, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: 2,
+        },
+        {
+          startRowIndex: 1, endRowIndex: 3, startColumnIndex: 2, endColumnIndex: 4,
+        }
+      );
+
+      await sheet.loadCells('A2:D3');
+      expect(sheet.getCellByA1('C2').value).toEqual('1');
+      expect(sheet.getCellByA1('D2').value).toEqual('2');
+      expect(sheet.getCellByA1('C3').value).toEqual('3');
+      expect(sheet.getCellByA1('D3').value).toEqual('4');
+    });
+  });
+
+  describe('cutPaste - cut and paste cells', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Cut paste test ${+new Date()}`,
+        headerValues: ['a', 'b', 'c'],
+      });
+      await sheet.addRows([
+        { a: '1', b: '2', c: '' },
+        { a: '3', b: '4', c: '' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can cut and paste a range', async () => {
+      await sheet.cutPaste(
+        {
+          startRowIndex: 1, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: 1,
+        },
+        { rowIndex: 1, columnIndex: 2 }
+      );
+
+      await sheet.loadCells('A2:C3');
+      expect(sheet.getCellByA1('A2').value).toBeUndefined();
+      expect(sheet.getCellByA1('A3').value).toBeUndefined();
+      expect(sheet.getCellByA1('C2').value).toEqual('1');
+      expect(sheet.getCellByA1('C3').value).toEqual('3');
+    });
+  });
+
+  describe('autoFill - fill cells with pattern', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Auto fill test ${+new Date()}`,
+        headerValues: ['numbers'],
+      });
+      await sheet.addRows([
+        { numbers: 1 },
+        { numbers: 2 },
+        { numbers: '' },
+        { numbers: '' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can autofill cells based on pattern', async () => {
+      await sheet.autoFill({
+        source: {
+          startRowIndex: 1, endRowIndex: 3, startColumnIndex: 0, endColumnIndex: 1,
+        },
+        dimension: 'ROWS',
+        fillLength: 2,
+      });
+
+      const rows = await sheet.getRows<{ numbers: string }>();
+      expect(rows[0].get('numbers')).toEqual('1');
+      expect(rows[1].get('numbers')).toEqual('2');
+      expect(rows[2].get('numbers')).toEqual('3');
+      expect(rows[3].get('numbers')).toEqual('4');
+    });
+  });
+
+  describe('findReplace - find and replace text', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Find replace test ${+new Date()}`,
+        headerValues: ['text'],
+      });
+      await sheet.addRows([
+        { text: 'hello world' },
+        { text: 'hello there' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can find and replace text in cells', async () => {
+      await sheet.findReplace('hello', 'hi');
+
+      const rows = await sheet.getRows<{ text: string }>();
+      expect(rows[0].get('text')).toEqual('hi world');
+      expect(rows[1].get('text')).toEqual('hi there');
+    });
+  });
+
+  describe('randomizeRange - shuffle rows', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Randomize range test ${+new Date()}`,
+        headerValues: ['number'],
+      });
+      await sheet.addRows([
+        { number: 1 },
+        { number: 2 },
+        { number: 3 },
+        { number: 4 },
+        { number: 5 },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can randomize rows in a range', async () => {
+      const rowsBefore = await sheet.getRows<{ number: string }>();
+      const valuesBefore = rowsBefore.map((r) => r.get('number'));
+
+      await sheet.randomizeRange({
+        startRowIndex: 1, endRowIndex: 6, startColumnIndex: 0, endColumnIndex: 1,
+      });
+
+      const rowsAfter = await sheet.getRows<{ number: string }>();
+      const valuesAfter = rowsAfter.map((r) => r.get('number'));
+
+      // Check that all values are still present (same set)
+      expect(valuesAfter.sort()).toEqual(valuesBefore.sort());
+      // In theory could be the same order, but very unlikely with 5 items
+    });
+  });
 });

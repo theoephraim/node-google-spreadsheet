@@ -14,6 +14,8 @@ import {
   WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId,
   DataValidationRule,
   ProtectedRange, Integer, GridCoordinateWithOptionalWorksheetId, PasteType,
+  SortSpec,
+  FilterView, ConditionalFormatRule, BandedRange, DeveloperMetadata, DataFilterObject,
 } from './types/sheets-types';
 
 
@@ -739,19 +741,60 @@ export class GoogleSpreadsheetWorksheet {
     return data.valueRanges.map((r: any) => r.values);
   }
 
-  async updateNamedRange() {
-    // Request type = `updateNamedRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateNamedRangeRequest
+  /**
+   * Updates an existing named range
+   *
+   * @param namedRangeId - ID of the named range to update
+   * @param namedRange - The named range properties to update
+   * @param fields - Field mask specifying which properties to update
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateNamedRangeRequest
+   */
+  async updateNamedRange(
+    namedRangeId: string,
+    namedRange: Partial<{ name: string, range: GridRangeWithOptionalWorksheetId }>,
+    fields: string
+  ) {
+    return this._makeSingleUpdateRequest('updateNamedRange', {
+      namedRange: {
+        namedRangeId,
+        ...namedRange.name && { name: namedRange.name },
+        ...namedRange.range && { range: this._addSheetIdToRange(namedRange.range) },
+      },
+      fields,
+    });
   }
 
-  async addNamedRange() {
-    // Request type = `addNamedRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddNamedRangeRequest
+  /**
+   * Creates a new named range in this worksheet (convenience method that auto-fills sheetId)
+   *
+   * @param name - Name of the new named range
+   * @param range - GridRange describing the range (sheetId optional, will be auto-filled)
+   * @param namedRangeId - Optional ID for the named range
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddNamedRangeRequest
+   */
+  async addNamedRange(
+    name: string,
+    range: GridRangeWithOptionalWorksheetId,
+    namedRangeId?: string
+  ) {
+    return this._spreadsheet.addNamedRange(
+      name,
+      this._addSheetIdToRange(range),
+      namedRangeId
+    );
   }
 
-  async deleteNamedRange() {
-    // Request type = `deleteNamedRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteNamedRangeRequest
+  /**
+   * Deletes a named range (convenience wrapper)
+   *
+   * @param namedRangeId - ID of the named range to delete
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteNamedRangeRequest
+   */
+  async deleteNamedRange(namedRangeId: string) {
+    return this._spreadsheet.deleteNamedRange(namedRangeId);
   }
 
   async repeatCell() {
@@ -797,24 +840,69 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async updateBorders() {
-    // Request type = `updateBorders`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateBordersRequest
+  /**
+   * Updates borders for a range
+   *
+   * @param range - The range whose borders should be updated (sheetId not required)
+   * @param borders - Border styles to apply
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateBordersRequest
+   */
+  async updateBorders(
+    range: GridRangeWithOptionalWorksheetId,
+    borders: {
+      top?: any,
+      bottom?: any,
+      left?: any,
+      right?: any,
+      innerHorizontal?: any,
+      innerVertical?: any
+    }
+  ) {
+    await this._makeSingleUpdateRequest('updateBorders', {
+      range: this._addSheetIdToRange(range),
+      ...borders,
+    });
   }
 
-  async addFilterView() {
-    // Request type = `addFilterView`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddFilterViewRequest
+  /**
+   * Adds a filter view to the sheet
+   *
+   * @param filter - The filter view to add (filterViewId is optional and will be auto-generated if not provided)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddFilterViewRequest
+   */
+  async addFilterView(filter: FilterView) {
+    await this._makeSingleUpdateRequest('addFilterView', {
+      filter,
+    });
   }
 
-  async appendCells() {
-    // Request type = `appendCells`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AppendCellsRequest
+  /**
+   * Appends cells after the last row with data in a sheet
+   *
+   * @param rows - The row data to append
+   * @param fields - Which fields to update (use "*" for all fields)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AppendCellsRequest
+   */
+  async appendCells(rows: any[], fields: string) {
+    await this._makeSingleUpdateRequest('appendCells', {
+      sheetId: this.sheetId,
+      rows,
+      fields,
+    });
   }
 
+  /**
+   * Clears the basic filter on this sheet
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#ClearBasicFilterRequest
+   */
   async clearBasicFilter() {
-    // Request type = `clearBasicFilter`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#ClearBasicFilterRequest
+    await this._makeSingleUpdateRequest('clearBasicFilter', {
+      sheetId: this.sheetId,
+    });
   }
 
   /**
@@ -874,14 +962,30 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteEmbeddedObjectRequest
   }
 
-  async deleteFilterView() {
-    // Request type = `deleteFilterView`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteFilterViewRequest
+  /**
+   * Deletes a filter view from the sheet
+   *
+   * @param filterId - The ID of the filter view to delete
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteFilterViewRequest
+   */
+  async deleteFilterView(filterId: Integer) {
+    await this._makeSingleUpdateRequest('deleteFilterView', {
+      filterId,
+    });
   }
 
-  async duplicateFilterView() {
-    // Request type = `duplicateFilterView`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DuplicateFilterViewRequest
+  /**
+   * Duplicates a filter view
+   *
+   * @param filterId - The ID of the filter view to duplicate
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DuplicateFilterViewRequest
+   */
+  async duplicateFilterView(filterId: Integer) {
+    await this._makeSingleUpdateRequest('duplicateFilterView', {
+      filterId,
+    });
   }
 
   /**
@@ -1005,9 +1109,19 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#TextToColumnsRequest
   }
 
-  async updateFilterView() {
-    // Request type = `updateFilterView`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateFilterViewRequest
+  /**
+   * Updates properties of a filter view
+   *
+   * @param filter - The new properties of the filter view
+   * @param fields - The fields that should be updated (use "*" to update all fields)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateFilterViewRequest
+   */
+  async updateFilterView(filter: FilterView, fields: string) {
+    await this._makeSingleUpdateRequest('updateFilterView', {
+      filter,
+      fields,
+    });
   }
 
   async deleteRange() {
@@ -1031,19 +1145,56 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async addConditionalFormatRule() {
-    // Request type = `addConditionalFormatRule`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddConditionalFormatRuleRequest
+  /**
+   * Adds a new conditional formatting rule at the given index
+   * All subsequent rules' indexes are incremented
+   *
+   * @param rule - The rule to add
+   * @param index - The zero-based index where the rule should be inserted
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddConditionalFormatRuleRequest
+   */
+  async addConditionalFormatRule(rule: ConditionalFormatRule, index: Integer) {
+    await this._makeSingleUpdateRequest('addConditionalFormatRule', {
+      rule,
+      index,
+    });
   }
 
-  async updateConditionalFormatRule() {
-    // Request type = `updateConditionalFormatRule`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateConditionalFormatRuleRequest
+  /**
+   * Updates a conditional format rule at the given index, or moves a conditional format rule to another index
+   *
+   * @param options - Either provide `rule` to replace the rule, or `newIndex` and `sheetId` to move it
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateConditionalFormatRuleRequest
+   */
+  async updateConditionalFormatRule(options: {
+    /** The zero-based index of the rule */
+    index: Integer;
+    /** The rule that should replace the rule at the given index (mutually exclusive with newIndex) */
+    rule?: ConditionalFormatRule;
+    /** The zero-based new index the rule should end up at (mutually exclusive with rule, requires sheetId) */
+    newIndex?: Integer;
+    /** The sheet of the rule to move (required if newIndex is set) */
+    sheetId?: WorksheetId;
+  }) {
+    await this._makeSingleUpdateRequest('updateConditionalFormatRule', options);
   }
 
-  async deleteConditionalFormatRule() {
-    // Request type = `deleteConditionalFormatRule`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteConditionalFormatRuleRequest
+  /**
+   * Deletes a conditional format rule at the given index
+   * All subsequent rules' indexes are decremented
+   *
+   * @param index - The zero-based index of the rule to be deleted
+   * @param sheetId - The sheet the rule is being deleted from (defaults to this sheet)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteConditionalFormatRuleRequest
+   */
+  async deleteConditionalFormatRule(index: Integer, sheetId?: WorksheetId) {
+    await this._makeSingleUpdateRequest('deleteConditionalFormatRule', {
+      index,
+      sheetId: sheetId ?? this.sheetId,
+    });
   }
 
   async sortRange() {
@@ -1069,9 +1220,24 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async setBasicFilter() {
-    // Request type = `setBasicFilter`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SetBasicFilterRequest
+  /**
+   * Sets the basic filter on this sheet
+   *
+   * @param filter - The basic filter configuration (range will auto-fill sheetId if not provided)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SetBasicFilterRequest
+   */
+  async setBasicFilter(filter: {
+    range?: GridRangeWithOptionalWorksheetId,
+    sortSpecs?: SortSpec[],
+    filterSpecs?: any[]
+  }) {
+    await this._makeSingleUpdateRequest('setBasicFilter', {
+      filter: {
+        ...filter,
+        ...filter.range && { range: this._addSheetIdToRange(filter.range) },
+      },
+    });
   }
 
   /**
@@ -1137,34 +1303,92 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateChartSpecRequest
   }
 
-  async updateBanding() {
-    // Request type = `updateBanding`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateBandingRequest
+  /**
+   * Updates properties of a banded range
+   *
+   * @param bandedRange - The banded range to update with the new properties
+   * @param fields - The fields that should be updated (use "*" to update all fields)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateBandingRequest
+   */
+  async updateBanding(bandedRange: BandedRange, fields: string) {
+    await this._makeSingleUpdateRequest('updateBanding', {
+      bandedRange,
+      fields,
+    });
   }
 
-  async addBanding() {
-    // Request type = `addBanding`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddBandingRequest
+  /**
+   * Adds a new banded range to the sheet
+   *
+   * @param bandedRange - The banded range to add (bandedRangeId is optional and will be auto-generated if not provided)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddBandingRequest
+   */
+  async addBanding(bandedRange: BandedRange) {
+    await this._makeSingleUpdateRequest('addBanding', {
+      bandedRange,
+    });
   }
 
-  async deleteBanding() {
-    // Request type = `deleteBanding`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteBandingRequest
+  /**
+   * Deletes a banded range from the sheet
+   *
+   * @param bandedRangeId - The ID of the banded range to delete
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteBandingRequest
+   */
+  async deleteBanding(bandedRangeId: Integer) {
+    await this._makeSingleUpdateRequest('deleteBanding', {
+      bandedRangeId,
+    });
   }
 
-  async createDeveloperMetadata() {
-    // Request type = `createDeveloperMetadata`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#CreateDeveloperMetadataRequest
+  /**
+   * Creates developer metadata
+   *
+   * @param developerMetadata - The developer metadata to create
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#CreateDeveloperMetadataRequest
+   */
+  async createDeveloperMetadata(developerMetadata: DeveloperMetadata) {
+    await this._makeSingleUpdateRequest('createDeveloperMetadata', {
+      developerMetadata,
+    });
   }
 
-  async updateDeveloperMetadata() {
-    // Request type = `updateDeveloperMetadata`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateDeveloperMetadataRequest
+  /**
+   * Updates developer metadata that matches the specified filters
+   *
+   * @param dataFilters - The filters matching the developer metadata entries to update
+   * @param developerMetadata - The value that all metadata matched by the filters will be updated to
+   * @param fields - The fields that should be updated (use "*" to update all fields)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateDeveloperMetadataRequest
+   */
+  async updateDeveloperMetadata(
+    dataFilters: DataFilterObject[],
+    developerMetadata: DeveloperMetadata,
+    fields: string
+  ) {
+    await this._makeSingleUpdateRequest('updateDeveloperMetadata', {
+      dataFilters,
+      developerMetadata,
+      fields,
+    });
   }
 
-  async deleteDeveloperMetadata() {
-    // Request type = `deleteDeveloperMetadata`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDeveloperMetadataRequest
+  /**
+   * Deletes developer metadata that matches the specified filter
+   *
+   * @param dataFilter - The filter describing the criteria used to select which developer metadata to delete
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDeveloperMetadataRequest
+   */
+  async deleteDeveloperMetadata(dataFilter: DataFilterObject) {
+    await this._makeSingleUpdateRequest('deleteDeveloperMetadata', {
+      dataFilter,
+    });
   }
 
   async randomizeRange() {

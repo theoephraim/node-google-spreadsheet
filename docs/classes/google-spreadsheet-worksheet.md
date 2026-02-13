@@ -373,6 +373,178 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - rows or columns are appended to the end of the sheet
 
+#### `deleteDimension(dimension, rangeIndexes)` (async) :id=fn-deleteDimension
+> Deletes rows or columns from a sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`dimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Whether to delete rows or columns
+`rangeIndexes`|Object|✅|
+`rangeIndexes.startIndex`|Number<br>_int >= 0_|✅|Start row/column (inclusive)
+`rangeIndexes.endIndex`|Number<br>_int >= 1_|✅|End row/column (exclusive)
+
+- ✨ **Side effects** - rows or columns are deleted from the sheet
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sheet contents
+
+#### `moveDimension(dimension, source, destinationIndex)` (async) :id=fn-moveDimension
+> Moves rows or columns to a different position within the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`dimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Whether to move rows or columns
+`source`|Object|✅|
+`source.startIndex`|Number<br>_int >= 0_|✅|Start row/column to move (inclusive)
+`source.endIndex`|Number<br>_int >= 1_|✅|End row/column to move (exclusive)
+`destinationIndex`|Number<br>_int >= 0_|✅|Where to move them (calculated before removal)
+
+- ✨ **Side effects** - rows or columns are moved to a new position
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sheet contents
+
+#### `deleteRange(range, shiftDimension)` (async) :id=fn-deleteRange
+> Deletes a range of cells and shifts remaining cells
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range of cells to delete, sheetId not required
+`shiftDimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|How remaining cells should shift (ROWS = up, COLUMNS = left)
+
+- ✨ **Side effects** - cells are deleted and remaining cells are shifted
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sheet contents
+
+#### `textToColumns(source, delimiterType, delimiter)` (async) :id=fn-textToColumns
+> Splits a column of text into multiple columns based on a delimiter
+
+Param|Type|Required|Description
+---|---|---|---
+`source`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The column to split (must span exactly one column), sheetId not required
+`delimiterType`|String (enum)<br>[DelimiterType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DelimiterType)|✅|Type of delimiter (COMMA, SEMICOLON, PERIOD, SPACE, CUSTOM, AUTODETECT)
+`delimiter`|String|-|Custom delimiter character (only used when delimiterType is CUSTOM)
+
+- ✨ **Side effects** - text in cells is split into multiple columns
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing the split data
+
+#### `sortRange(range, sortSpecs)` (async) :id=fn-sortRange
+> Sorts data in rows based on sort order per column
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to sort, sheetId not required
+`sortSpecs`|Array of [SortSpec](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#sortspec)|✅|Sort specifications (later specs used when values are equal)
+`sortSpecs[].dimensionIndex`|Number<br>_int >= 0_|✅|The column index to sort by
+`sortSpecs[].sortOrder`|String (enum)|-|ASCENDING or DESCENDING (defaults to ASCENDING)
+
+- ✨ **Side effects** - rows in the range are reordered based on sort criteria
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sorted data
+
+#### `trimWhitespace(range)` (async) :id=fn-trimWhitespace
+> Trims whitespace from the start and end of each cell's text
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range whose cells to trim, sheetId not required
+
+- ✨ **Side effects** - whitespace is removed from cell text
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing trimmed data
+
+#### `deleteDuplicates(range, comparisonColumns)` (async) :id=fn-deleteDuplicates
+> Removes duplicate rows from a range based on specified columns
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to remove duplicates from, sheetId not required
+`comparisonColumns`|Array of [DimensionRange](https://developers.google.com/sheets/api/reference/rest/v4/DimensionRange)|-|Columns to check for duplicates (if empty, all columns are used)
+
+- ✨ **Side effects** - duplicate rows are removed (first occurrence is kept)
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sheet contents
+
+#### `copyPaste(source, destination, pasteType, pasteOrientation)` (async) :id=fn-copyPaste
+> Copies data from a source range and pastes it to a destination range
+
+Param|Type|Required|Description
+---|---|---|---
+`source`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The source range to copy from, sheetId not required
+`destination`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The destination range to paste to, sheetId not required
+`pasteType`|String (enum)<br>[PasteType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteType)|-|What kind of data to paste. _defaults to `PASTE_NORMAL`_
+`pasteOrientation`|String (enum)|-|NORMAL or TRANSPOSE. _defaults to `NORMAL`_
+
+- ✨ **Side effects** - data is copied to the destination range
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing pasted data
+
+#### `cutPaste(source, destination, pasteType)` (async) :id=fn-cutPaste
+> Cuts data from a source range and pastes it to a destination coordinate
+
+Param|Type|Required|Description
+---|---|---|---
+`source`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The source range to cut from, sheetId not required
+`destination`|Object<br>[GridCoordinate](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridCoordinate)|✅|The top-left coordinate where data should be pasted, sheetId not required
+`destination.rowIndex`|Number<br>_int >= 0_|✅|The row index (0-based)
+`destination.columnIndex`|Number<br>_int >= 0_|✅|The column index (0-based)
+`pasteType`|String (enum)<br>[PasteType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteType)|-|What kind of data to paste. _defaults to `PASTE_NORMAL`_
+
+- ✨ **Side effects** - data is moved from source to destination
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing moved data
+
+#### `autoFill(rangeOrSource, useAlternateSeries)` (async) :id=fn-autoFill
+> Auto-fills cells with data following a pattern (like dragging the fill handle)
+
+Param|Type|Required|Description
+---|---|---|---
+`rangeOrSource`|Object ([GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange) or [SourceAndDestination](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SourceAndDestination))|✅|Either a range (auto-detects source) or explicit source/destination spec, sheetId not required
+`useAlternateSeries`|Boolean|-|Whether to generate data with the alternate series
+
+- ✨ **Side effects** - cells are filled with pattern-based data
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing filled data
+
+#### `repeatCell(range, cell, fields)` (async) :id=fn-repeatCell
+> Updates all cells in a range with the same cell data
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to update, sheetId not required
+`cell`|Object<br>[CellData](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#CellData)|✅|The cell data to repeat across the range
+`fields`|String (FieldMask)|✅|Which fields to update (use "*" for all fields)
+
+- ✨ **Side effects** - all cells in range are updated with the same data
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing updated data
+
+#### `appendCells(rows, fields)` (async) :id=fn-appendCells
+> Appends cells after the last row with data in a sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`rows`|Array of [RowData](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#RowData)|✅|The row data to append
+`fields`|String (FieldMask)|✅|Which fields to update (use "*" for all fields)
+
+- ✨ **Side effects** - new rows are appended to the sheet
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing appended data
+
+#### `findReplace(find, replacement, options, range)` (async) :id=fn-findReplace
+> Finds and replaces text in cells
+
+Param|Type|Required|Description
+---|---|---|---
+`find`|String|✅|The value to search for
+`replacement`|String|✅|The value to use as replacement
+`options`|Object|-|Search options
+`options.matchCase`|Boolean|-|True if the search is case sensitive
+`options.matchEntireCell`|Boolean|-|True if the find value should match the entire cell
+`options.searchByRegex`|Boolean|-|True if the find value is a regex
+`options.includeFormulas`|Boolean|-|True if the search should include cells with formulas
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|Optional range to search in (defaults to entire sheet), sheetId not required
+
+- ✨ **Side effects** - matching text is replaced in cells
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing modified data
+
+#### `randomizeRange(range)` (async) :id=fn-randomizeRange
+> Randomizes the order of rows in a range
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to randomize, sheetId not required
+
+- ✨ **Side effects** - rows in the range are shuffled randomly
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing randomized data
+
 ### Other
 
 #### `clear(a1Range)` (async) :id=fn-clear

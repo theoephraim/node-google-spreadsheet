@@ -441,6 +441,59 @@ export type PasteType =
   | 'PASTE_CONDITIONAL_FORMATTING';
 
 /**
+ * How pasted data should be oriented.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteOrientation
+ */
+export type PasteOrientation = 'NORMAL' | 'TRANSPOSE';
+
+/**
+ * The delimiter type for text to columns operations.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DelimiterType
+ */
+export type DelimiterType =
+  | 'DELIMITER_TYPE_UNSPECIFIED'
+  | 'COMMA'
+  | 'SEMICOLON'
+  | 'PERIOD'
+  | 'SPACE'
+  | 'CUSTOM'
+  | 'AUTODETECT';
+
+/**
+ * The order data should be sorted.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#sortorder
+ */
+export type SortOrder = 'SORT_ORDER_UNSPECIFIED' | 'ASCENDING' | 'DESCENDING';
+
+/**
+ * A sort order specification for a single column.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#sortspec
+ */
+export type SortSpec = {
+  /** The dimension (column index) to sort by */
+  dimensionIndex: Integer,
+  /** The order data should be sorted */
+  sortOrder?: SortOrder,
+  /** Background color to sort by - cells with this color are sorted to the top */
+  backgroundColorStyle?: any,
+  /** Foreground color to sort by - cells with this color are sorted to the top */
+  foregroundColorStyle?: any
+};
+
+/**
+ * Source and destination areas for autofill operations.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SourceAndDestination
+ */
+export type SourceAndDestination = {
+  /** The source range to autofill from (sheetId optional) */
+  source: GridRangeWithOptionalWorksheetId,
+  /** The dimension that data should be filled in */
+  dimension: WorksheetDimension,
+  /** The number of rows or columns to fill (positive = after, negative = before) */
+  fillLength: Integer
+};
+
+/**
  * object describing the editors of a protected range
  * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#Editors
  * */
