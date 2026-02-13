@@ -1,7 +1,7 @@
-import ky, {HTTPError, KyInstance, RetryOptions} from 'ky'; // eslint-disable-line import/no-extraneous-dependencies
+import ky, { HTTPError, KyInstance, RetryOptions } from 'ky'; // eslint-disable-line import/no-extraneous-dependencies
 import * as _ from './toolkit';
-import {GoogleSpreadsheetWorksheet} from './GoogleSpreadsheetWorksheet';
-import {getFieldMask} from './utils';
+import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
+import { getFieldMask } from './utils';
 import {
   DataFilter,
   GridRange,
@@ -12,9 +12,9 @@ import {
   WorksheetId,
   WorksheetProperties,
 } from './types/sheets-types';
-import {PermissionRoles, PermissionsList, PublicPermissionRoles} from './types/drive-types';
-import {RecursivePartial} from './types/util-types';
-import {AUTH_MODES, GoogleApiAuth} from './types/auth-types';
+import { PermissionRoles, PermissionsList, PublicPermissionRoles } from './types/drive-types';
+import { RecursivePartial } from './types/util-types';
+import { AUTH_MODES, GoogleApiAuth } from './types/auth-types';
 
 
 const SHEETS_API_BASE_URL = 'https://sheets.googleapis.com/v4/spreadsheets';

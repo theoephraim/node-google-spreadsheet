@@ -1,6 +1,6 @@
-import {describe, expect, it,} from 'vitest';
+import { describe, expect, it } from 'vitest';
 import nock from 'nock';
-import {GoogleSpreadsheet} from '../lib/GoogleSpreadsheet';
+import { GoogleSpreadsheet } from '../lib/GoogleSpreadsheet';
 
 const SPREADSHEET_ID = '123456';
 const SPREADSHEET_URI_PART = `/${SPREADSHEET_ID}/`;
