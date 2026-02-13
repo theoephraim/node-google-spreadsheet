@@ -413,6 +413,41 @@ export type GridRangeWithOptionalWorksheetId = MakeOptional<GridRange, 'sheetId'
 export type DataFilter = A1Range | GridRange;
 export type DataFilterWithoutWorksheetId = A1Range | GridRangeWithoutWorksheetId;
 
+/**
+ * object describing the editors of a protected range
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#Editors
+ * */
+export type Editors = {
+  /** The email addresses of users with edit access to the protected range. */
+  users?: string[],
+  /** The email addresses of groups with edit access to the protected range. */
+  groups?: string[],
+  /** True if anyone in the document's domain has edit access to the protected range. */
+  domainUsersCanEdit?: boolean
+};
+
+/**
+ * object describing a protected range in a sheet
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ProtectedRange
+ * */
+export type ProtectedRange = {
+  /** The ID of the protected range - read-only, auto-assigned */
+  protectedRangeId?: Integer,
+  /** The range that is being protected - mutually exclusive with namedRangeId */
+  range?: GridRange,
+  /** The named range this protected range is backed by - mutually exclusive with range */
+  namedRangeId?: NamedRangeId,
+  /** The description of this protected range */
+  description?: string,
+  /** True if this protected range will show a warning when editing. When true, editors is ignored. */
+  warningOnly?: boolean,
+  /** True if the user who requested this protected range can edit the protected area - read-only */
+  requestingUserCanEdit?: boolean,
+  /** The list of unprotected ranges within a protected sheet. Only supported on protected sheets. */
+  unprotectedRanges?: GridRange[],
+  /** The users and groups with edit access to the protected range. Not supported with warningOnly. */
+  editors?: Editors
+};
 
 /** @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#colorstyle */
 export type ColorStyle = { rgbColor: Color } | { themeColor: ThemeColorType };

@@ -182,6 +182,30 @@ describe('Managing doc info and sheets', () => {
       expect(sheet.rowCount).toBe(77);
     });
 
+    it('can freeze and unfreeze rows and columns', async () => {
+      await sheet.updateGridProperties({
+        frozenRowCount: 2,
+        frozenColumnCount: 1,
+      });
+      expect(sheet.gridProperties.frozenRowCount).toBe(2);
+      expect(sheet.gridProperties.frozenColumnCount).toBe(1);
+
+      // unfreeze
+      await sheet.updateGridProperties({
+        frozenRowCount: 0,
+        frozenColumnCount: 0,
+      });
+      // Google API omits 0/default values from responses, so these come back as undefined
+      expect(sheet.gridProperties.frozenRowCount).toBeFalsy();
+      expect(sheet.gridProperties.frozenColumnCount).toBeFalsy();
+
+      // verify it persisted
+      sheet.resetLocalCache();
+      await doc.loadInfo();
+      expect(sheet.gridProperties.frozenRowCount).toBeFalsy();
+      expect(sheet.gridProperties.frozenColumnCount).toBeFalsy();
+    });
+
     it('can clear sheet data', async () => {
       await sheet.setHeaderRow(['some', 'data', 'to', 'clear']);
       await sheet.loadCells();
@@ -389,6 +413,179 @@ describe('Managing doc info and sheets', () => {
       expect(rows[2].get('b')).toBeUndefined();
       expect(rows[3].get('a')).toEqual('a2');
       expect(rows[3].get('b')).toEqual('b2');
+    });
+  });
+
+  describe('autoResizeDimensions - auto-resize columns/rows to fit content', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Auto resize test ${+new Date()}`,
+        headerValues: ['short', 'a much longer column header value'],
+      });
+    });
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can auto-resize all columns', async () => {
+      await sheet.autoResizeDimensions('COLUMNS');
+    });
+
+    it('can auto-resize a specific range of columns', async () => {
+      await sheet.autoResizeDimensions('COLUMNS', {
+        startIndex: 0,
+        endIndex: 1,
+      });
+    });
+  });
+
+  describe('insertRange - inserting empty cells into a range', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Insert range test ${+new Date()}`,
+        headerValues: ['a', 'b'],
+      });
+      await sheet.addRows([
+        { a: 'a1', b: 'b1' },
+        { a: 'a2', b: 'b2' },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('should insert empty cells and shift rows down', async () => {
+      // insert 2 empty rows in column A only, between the first and second data rows
+      await sheet.insertRange({
+        startRowIndex: 2,
+        endRowIndex: 4,
+        startColumnIndex: 0,
+        endColumnIndex: 1,
+      }, 'ROWS');
+
+      // reload and check
+      await sheet.loadCells();
+      // row 1 (index 1) should still have a1
+      expect(sheet.getCell(1, 0).value).toEqual('a1');
+      // rows 2-3 should be empty in column A
+      expect(sheet.getCell(2, 0).value).toBeNull();
+      expect(sheet.getCell(3, 0).value).toBeNull();
+      // row 4 column A should have a2 (shifted down)
+      expect(sheet.getCell(4, 0).value).toEqual('a2');
+      // column B should be unaffected - b1 and b2 still in rows 1-2
+      expect(sheet.getCell(1, 1).value).toEqual('b1');
+      expect(sheet.getCell(2, 1).value).toEqual('b2');
+    });
+  });
+
+  describe('named ranges', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Named range test ${+new Date()}`,
+      });
+    });
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('can add and delete a named range', async () => {
+      const result = await doc.addNamedRange('testRange', {
+        sheetId: sheet.sheetId,
+        startRowIndex: 0,
+        endRowIndex: 5,
+        startColumnIndex: 0,
+        endColumnIndex: 3,
+      });
+      expect(result).toBeTruthy();
+      const namedRangeId = result.namedRange?.namedRangeId;
+      expect(namedRangeId).toBeTruthy();
+
+      // clean up
+      await doc.deleteNamedRange(namedRangeId);
+    });
+  });
+
+  describe('permissions', () => {
+    let newDoc: GoogleSpreadsheet;
+
+    beforeAll(async () => {
+      newDoc = await GoogleSpreadsheet.createNewSpreadsheetDocument(
+        testServiceAccountAuth,
+        { title: `Permission test ${+new Date()}` }
+      );
+    });
+    afterAll(async () => {
+      await newDoc.delete();
+    });
+
+    it('can delete a permission', async () => {
+      // make doc public so we have a permission to delete
+      await newDoc.setPublicAccessLevel('reader');
+
+      const permissions = await newDoc.listPermissions();
+      const publicPerm = permissions.find((p) => p.type === 'anyone');
+      expect(publicPerm).toBeTruthy();
+
+      await newDoc.deletePermission(publicPerm!.id);
+
+      // verify it's gone
+      const permissionsAfter = await newDoc.listPermissions();
+      const found = permissionsAfter.find((p) => p.type === 'anyone');
+      expect(found).toBeFalsy();
+    });
+  });
+
+  describe('protected ranges', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+    let protectedRangeId: number;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Protected range test ${+new Date()}`,
+      });
+    });
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('throws when adding without range or namedRangeId', async () => {
+      await expect(sheet.addProtectedRange({
+        description: 'should fail',
+      })).rejects.toThrow('No range specified');
+    });
+
+    it('can add a protected range', async () => {
+      const result = await sheet.addProtectedRange({
+        range: {
+          sheetId: sheet.sheetId,
+          startRowIndex: 0,
+          endRowIndex: 5,
+          startColumnIndex: 0,
+          endColumnIndex: 3,
+        },
+        description: 'test protected range',
+        warningOnly: true,
+      });
+      expect(result).toBeTruthy();
+      protectedRangeId = result.protectedRange.protectedRangeId;
+      expect(protectedRangeId).toBeTruthy();
+    });
+
+    it('can update a protected range', async () => {
+      await sheet.updateProtectedRange(protectedRangeId, {
+        description: 'updated description',
+      });
+    });
+
+    it('can delete a protected range', async () => {
+      await sheet.deleteProtectedRange(protectedRangeId);
     });
   });
 });

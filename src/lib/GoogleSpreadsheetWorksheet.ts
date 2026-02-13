@@ -13,6 +13,7 @@ import {
   RowIndex, ColumnIndex, DataFilterWithoutWorksheetId, DataFilter, GetValuesRequestOptions, WorksheetGridProperties,
   WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId,
   DataValidationRule,
+  ProtectedRange, Integer,
 } from './types/sheets-types';
 
 
@@ -29,6 +30,7 @@ export class GoogleSpreadsheetWorksheet {
   private _cells: GoogleSpreadsheetCell[][] = [];
   private _rowMetadata: any[] = [];
   private _columnMetadata: any[] = [];
+  private _protectedRanges: ProtectedRange[] | null = null;
 
   private _headerValues: string[] | undefined;
   get headerValues() {
@@ -42,7 +44,8 @@ export class GoogleSpreadsheetWorksheet {
     /** parent GoogleSpreadsheet instance */
     readonly _spreadsheet: GoogleSpreadsheet,
     rawProperties: WorksheetProperties,
-    rawCellData?: CellDataRange[]
+    rawCellData?: CellDataRange[],
+    protectedRanges?: ProtectedRange[]
   ) {
     this._headerRowIndex = 1;
 
@@ -53,15 +56,17 @@ export class GoogleSpreadsheetWorksheet {
 
     this._rowMetadata = []; // 1d sparse array
     this._columnMetadata = [];
+    if (protectedRanges) this._protectedRanges = protectedRanges;
 
     if (rawCellData) this._fillCellData(rawCellData);
   }
 
   // INTERNAL UTILITY FUNCTIONS ////////////////////////////////////////////////////////////////////
 
-  updateRawData(properties: WorksheetProperties, rawCellData: CellDataRange[]) {
+  updateRawData(properties: WorksheetProperties, rawCellData: CellDataRange[], protectedRanges?: ProtectedRange[]) {
     this._rawProperties = properties;
     this._fillCellData(rawCellData);
+    if (protectedRanges) this._protectedRanges = protectedRanges;
   }
 
   async _makeSingleUpdateRequest(requestType: string, requestParams: any) {
@@ -166,6 +171,7 @@ export class GoogleSpreadsheetWorksheet {
   get hidden() { return this._getProp('hidden'); }
   get tabColor() { return this._getProp('tabColor'); }
   get rightToLeft() { return this._getProp('rightToLeft'); }
+  get protectedRanges() { return this._protectedRanges; }
   private get _headerRange() {
     return `A${this._headerRowIndex}:${this.lastColumnLetter}${this._headerRowIndex}`;
   }
@@ -788,9 +794,20 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async insertRange() {
-    // Request type = `insertRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#InsertRangeRequest
+  /**
+   * insert empty cells in a range, shifting existing cells in the specified direction
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#InsertRangeRequest
+   */
+  async insertRange(
+    /** the range to insert new cells into */
+    range: GridRangeWithOptionalWorksheetId,
+    /** which direction to shift existing cells - ROWS (shift down) or COLUMNS (shift right) */
+    shiftDimension: WorksheetDimension
+  ) {
+    return this._makeSingleUpdateRequest('insertRange', {
+      range: this._addSheetIdToRange(range),
+      shiftDimension,
+    });
   }
 
   async moveDimension() {
@@ -871,24 +888,57 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SetBasicFilterRequest
   }
 
-  async addProtectedRange() {
-    // Request type = `addProtectedRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddProtectedRangeRequest
+  /**
+   * add a new protected range to the sheet
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddProtectedRangeRequest
+   */
+  async addProtectedRange(protectedRange: ProtectedRange) {
+    if (!protectedRange.range && !protectedRange.namedRangeId) {
+      throw new Error('No range specified: either range or namedRangeId is required');
+    }
+    return this._makeSingleUpdateRequest('addProtectedRange', {
+      protectedRange,
+    });
   }
 
-  async updateProtectedRange() {
-    // Request type = `updateProtectedRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateProtectedRangeRequest
+  /**
+   * update an existing protected range
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateProtectedRangeRequest
+   */
+  async updateProtectedRange(protectedRangeId: Integer, protectedRange: Partial<ProtectedRange>) {
+    return this._makeSingleUpdateRequest('updateProtectedRange', {
+      protectedRange: { protectedRangeId, ...protectedRange },
+      fields: getFieldMask(protectedRange as Record<string, unknown>),
+    });
   }
 
-  async deleteProtectedRange() {
-    // Request type = `deleteProtectedRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteProtectedRangeRequest
+  /**
+   * delete a protected range by ID
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteProtectedRangeRequest
+   */
+  async deleteProtectedRange(protectedRangeId: Integer) {
+    return this._makeSingleUpdateRequest('deleteProtectedRange', {
+      protectedRangeId,
+    });
   }
 
-  async autoResizeDimensions() {
-    // Request type = `autoResizeDimensions`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AutoResizeDimensionsRequest
+  /**
+   * auto-resize rows or columns to fit their contents
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AutoResizeDimensionsRequest
+   */
+  async autoResizeDimensions(
+    /** which dimension to auto-resize */
+    columnsOrRows: WorksheetDimension,
+    /** start and end indexes (optional, defaults to all) */
+    rangeIndexes?: DimensionRangeIndexes
+  ) {
+    return this._makeSingleUpdateRequest('autoResizeDimensions', {
+      dimensions: {
+        sheetId: this.sheetId,
+        dimension: columnsOrRows,
+        ...rangeIndexes,
+      },
+    });
   }
 
   async addChart() {

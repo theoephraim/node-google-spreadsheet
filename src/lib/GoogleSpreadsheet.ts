@@ -3,7 +3,8 @@ import * as _ from './toolkit';
 import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
 import { getFieldMask } from './utils';
 import {
-  DataFilter, GridRange, NamedRangeId, SpreadsheetId, SpreadsheetProperties, WorksheetId, WorksheetProperties,
+  DataFilter, GridRange, NamedRangeId, ProtectedRange,
+  SpreadsheetId, SpreadsheetProperties, WorksheetId, WorksheetProperties,
 } from './types/sheets-types';
 import { PermissionRoles, PermissionsList, PublicPermissionRoles } from './types/drive-types';
 import { RecursivePartial } from './types/util-types';
@@ -144,7 +145,7 @@ export class GoogleSpreadsheet {
   // INTERNAL UTILITY FUNCTIONS ////////////////////////////////////////////////////////////////////
 
   /** @internal */
-  async _setAuthRequestHook(req: Request) {
+  async _setAuthRequestHook(req: Request): Promise<Request> {
     const authConfig = await getRequestAuthConfig(this.auth);
     if (authConfig.headers) {
       Object.entries(authConfig.headers).forEach(([key, val]) => {
@@ -240,13 +241,13 @@ export class GoogleSpreadsheet {
   _updateRawProperties(newProperties: SpreadsheetProperties) { this._rawProperties = newProperties; }
 
   /** @internal */
-  _updateOrCreateSheet(sheetInfo: { properties: WorksheetProperties, data: any }) {
-    const { properties, data } = sheetInfo;
+  _updateOrCreateSheet(sheetInfo: { properties: WorksheetProperties, data: any, protectedRanges?: ProtectedRange[] }) {
+    const { properties, data, protectedRanges } = sheetInfo;
     const { sheetId } = properties;
     if (!this._rawSheets[sheetId]) {
-      this._rawSheets[sheetId] = new GoogleSpreadsheetWorksheet(this, properties, data);
+      this._rawSheets[sheetId] = new GoogleSpreadsheetWorksheet(this, properties, data, protectedRanges);
     } else {
-      this._rawSheets[sheetId].updateRawData(properties, data);
+      this._rawSheets[sheetId].updateRawData(properties, data, protectedRanges);
     }
   }
 
@@ -368,9 +369,11 @@ export class GoogleSpreadsheet {
   ) {
     // TODO: add named range to local cache
     return this._makeSingleUpdateRequest('addNamedRange', {
-      name,
-      namedRangeId,
-      range,
+      namedRange: {
+        name,
+        namedRangeId,
+        range,
+      },
     });
   }
 
@@ -618,6 +621,14 @@ export class GoogleSpreadsheet {
     });
 
     return shareReq.json();
+  }
+
+  /**
+   * delete a permission by its ID
+   * @see https://developers.google.com/drive/api/v3/reference/permissions/delete
+   */
+  async deletePermission(permissionId: string) {
+    await this.driveApi.delete(`permissions/${permissionId}`);
   }
 
   //

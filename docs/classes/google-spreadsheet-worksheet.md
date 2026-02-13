@@ -289,6 +289,29 @@ Param|Type|Required|Description
 - ✨ **Side effects** - new row(s) or column(s) are inserted into the sheet
 - 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to make any updates to sheet contents
 
+#### `insertRange(range, shiftDimension)` (async) :id=fn-insertRange
+> Insert empty cells in a range, shifting existing cells in the specified direction
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to insert new cells into, sheetId not required
+`shiftDimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Which direction to shift existing cells - ROWS shifts down, COLUMNS shifts right
+
+- ✨ **Side effects** - new empty cells are inserted and existing cells are shifted
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to make any updates to sheet contents
+
+#### `autoResizeDimensions(columnsOrRows, rangeIndexes?)` (async) :id=fn-autoResizeDimensions
+> Auto-resize rows or columns to fit their contents (equivalent to "Fit to data" in the UI)
+
+Param|Type|Required|Description
+---|---|---|---
+`columnsOrRows`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Which dimension to auto-resize
+`rangeIndexes`|Object|-|Optional start/end indexes to limit which rows/columns are resized
+`rangeIndexes.startIndex`|Number<br>_int >= 0_|-|Start row/column (inclusive)
+`rangeIndexes.endIndex`|Number<br>_int >= 1_|-|End row/column (exclusive)
+
+- ✨ **Side effects** - rows or columns are resized to fit their content
+
 ### Other
 
 #### `clear(a1Range)` (async) :id=fn-clear
@@ -341,6 +364,40 @@ Param|Type|Required|Description
 ---|---|---|---
 `range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|Range of cells to apply the rule to, sheetId not required!
 `rule`|Object<br>[DataValidationRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#DataValidationRule)<br>or `false`|✅|Object describing the validation rule<br/>Or `false` to unset the rule
+
+
+### Protected Ranges
+
+#### `protectedRanges` :id=prop-protectedRanges
+> The list of protected ranges on this sheet, populated after calling `loadInfo()`
+
+- ↩️ **Returns** - Array of [ProtectedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ProtectedRange) objects, or `null` if not yet loaded
+
+#### `addProtectedRange(protectedRange)` (async) :id=fn-addProtectedRange
+> Add a new protected range to the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`protectedRange`|Object<br>[ProtectedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ProtectedRange)|✅|The protected range to add. Must include either `range` or `namedRangeId`. The `protectedRangeId` field is optional; if not set, an ID will be auto-generated.
+
+- ↩️ **Returns** - response from the API including the created protected range
+
+#### `updateProtectedRange(protectedRangeId, protectedRange)` (async) :id=fn-updateProtectedRange
+> Update an existing protected range
+
+Param|Type|Required|Description
+---|---|---|---
+`protectedRangeId`|Number|✅|ID of the protected range to update
+`protectedRange`|Object<br>Partial [ProtectedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ProtectedRange)|✅|The properties to update (field mask is auto-generated)
+
+- ↩️ **Returns** - response from the API including the updated protected range
+
+#### `deleteProtectedRange(protectedRangeId)` (async) :id=fn-deleteProtectedRange
+> Delete a protected range by ID
+
+Param|Type|Required|Description
+---|---|---|---
+`protectedRangeId`|Number|✅|ID of the protected range to delete
 
 
 ### Exports

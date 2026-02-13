@@ -28,7 +28,7 @@ Full docs available at [https://theoephraim.github.io/node-google-spreadsheet](h
 
 ---
 
-> 🌈 **Installation** - `pnpm i google-spreadsheet`<br/>(or `npm i google-spreadsheet --save` or `yarn add google-spreadsheet`)
+> 🌈 **Installation** - `npm i google-spreadsheet`<br/>(or `pnpm`/`yarn`/`bun`/etc...)
 
 ## Examples
 
