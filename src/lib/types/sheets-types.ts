@@ -196,19 +196,19 @@ export type DimensionRangeIndexes = {
 
 /** @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata.DeveloperMetadataLocation */
 export interface DeveloperMetadataLocation {
-  sheetId: number;
-  spreadsheet: boolean;
-  dimensionRange: DimensionRange;
-  locationType: DeveloperMetadataLocationType;
+  sheetId?: number;
+  spreadsheet?: boolean;
+  dimensionRange?: DimensionRange;
+  locationType?: DeveloperMetadataLocationType;
 }
 
 /** @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata.DeveloperMetadataLocation */
 export interface DeveloperMetadata {
-  metadataId: number;
+  metadataId?: number;
   metadataKey: string;
-  metadataValue: string;
-  location: DeveloperMetadataLocation;
-  visibility: DeveloperMetadataVisibility;
+  metadataValue?: string;
+  location?: DeveloperMetadataLocation;
+  visibility?: DeveloperMetadataVisibility;
 }
 
 export interface WorksheetDimensionProperties {
@@ -412,6 +412,86 @@ export type GridRangeWithoutWorksheetId = Omit<GridRange, 'sheetId'>;
 export type GridRangeWithOptionalWorksheetId = MakeOptional<GridRange, 'sheetId'>;
 export type DataFilter = A1Range | GridRange;
 export type DataFilterWithoutWorksheetId = A1Range | GridRangeWithoutWorksheetId;
+
+/**
+ * A coordinate in a sheet. All indexes are zero-based.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridCoordinate
+ */
+export type GridCoordinate = {
+  /** The sheet this coordinate is on */
+  sheetId: WorksheetId,
+  /** The row index of the coordinate */
+  rowIndex: RowIndex,
+  /** The column index of the coordinate */
+  columnIndex: ColumnIndex
+};
+export type GridCoordinateWithOptionalWorksheetId = MakeOptional<GridCoordinate, 'sheetId'>;
+
+/**
+ * How a paste operation should be applied.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteType
+ */
+export type PasteType =
+  | 'PASTE_NORMAL'
+  | 'PASTE_VALUES'
+  | 'PASTE_FORMAT'
+  | 'PASTE_NO_BORDERS'
+  | 'PASTE_FORMULA'
+  | 'PASTE_DATA_VALIDATION'
+  | 'PASTE_CONDITIONAL_FORMATTING';
+
+/**
+ * How pasted data should be oriented.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteOrientation
+ */
+export type PasteOrientation = 'NORMAL' | 'TRANSPOSE';
+
+/**
+ * The delimiter type for text to columns operations.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DelimiterType
+ */
+export type DelimiterType =
+  | 'DELIMITER_TYPE_UNSPECIFIED'
+  | 'COMMA'
+  | 'SEMICOLON'
+  | 'PERIOD'
+  | 'SPACE'
+  | 'CUSTOM'
+  | 'AUTODETECT';
+
+/**
+ * The order data should be sorted.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#sortorder
+ */
+export type SortOrder = 'SORT_ORDER_UNSPECIFIED' | 'ASCENDING' | 'DESCENDING';
+
+/**
+ * A sort order specification for a single column.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#sortspec
+ */
+export type SortSpec = {
+  /** The dimension (column index) to sort by */
+  dimensionIndex: Integer,
+  /** The order data should be sorted */
+  sortOrder?: SortOrder,
+  /** Background color to sort by - cells with this color are sorted to the top */
+  backgroundColorStyle?: any,
+  /** Foreground color to sort by - cells with this color are sorted to the top */
+  foregroundColorStyle?: any
+};
+
+/**
+ * Source and destination areas for autofill operations.
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SourceAndDestination
+ */
+export type SourceAndDestination = {
+  /** The source range to autofill from (sheetId optional) */
+  source: GridRangeWithOptionalWorksheetId,
+  /** The dimension that data should be filled in */
+  dimension: WorksheetDimension,
+  /** The number of rows or columns to fill (positive = after, negative = before) */
+  fillLength: Integer
+};
 
 /**
  * object describing the editors of a protected range
@@ -645,4 +725,171 @@ export type DataValidationRule = {
   strict: boolean;
   /** True if the UI should be customized based on the kind of condition. If true, "List" conditions will show a dropdown. */
   showCustomUi: boolean;
+};
+
+/**
+ * Filtering specification for a column
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#FilterSpec
+ */
+export type FilterSpec = {
+  /** The column index */
+  columnIndex?: Integer;
+  /** The filter criteria */
+  filterCriteria?: BooleanCondition;
+  /** The reference to the data source column (for data source sheets) */
+  dataSourceColumnReference?: any;
+};
+
+/**
+ * A filter view in a sheet
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#FilterView
+ */
+export type FilterView = {
+  /** The ID of the filter view */
+  filterViewId?: Integer;
+  /** The name of the filter view */
+  title?: string;
+  /** The range this filter view covers */
+  range?: GridRange;
+  /** The named range this filter view is backed by (mutually exclusive with range) */
+  namedRangeId?: string;
+  /** The table this filter view is backed by (mutually exclusive with range) */
+  tableId?: string;
+  /** The sort order per column */
+  sortSpecs?: SortSpec[];
+  /** The criteria for showing/hiding values per column (deprecated, use filterSpecs) */
+  criteria?: Record<string, BooleanCondition>;
+  /** The filter specifications per column */
+  filterSpecs?: FilterSpec[];
+};
+
+/**
+ * A rule describing a conditional format
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ConditionalFormatRule
+ */
+export type ConditionalFormatRule = {
+  /** The ranges that are formatted if the condition is true */
+  ranges?: GridRange[];
+  /** The formatting is either 'on' or 'off' according to the rule */
+  booleanRule?: BooleanRule;
+  /** The formatting will vary based on the gradients in the rule */
+  gradientRule?: GradientRule;
+};
+
+/**
+ * A rule that may or may not match, depending on the condition
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BooleanRule
+ */
+export type BooleanRule = {
+  /** The condition of the rule */
+  condition: BooleanCondition;
+  /** The format to apply (partial format supported) */
+  format: Partial<CellFormat>;
+};
+
+/**
+ * A rule that applies a gradient color scale format
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#GradientRule
+ */
+export type GradientRule = {
+  /** The starting point for the gradient */
+  minpoint: InterpolationPoint;
+  /** The midway point for the gradient (optional) */
+  midpoint?: InterpolationPoint;
+  /** The final point for the gradient */
+  maxpoint: InterpolationPoint;
+};
+
+/**
+ * A single interpolation point on a gradient
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#InterpolationPoint
+ */
+export type InterpolationPoint = {
+  /** The color to use at this point */
+  color?: Color;
+  /** The color style to use at this point */
+  colorStyle?: ColorStyle;
+  /** How to calculate the value that this interpolation point uses */
+  type?: InterpolationPointType;
+  /** The value this interpolation point uses */
+  value?: string;
+};
+
+/**
+ * The type of interpolation point
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#interpolationpointtype
+ */
+export type InterpolationPointType = 'MIN' | 'MAX' | 'NUMBER' | 'PERCENT' | 'PERCENTILE';
+
+/**
+ * Properties for row or column bands
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandingProperties
+ */
+export type BandingProperties = {
+  /** The color of the first row/column (takes priority over band colors) */
+  headerColorStyle?: ColorStyle;
+  /** The color of the last row/column */
+  footerColorStyle?: ColorStyle;
+  /** The first color that is alternating (required) */
+  firstBandColorStyle?: ColorStyle;
+  /** The second color that is alternating (required) */
+  secondBandColorStyle?: ColorStyle;
+};
+
+/**
+ * A banded (alternating colors) range in a sheet
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandedRange
+ */
+export type BandedRange = {
+  /** The id of the banded range */
+  bandedRangeId?: Integer;
+  /** The range over which these properties are applied */
+  range?: GridRange;
+  /** Properties for row banding */
+  rowProperties?: BandingProperties;
+  /** Properties for column banding */
+  columnProperties?: BandingProperties;
+};
+
+/**
+ * Strategy for matching developer metadata locations
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/DataFilter#DeveloperMetadataLookup.DeveloperMetadataLocationMatchingStrategy
+ */
+export type DeveloperMetadataLocationMatchingStrategy =
+  | 'DEVELOPER_METADATA_LOCATION_MATCHING_STRATEGY_UNSPECIFIED'
+  | 'EXACT_LOCATION'
+  | 'INTERSECTING_LOCATION';
+
+/**
+ * Filter for matching developer metadata
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/DataFilter#DeveloperMetadataLookup
+ */
+export type DeveloperMetadataLookup = {
+  /** Determines how location matching is performed */
+  locationType?: DeveloperMetadataLocationType;
+  /** Limits the selected metadata to that which has a matching location */
+  metadataLocation?: DeveloperMetadataLocation;
+  /** Determines how location matching is done */
+  locationMatchingStrategy?: DeveloperMetadataLocationMatchingStrategy;
+  /** Limits the selected metadata to that which has a matching metadata ID */
+  metadataId?: Integer;
+  /** Limits the selected metadata to that which has a matching metadata key */
+  metadataKey?: string;
+  /** Limits the selected metadata to that which has a matching metadata value */
+  metadataValue?: string;
+  /** Limits the selected metadata to that which has a matching visibility */
+  visibility?: DeveloperMetadataVisibility;
+};
+
+/**
+ * Filter that describes what data should be selected or returned
+ * @see https://developers.google.com/sheets/api/reference/rest/v4/DataFilter
+ */
+export type DataFilterObject = {
+  /** Selects data associated with the developer metadata matching the criteria */
+  developerMetadataLookup?: DeveloperMetadataLookup;
+  /** Selects data that matches the specified A1 range */
+  a1Range?: A1Range;
+  /** Selects data that matches the range */
+  gridRange?: GridRange;
 };

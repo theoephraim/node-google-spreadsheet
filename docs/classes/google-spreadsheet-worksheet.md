@@ -348,6 +348,203 @@ Param|Type|Required|Description
 
 - ✨ **Side effects** - rows or columns are resized to fit their content
 
+#### `pasteData(coordinate, data, delimiter, type)` (async) :id=fn-pasteData
+> Inserts data into the spreadsheet starting at the specified coordinate
+
+Param|Type|Required|Description
+---|---|---|---
+`coordinate`|Object<br>[GridCoordinate](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridCoordinate)|✅|The coordinate at which the data should start being inserted, sheetId not required
+`coordinate.rowIndex`|Number<br>_int >= 0_|✅|The row index (0-based)
+`coordinate.columnIndex`|Number<br>_int >= 0_|✅|The column index (0-based)
+`data`|String|✅|The data to insert
+`delimiter`|String|✅|The delimiter in the data (e.g., ',' for CSV, '\t' for TSV)
+`type`|String (enum)<br>[PasteType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteType)|-|How the data should be pasted. _defaults to `PASTE_NORMAL`_
+
+- ✨ **Side effects** - data is inserted into the sheet at the specified coordinate
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to access the newly pasted data
+
+#### `appendDimension(dimension, length)` (async) :id=fn-appendDimension
+> Appends rows or columns to the end of a sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`dimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Whether rows or columns should be appended
+`length`|Number<br>_int >= 1_|✅|The number of rows or columns to append
+
+- ✨ **Side effects** - rows or columns are appended to the end of the sheet
+
+#### `deleteDimension(dimension, rangeIndexes)` (async) :id=fn-deleteDimension
+> Deletes rows or columns from a sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`dimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Whether to delete rows or columns
+`rangeIndexes`|Object|✅|
+`rangeIndexes.startIndex`|Number<br>_int >= 0_|✅|Start row/column (inclusive)
+`rangeIndexes.endIndex`|Number<br>_int >= 1_|✅|End row/column (exclusive)
+
+- ✨ **Side effects** - rows or columns are deleted from the sheet
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sheet contents
+
+#### `moveDimension(dimension, source, destinationIndex)` (async) :id=fn-moveDimension
+> Moves rows or columns to a different position within the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`dimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Whether to move rows or columns
+`source`|Object|✅|
+`source.startIndex`|Number<br>_int >= 0_|✅|Start row/column to move (inclusive)
+`source.endIndex`|Number<br>_int >= 1_|✅|End row/column to move (exclusive)
+`destinationIndex`|Number<br>_int >= 0_|✅|Where to move them (calculated before removal)
+
+- ✨ **Side effects** - rows or columns are moved to a new position
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sheet contents
+
+#### `deleteRange(range, shiftDimension)` (async) :id=fn-deleteRange
+> Deletes a range of cells and shifts remaining cells
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range of cells to delete, sheetId not required
+`shiftDimension`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|How remaining cells should shift (ROWS = up, COLUMNS = left)
+
+- ✨ **Side effects** - cells are deleted and remaining cells are shifted
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sheet contents
+
+#### `textToColumns(source, delimiterType, delimiter)` (async) :id=fn-textToColumns
+> Splits a column of text into multiple columns based on a delimiter
+
+Param|Type|Required|Description
+---|---|---|---
+`source`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The column to split (must span exactly one column), sheetId not required
+`delimiterType`|String (enum)<br>[DelimiterType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DelimiterType)|✅|Type of delimiter (COMMA, SEMICOLON, PERIOD, SPACE, CUSTOM, AUTODETECT)
+`delimiter`|String|-|Custom delimiter character (only used when delimiterType is CUSTOM)
+
+- ✨ **Side effects** - text in cells is split into multiple columns
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing the split data
+
+#### `sortRange(range, sortSpecs)` (async) :id=fn-sortRange
+> Sorts data in rows based on sort order per column
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to sort, sheetId not required
+`sortSpecs`|Array of [SortSpec](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#sortspec)|✅|Sort specifications (later specs used when values are equal)
+`sortSpecs[].dimensionIndex`|Number<br>_int >= 0_|✅|The column index to sort by
+`sortSpecs[].sortOrder`|String (enum)|-|ASCENDING or DESCENDING (defaults to ASCENDING)
+
+- ✨ **Side effects** - rows in the range are reordered based on sort criteria
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sorted data
+
+#### `trimWhitespace(range)` (async) :id=fn-trimWhitespace
+> Trims whitespace from the start and end of each cell's text
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range whose cells to trim, sheetId not required
+
+- ✨ **Side effects** - whitespace is removed from cell text
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing trimmed data
+
+#### `deleteDuplicates(range, comparisonColumns)` (async) :id=fn-deleteDuplicates
+> Removes duplicate rows from a range based on specified columns
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to remove duplicates from, sheetId not required
+`comparisonColumns`|Array of [DimensionRange](https://developers.google.com/sheets/api/reference/rest/v4/DimensionRange)|-|Columns to check for duplicates (if empty, all columns are used)
+
+- ✨ **Side effects** - duplicate rows are removed (first occurrence is kept)
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing sheet contents
+
+#### `copyPaste(source, destination, pasteType, pasteOrientation)` (async) :id=fn-copyPaste
+> Copies data from a source range and pastes it to a destination range
+
+Param|Type|Required|Description
+---|---|---|---
+`source`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The source range to copy from, sheetId not required
+`destination`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The destination range to paste to, sheetId not required
+`pasteType`|String (enum)<br>[PasteType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteType)|-|What kind of data to paste. _defaults to `PASTE_NORMAL`_
+`pasteOrientation`|String (enum)|-|NORMAL or TRANSPOSE. _defaults to `NORMAL`_
+
+- ✨ **Side effects** - data is copied to the destination range
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing pasted data
+
+#### `cutPaste(source, destination, pasteType)` (async) :id=fn-cutPaste
+> Cuts data from a source range and pastes it to a destination coordinate
+
+Param|Type|Required|Description
+---|---|---|---
+`source`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The source range to cut from, sheetId not required
+`destination`|Object<br>[GridCoordinate](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridCoordinate)|✅|The top-left coordinate where data should be pasted, sheetId not required
+`destination.rowIndex`|Number<br>_int >= 0_|✅|The row index (0-based)
+`destination.columnIndex`|Number<br>_int >= 0_|✅|The column index (0-based)
+`pasteType`|String (enum)<br>[PasteType](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#PasteType)|-|What kind of data to paste. _defaults to `PASTE_NORMAL`_
+
+- ✨ **Side effects** - data is moved from source to destination
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing moved data
+
+#### `autoFill(rangeOrSource, useAlternateSeries)` (async) :id=fn-autoFill
+> Auto-fills cells with data following a pattern (like dragging the fill handle)
+
+Param|Type|Required|Description
+---|---|---|---
+`rangeOrSource`|Object ([GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange) or [SourceAndDestination](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SourceAndDestination))|✅|Either a range (auto-detects source) or explicit source/destination spec, sheetId not required
+`useAlternateSeries`|Boolean|-|Whether to generate data with the alternate series
+
+- ✨ **Side effects** - cells are filled with pattern-based data
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing filled data
+
+#### `repeatCell(range, cell, fields)` (async) :id=fn-repeatCell
+> Updates all cells in a range with the same cell data
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to update, sheetId not required
+`cell`|Object<br>[CellData](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#CellData)|✅|The cell data to repeat across the range
+`fields`|String (FieldMask)|✅|Which fields to update (use "*" for all fields)
+
+- ✨ **Side effects** - all cells in range are updated with the same data
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing updated data
+
+#### `appendCells(rows, fields)` (async) :id=fn-appendCells
+> Appends cells after the last row with data in a sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`rows`|Array of [RowData](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#RowData)|✅|The row data to append
+`fields`|String (FieldMask)|✅|Which fields to update (use "*" for all fields)
+
+- ✨ **Side effects** - new rows are appended to the sheet
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing appended data
+
+#### `findReplace(find, replacement, options, range)` (async) :id=fn-findReplace
+> Finds and replaces text in cells
+
+Param|Type|Required|Description
+---|---|---|---
+`find`|String|✅|The value to search for
+`replacement`|String|✅|The value to use as replacement
+`options`|Object|-|Search options
+`options.matchCase`|Boolean|-|True if the search is case sensitive
+`options.matchEntireCell`|Boolean|-|True if the find value should match the entire cell
+`options.searchByRegex`|Boolean|-|True if the find value is a regex
+`options.includeFormulas`|Boolean|-|True if the search should include cells with formulas
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|Optional range to search in (defaults to entire sheet), sheetId not required
+
+- ✨ **Side effects** - matching text is replaced in cells
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing modified data
+
+#### `randomizeRange(range)` (async) :id=fn-randomizeRange
+> Randomizes the order of rows in a range
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range to randomize, sheetId not required
+
+- ✨ **Side effects** - rows in the range are shuffled randomly
+- 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before accessing randomized data
+
 ### Other
 
 #### `clear(a1Range)` (async) :id=fn-clear
@@ -434,6 +631,234 @@ Param|Type|Required|Description
 Param|Type|Required|Description
 ---|---|---|---
 `protectedRangeId`|Number|✅|ID of the protected range to delete
+
+### Named Ranges
+
+#### `addNamedRange(name, range, namedRangeId)` (async) :id=fn-addNamedRange
+> Create a new named range in this worksheet (convenience method that auto-fills sheetId)
+
+Param|Type|Required|Description
+---|---|---|---
+`name`|String|✅|Name of the new named range
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|Range for the named range, sheetId not required
+`namedRangeId`|String|-|Optional ID for the named range
+
+- ↩️ **Returns** - response from the API including the created named range
+- ✨ **Side effects** - named range is added to the document
+
+#### `updateNamedRange(namedRangeId, namedRange, fields)` (async) :id=fn-updateNamedRange
+> Update an existing named range
+
+Param|Type|Required|Description
+---|---|---|---
+`namedRangeId`|String|✅|ID of the named range to update
+`namedRange`|Object|-|Properties to update
+`namedRange.name`|String|-|New name for the named range
+`namedRange.range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|New range, sheetId not required
+`fields`|String (FieldMask)|✅|Which fields to update (e.g., "name", "range", or "*" for all)
+
+- ↩️ **Returns** - response from the API
+- ✨ **Side effects** - named range is updated
+
+#### `deleteNamedRange(namedRangeId)` (async) :id=fn-deleteNamedRange
+> Delete a named range (convenience wrapper)
+
+Param|Type|Required|Description
+---|---|---|---
+`namedRangeId`|String|✅|ID of the named range to delete
+
+- ✨ **Side effects** - named range is removed from the document
+
+### Filters
+
+#### `setBasicFilter(filter)` (async) :id=fn-setBasicFilter
+> Sets the basic filter on this sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`filter`|Object|-|Basic filter configuration
+`filter.range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|Range to filter, sheetId not required
+`filter.sortSpecs`|Array of [SortSpec](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#sortspec)|-|Sort specifications
+`filter.filterSpecs`|Array|-|Filter specifications per column
+
+- ✨ **Side effects** - basic filter is applied to the sheet
+
+#### `clearBasicFilter()` (async) :id=fn-clearBasicFilter
+> Clears the basic filter on this sheet
+
+- ✨ **Side effects** - basic filter is removed from the sheet
+
+### Formatting
+
+#### `updateBorders(range, borders)` (async) :id=fn-updateBorders
+> Updates borders for a range
+
+Param|Type|Required|Description
+---|---|---|---
+`range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|✅|The range whose borders should be updated, sheetId not required
+`borders`|Object|-|Border styles
+`borders.top`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Top border style
+`borders.bottom`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Bottom border style
+`borders.left`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Left border style
+`borders.right`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Right border style
+`borders.innerHorizontal`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Inner horizontal border style
+`borders.innerVertical`|Object<br>[Border](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#Border)|-|Inner vertical border style
+
+- ✨ **Side effects** - borders are updated on the sheet
+
+
+### Filter Views
+
+#### `addFilterView(filter)` (async) :id=fn-addFilterView
+> Adds a filter view to the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`filter`|Object<br>[FilterView](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#FilterView)|✅|The filter view to add
+`filter.filterViewId`|Integer|-|ID of the filter view (auto-generated if not provided)
+`filter.title`|String|-|Name of the filter view
+`filter.range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|The range covered by this filter
+`filter.sortSpecs`|Array<[SortSpec](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#SortSpec)>|-|Sort order per column
+`filter.filterSpecs`|Array<[FilterSpec](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#FilterSpec)>|-|Filter specifications per column
+
+- ✨ **Side effects** - filter view is added to the sheet
+
+#### `updateFilterView(filter, fields)` (async) :id=fn-updateFilterView
+> Updates properties of a filter view
+
+Param|Type|Required|Description
+---|---|---|---
+`filter`|Object<br>[FilterView](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#FilterView)|✅|The new properties of the filter view
+`fields`|String|✅|The fields that should be updated (use "*" to update all fields)
+
+- ✨ **Side effects** - filter view is updated
+
+#### `deleteFilterView(filterId)` (async) :id=fn-deleteFilterView
+> Deletes a filter view from the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`filterId`|Integer|✅|The ID of the filter view to delete
+
+- ✨ **Side effects** - filter view is removed from the sheet
+
+#### `duplicateFilterView(filterId)` (async) :id=fn-duplicateFilterView
+> Duplicates a filter view
+
+Param|Type|Required|Description
+---|---|---|---
+`filterId`|Integer|✅|The ID of the filter view to duplicate
+
+- ✨ **Side effects** - new filter view is created
+
+
+### Conditional Formatting
+
+#### `addConditionalFormatRule(rule, index)` (async) :id=fn-addConditionalFormatRule
+> Adds a new conditional formatting rule at the given index
+
+Param|Type|Required|Description
+---|---|---|---
+`rule`|Object<br>[ConditionalFormatRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ConditionalFormatRule)|✅|The rule to add
+`rule.ranges`|Array<[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)>|-|The ranges that are formatted if the condition is true
+`rule.booleanRule`|Object<br>[BooleanRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BooleanRule)|-|The formatting is either 'on' or 'off'
+`rule.gradientRule`|Object<br>[GradientRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#GradientRule)|-|The formatting will vary based on gradients
+`index`|Integer|✅|The zero-based index where the rule should be inserted
+
+- ✨ **Side effects** - conditional format rule is added, all subsequent rules' indexes are incremented
+
+#### `updateConditionalFormatRule(options)` (async) :id=fn-updateConditionalFormatRule
+> Updates a conditional format rule at the given index, or moves it to another index
+
+Param|Type|Required|Description
+---|---|---|---
+`options.index`|Integer|✅|The zero-based index of the rule
+`options.rule`|Object<br>[ConditionalFormatRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ConditionalFormatRule)|-|The rule to replace at the given index (mutually exclusive with newIndex)
+`options.newIndex`|Integer|-|The zero-based new index the rule should end up at (mutually exclusive with rule)
+`options.sheetId`|Integer|-|The sheet of the rule to move (required if newIndex is set)
+
+- ✨ **Side effects** - conditional format rule is updated or moved
+
+#### `deleteConditionalFormatRule(index, sheetId)` (async) :id=fn-deleteConditionalFormatRule
+> Deletes a conditional format rule at the given index
+
+Param|Type|Required|Description
+---|---|---|---
+`index`|Integer|✅|The zero-based index of the rule to be deleted
+`sheetId`|Integer|-|The sheet the rule is being deleted from (defaults to this sheet)
+
+- ✨ **Side effects** - conditional format rule is deleted, all subsequent rules' indexes are decremented
+
+
+### Banding
+
+#### `addBanding(bandedRange)` (async) :id=fn-addBanding
+> Adds a new banded range to the sheet (alternating row/column colors)
+
+Param|Type|Required|Description
+---|---|---|---
+`bandedRange`|Object<br>[BandedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandedRange)|✅|The banded range to add
+`bandedRange.bandedRangeId`|Integer|-|ID of the banded range (auto-generated if not provided)
+`bandedRange.range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|The range over which properties are applied
+`bandedRange.rowProperties`|Object<br>[BandingProperties](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandingProperties)|-|Properties for row banding
+`bandedRange.columnProperties`|Object<br>[BandingProperties](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandingProperties)|-|Properties for column banding
+
+- ✨ **Side effects** - banded range is added to the sheet
+
+#### `updateBanding(bandedRange, fields)` (async) :id=fn-updateBanding
+> Updates properties of a banded range
+
+Param|Type|Required|Description
+---|---|---|---
+`bandedRange`|Object<br>[BandedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandedRange)|✅|The banded range to update with the new properties
+`fields`|String|✅|The fields that should be updated (use "*" to update all fields)
+
+- ✨ **Side effects** - banded range is updated
+
+#### `deleteBanding(bandedRangeId)` (async) :id=fn-deleteBanding
+> Deletes a banded range from the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`bandedRangeId`|Integer|✅|The ID of the banded range to delete
+
+- ✨ **Side effects** - banded range is removed from the sheet
+
+
+### Developer Metadata
+
+#### `createDeveloperMetadata(developerMetadata)` (async) :id=fn-createDeveloperMetadata
+> Creates developer metadata
+
+Param|Type|Required|Description
+---|---|---|---
+`developerMetadata`|Object<br>[DeveloperMetadata](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata)|✅|The developer metadata to create
+`developerMetadata.metadataKey`|String|✅|The key of the metadata
+`developerMetadata.metadataValue`|String|-|The value of the metadata
+`developerMetadata.location`|Object<br>[DeveloperMetadataLocation](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata.DeveloperMetadataLocation)|-|Where the metadata is attached
+`developerMetadata.visibility`|String|-|Who can access the metadata: 'DOCUMENT' or 'PROJECT'
+
+- ✨ **Side effects** - developer metadata is created
+
+#### `updateDeveloperMetadata(dataFilters, developerMetadata, fields)` (async) :id=fn-updateDeveloperMetadata
+> Updates developer metadata that matches the specified filters
+
+Param|Type|Required|Description
+---|---|---|---
+`dataFilters`|Array<[DataFilter](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter)>|✅|The filters matching the developer metadata entries to update
+`developerMetadata`|Object<br>[DeveloperMetadata](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata)|✅|The value that all metadata matched by the filters will be updated to
+`fields`|String|✅|The fields that should be updated (use "*" to update all fields)
+
+- ✨ **Side effects** - matching developer metadata is updated
+
+#### `deleteDeveloperMetadata(dataFilter)` (async) :id=fn-deleteDeveloperMetadata
+> Deletes developer metadata that matches the specified filter
+
+Param|Type|Required|Description
+---|---|---|---
+`dataFilter`|Object<br>[DataFilter](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter)|✅|The filter describing the criteria used to select which developer metadata to delete
+
+- ✨ **Side effects** - matching developer metadata is deleted
 
 
 ### Exports

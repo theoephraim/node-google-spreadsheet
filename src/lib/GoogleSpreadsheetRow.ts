@@ -29,6 +29,16 @@ export class GoogleSpreadsheetRow<T extends Record<string, any> = Record<string,
   _updateRowNumber(newRowNumber: number) {
     this._rowNumber = newRowNumber;
   }
+
+  /**
+   * @internal
+   * Used internally to mark row as deleted.
+   * Should not be called directly.
+   */
+  _markDeleted() {
+    this._deleted = true;
+  }
+
   get a1Range() {
     return [
       this._worksheet.a1SheetName,
