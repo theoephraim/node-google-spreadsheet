@@ -685,8 +685,8 @@ export class GoogleSpreadsheetWorksheet {
   /**
    * passes through the call to updateProperties to update only the gridProperties object
    */
-  async updateGridProperties(gridProperties: WorksheetGridProperties) {
-    return this.updateProperties({ gridProperties });
+  async updateGridProperties(gridProperties: Partial<WorksheetGridProperties>) {
+    return this.updateProperties({ gridProperties: gridProperties as WorksheetGridProperties });
   }
 
   /** resize, internally just calls updateGridProperties */
