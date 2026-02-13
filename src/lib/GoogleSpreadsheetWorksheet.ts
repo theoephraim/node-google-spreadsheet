@@ -1061,6 +1061,7 @@ export class GoogleSpreadsheetWorksheet {
   async deleteEmbeddedObject() {
     // Request type = `deleteEmbeddedObject`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteEmbeddedObjectRequest
+    throw new Error('Not implemented yet');
   }
 
   /**
@@ -1224,6 +1225,7 @@ export class GoogleSpreadsheetWorksheet {
   async updateEmbeddedObjectPosition() {
     // Request type = `updateEmbeddedObjectPosition`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateEmbeddedObjectPositionRequest
+    throw new Error('Not implemented yet');
   }
 
   /**
@@ -1506,11 +1508,13 @@ export class GoogleSpreadsheetWorksheet {
   async addChart() {
     // Request type = `addChart`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddChartRequest
+    throw new Error('Not implemented yet');
   }
 
   async updateChartSpec() {
     // Request type = `updateChartSpec`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateChartSpecRequest
+    throw new Error('Not implemented yet');
   }
 
   /**
@@ -1623,16 +1627,19 @@ export class GoogleSpreadsheetWorksheet {
   async addDimensionGroup() {
     // Request type = `addDimensionGroup`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddDimensionGroupRequest
+    throw new Error('Not implemented yet');
   }
 
   async deleteDimensionGroup() {
     // Request type = `deleteDimensionGroup`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDimensionGroupRequest
+    throw new Error('Not implemented yet');
   }
 
   async updateDimensionGroup() {
     // Request type = `updateDimensionGroup`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateDimensionGroupRequest
+    throw new Error('Not implemented yet');
   }
 
   /**
@@ -1669,11 +1676,13 @@ export class GoogleSpreadsheetWorksheet {
   async addSlicer() {
     // Request type = `addSlicer`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AddSlicerRequest
+    throw new Error('Not implemented yet');
   }
 
   async updateSlicerSpec() {
     // Request type = `updateSlicerSpec`
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateSlicerSpecRequest
+    throw new Error('Not implemented yet');
   }
 
   /**
