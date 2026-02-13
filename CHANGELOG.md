@@ -1,5 +1,15 @@
 # `google-spreadsheet` changelog
 
+## 5.0.3
+
+### Patch Changes
+
+- c1db500: Implement autoResizeDimensions method to auto-resize rows or columns to fit their contents
+- c1db500: Add deletePermission method to revoke access for a user, group, or domain
+- c1db500: Implement insertRange method to insert empty cells in a range and shift existing cells
+- c1db500: Add protected range CRUD operations (addProtectedRange, updateProtectedRange, deleteProtectedRange) on worksheets
+- c1db500: Fix addNamedRange request body to correctly nest properties under namedRange key
+
 ## 5.0.2
 
 ### Patch Changes
