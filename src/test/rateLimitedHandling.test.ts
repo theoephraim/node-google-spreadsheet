@@ -54,8 +54,10 @@ describe('Rate limited handling configured with custom configuration', async () 
       }),
     },
     {
-      limit: maxRetries,
-      backoffLimit: 5,
+      retryConfig: {
+        limit: maxRetries,
+        backoffLimit: 5,
+      },
     }
   );
 
@@ -85,7 +87,9 @@ describe('Rate limited handling disabled', async () => {
       }),
     },
     {
-      limit: 0,
+      retryConfig: {
+        limit: 0,
+      },
     }
   );
 

@@ -123,10 +123,10 @@ export class GoogleSpreadsheet {
     /** authentication to use with Google Sheets API */
     auth: GoogleApiAuth,
     /**
-     * Customise the retry behavior for failed requests (e.g. rate limited requests).
-     * See the [ky documentation](https://github.com/sindresorhus/ky#retry) for details of the available options and defaults.
+     * Options for customising the library.
+     * retryConfig: see the [ky documentation](https://github.com/sindresorhus/ky#retry) for details of the available options and defaults.
      */
-    retryConfig?: RetryOptions | number
+    { retryConfig }: { retryConfig?: RetryOptions | number } = {}
   ) {
     this.spreadsheetId = spreadsheetId;
     this.auth = auth;
