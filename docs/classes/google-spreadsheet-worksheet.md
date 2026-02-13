@@ -300,6 +300,42 @@ Param|Type|Required|Description
 - ✨ **Side effects** - new empty cells are inserted and existing cells are shifted
 - 🚨 **Warning** - Does not update cached rows/cells, so be sure to reload rows/cells before trying to make any updates to sheet contents
 
+#### `deleteDimension(columnsOrRows, rangeIndexes)` (async) :id=fn-deleteDimension
+> Delete rows or columns in a given range
+
+Param|Type|Required|Description
+---|---|---|---
+`columnsOrRows`|String (enum)<br>_"COLUMNS" or "ROWS"_|✅|Which dimension to delete
+`rangeIndexes`|Object|✅|
+`rangeIndexes.startIndex`|Number<br>_int >= 0_|✅|Start row/column (inclusive)
+`rangeIndexes.endIndex`|Number<br>_int >= 1_|✅|End row/column (exclusive), must be greater than startIndex
+
+- ✨ **Side effects** - row(s) or column(s) are deleted from the sheet, cached rows and cells are automatically updated
+
+#### `deleteRows(startIndex, endIndex)` (async) :id=fn-deleteRows
+> Delete rows by index
+
+Convenience wrapper around `deleteDimension` for deleting rows.
+
+Param|Type|Required|Description
+---|---|---|---
+`startIndex`|Number<br>_int >= 0_|✅|Start row index (inclusive, 0-based)
+`endIndex`|Number<br>_int >= 1_|✅|End row index (exclusive)
+
+- ✨ **Side effects** - row(s) are deleted from the sheet, cached rows and cells are automatically updated
+
+#### `deleteColumns(startIndex, endIndex)` (async) :id=fn-deleteColumns
+> Delete columns by index
+
+Convenience wrapper around `deleteDimension` for deleting columns.
+
+Param|Type|Required|Description
+---|---|---|---
+`startIndex`|Number<br>_int >= 0_|✅|Start column index (inclusive, 0-based)
+`endIndex`|Number<br>_int >= 1_|✅|End column index (exclusive)
+
+- ✨ **Side effects** - column(s) are deleted from the sheet, cached cells are automatically updated
+
 #### `autoResizeDimensions(columnsOrRows, rangeIndexes?)` (async) :id=fn-autoResizeDimensions
 > Auto-resize rows or columns to fit their contents (equivalent to "Fit to data" in the UI)
 

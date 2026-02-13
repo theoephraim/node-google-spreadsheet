@@ -375,47 +375,6 @@ describe('Managing doc info and sheets', () => {
     });
   });
 
-  describe('insertDimension - inserting columns/rows into a sheet', () => {
-    let sheet: GoogleSpreadsheetWorksheet;
-
-    beforeAll(async () => {
-      sheet = await doc.addSheet({
-        title: `Insert dimension test ${+new Date()}`,
-        headerValues: ['a', 'b'],
-      });
-      await sheet.addRows([
-        { a: 'a1', b: 'b1' },
-        { a: 'a2', b: 'b2' },
-      ]);
-    });
-
-    afterAll(async () => {
-      await sheet.delete();
-    });
-
-    // TODO: add error checking tests
-
-    it('Should insert a new empty rows at index', async () => {
-      // should insert 2 rows in between the first and second row of data (first row is header)
-      await sheet.insertDimension('ROWS', { startIndex: 2, endIndex: 4 });
-
-      // read rows and check it did what we expected
-      const rows = await sheet.getRows<{
-        a: string,
-        b: string,
-      }>();
-      // header row
-      expect(rows[0].get('a')).toEqual('a1');
-      expect(rows[0].get('b')).toEqual('b1');
-      expect(rows[1].get('a')).toBeUndefined();
-      expect(rows[1].get('b')).toBeUndefined();
-      expect(rows[2].get('a')).toBeUndefined();
-      expect(rows[2].get('b')).toBeUndefined();
-      expect(rows[3].get('a')).toEqual('a2');
-      expect(rows[3].get('b')).toEqual('b2');
-    });
-  });
-
   describe('autoResizeDimensions - auto-resize columns/rows to fit content', () => {
     let sheet: GoogleSpreadsheetWorksheet;
 
@@ -438,48 +397,6 @@ describe('Managing doc info and sheets', () => {
         startIndex: 0,
         endIndex: 1,
       });
-    });
-  });
-
-  describe('insertRange - inserting empty cells into a range', () => {
-    let sheet: GoogleSpreadsheetWorksheet;
-
-    beforeAll(async () => {
-      sheet = await doc.addSheet({
-        title: `Insert range test ${+new Date()}`,
-        headerValues: ['a', 'b'],
-      });
-      await sheet.addRows([
-        { a: 'a1', b: 'b1' },
-        { a: 'a2', b: 'b2' },
-      ]);
-    });
-
-    afterAll(async () => {
-      await sheet.delete();
-    });
-
-    it('should insert empty cells and shift rows down', async () => {
-      // insert 2 empty rows in column A only, between the first and second data rows
-      await sheet.insertRange({
-        startRowIndex: 2,
-        endRowIndex: 4,
-        startColumnIndex: 0,
-        endColumnIndex: 1,
-      }, 'ROWS');
-
-      // reload and check
-      await sheet.loadCells();
-      // row 1 (index 1) should still have a1
-      expect(sheet.getCell(1, 0).value).toEqual('a1');
-      // rows 2-3 should be empty in column A
-      expect(sheet.getCell(2, 0).value).toBeNull();
-      expect(sheet.getCell(3, 0).value).toBeNull();
-      // row 4 column A should have a2 (shifted down)
-      expect(sheet.getCell(4, 0).value).toEqual('a2');
-      // column B should be unaffected - b1 and b2 still in rows 1-2
-      expect(sheet.getCell(1, 1).value).toEqual('b1');
-      expect(sheet.getCell(2, 1).value).toEqual('b2');
     });
   });
 

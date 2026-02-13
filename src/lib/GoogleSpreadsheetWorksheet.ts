@@ -548,6 +548,111 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
+  /**
+   * @internal
+   * Used internally to update row numbers after deleting multiple rows.
+   * Should not be called directly.
+   * */
+  _shiftRowCacheBulk(startIndex: number, endIndex: number) {
+    const numDeleted = endIndex - startIndex;
+    // Convert from 0-based indices to 1-based row numbers
+    const startRow = startIndex + 1;
+    const endRow = endIndex;
+
+    // Mark rows in the deleted range as deleted, then remove from cache
+    for (let rowNum = startRow; rowNum <= endRow; rowNum++) {
+      const row = this._rowCache[rowNum];
+      if (row) {
+        (row as any)._deleted = true; // Mark as deleted
+      }
+      delete this._rowCache[rowNum];
+    }
+
+    // Shift rows after the deleted range
+    this._rowCache.forEach((row) => {
+      if (row.rowNumber > endRow) {
+        row._updateRowNumber(row.rowNumber - numDeleted);
+      }
+    });
+  }
+
+  /**
+   * @internal
+   * Used internally to shift cell cache after deleting rows.
+   * Should not be called directly.
+   * */
+  _shiftCellCacheRows(startIndex: number, endIndex: number) {
+    const numDeleted = endIndex - startIndex;
+
+    // Mark cells in the deleted row range as deleted, then remove from cache
+    for (let rowIndex = startIndex; rowIndex < endIndex; rowIndex++) {
+      const row = this._cells[rowIndex];
+      if (row) {
+        row.forEach((cell) => {
+          if (cell) cell._markDeleted();
+        });
+      }
+      delete this._cells[rowIndex];
+    }
+
+    // Collect rows that need to be shifted
+    const rowsToShift: Array<{ oldRowIndex: number, cells: any[] }> = [];
+    for (let rowIndex = endIndex; rowIndex < this._cells.length; rowIndex++) {
+      if (this._cells[rowIndex]) {
+        rowsToShift.push({ oldRowIndex: rowIndex, cells: this._cells[rowIndex] });
+      }
+    }
+
+    // Clear old positions and update to new positions
+    rowsToShift.forEach(({ oldRowIndex, cells }) => {
+      delete this._cells[oldRowIndex];
+      const newRowIndex = oldRowIndex - numDeleted;
+      this._cells[newRowIndex] = cells;
+      // Update each cell's internal row index
+      cells.forEach((cell, colIndex) => {
+        if (cell) cell._updateIndices(newRowIndex, colIndex);
+      });
+    });
+  }
+
+  /**
+   * @internal
+   * Used internally to shift cell cache after deleting columns.
+   * Should not be called directly.
+   * */
+  _shiftCellCacheColumns(startIndex: number, endIndex: number) {
+    const numDeleted = endIndex - startIndex;
+
+    // For each row, delete cells in the deleted column range and shift remaining
+    this._cells.forEach((row, rowIndex) => {
+      if (!row) return;
+
+      // Mark cells in the deleted column range as deleted, then remove from cache
+      for (let colIndex = startIndex; colIndex < endIndex; colIndex++) {
+        const cell = row[colIndex];
+        if (cell) cell._markDeleted();
+        delete row[colIndex];
+      }
+
+      // Collect cells that need to be shifted
+      const cellsToShift: Array<{ oldColIndex: number, cell: any }> = [];
+      for (let colIndex = endIndex; colIndex < row.length; colIndex++) {
+        if (row[colIndex]) {
+          cellsToShift.push({ oldColIndex: colIndex, cell: row[colIndex] });
+        }
+      }
+
+      // Clear old positions and update to new positions
+      cellsToShift.forEach(({ oldColIndex, cell }) => {
+        delete row[oldColIndex];
+        const newColIndex = oldColIndex - numDeleted;
+        row[newColIndex] = cell;
+        // Update cell's internal column index
+        cell._updateIndices(rowIndex, newColIndex);
+      });
+    });
+  }
+
   async clearRows(
     options?: {
       start?: number,
@@ -580,8 +685,8 @@ export class GoogleSpreadsheetWorksheet {
   /**
    * passes through the call to updateProperties to update only the gridProperties object
    */
-  async updateGridProperties(gridProperties: WorksheetGridProperties) {
-    return this.updateProperties({ gridProperties });
+  async updateGridProperties(gridProperties: Partial<WorksheetGridProperties>) {
+    return this.updateProperties({ gridProperties: gridProperties as WorksheetGridProperties });
   }
 
   /** resize, internally just calls updateGridProperties */
@@ -712,9 +817,56 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#ClearBasicFilterRequest
   }
 
-  async deleteDimension() {
-    // Request type = `deleteDimension`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDimensionRequest
+  /**
+   * Delete rows or columns in a given range
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDimensionRequest
+   */
+  async deleteDimension(
+    columnsOrRows: WorksheetDimension,
+    rangeIndexes: DimensionRangeIndexes
+  ) {
+    if (!columnsOrRows) throw new Error('You need to specify a dimension. i.e. COLUMNS|ROWS');
+    if (!_.isObject(rangeIndexes)) throw new Error('`range` must be an object containing `startIndex` and `endIndex`');
+    if (!_.isInteger(rangeIndexes.startIndex) || rangeIndexes.startIndex < 0) throw new Error('range.startIndex must be an integer >=0');
+    if (!_.isInteger(rangeIndexes.endIndex) || rangeIndexes.endIndex < 0) throw new Error('range.endIndex must be an integer >=0');
+    if (rangeIndexes.endIndex <= rangeIndexes.startIndex) throw new Error('range.endIndex must be greater than range.startIndex');
+
+    const result = await this._makeSingleUpdateRequest('deleteDimension', {
+      range: {
+        sheetId: this.sheetId,
+        dimension: columnsOrRows,
+        startIndex: rangeIndexes.startIndex,
+        endIndex: rangeIndexes.endIndex,
+      },
+    });
+
+    // Update cached rows and cells
+    if (columnsOrRows === 'ROWS') {
+      this._shiftRowCacheBulk(rangeIndexes.startIndex, rangeIndexes.endIndex);
+      this._shiftCellCacheRows(rangeIndexes.startIndex, rangeIndexes.endIndex);
+    } else {
+      this._shiftCellCacheColumns(rangeIndexes.startIndex, rangeIndexes.endIndex);
+    }
+
+    return result;
+  }
+
+  /**
+   * Delete rows by index
+   * @param startIndex - the start row index (inclusive, 0-based)
+   * @param endIndex - the end row index (exclusive)
+   */
+  async deleteRows(startIndex: number, endIndex: number) {
+    return this.deleteDimension('ROWS', { startIndex, endIndex });
+  }
+
+  /**
+   * Delete columns by index
+   * @param startIndex - the start column index (inclusive, 0-based)
+   * @param endIndex - the end column index (exclusive)
+   */
+  async deleteColumns(startIndex: number, endIndex: number) {
+    return this.deleteDimension('COLUMNS', { startIndex, endIndex });
   }
 
   async deleteEmbeddedObject() {

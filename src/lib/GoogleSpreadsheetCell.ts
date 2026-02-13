@@ -15,6 +15,7 @@ export class GoogleSpreadsheetCell {
   private _rawData?: CellData;
   private _draftData: any = {};
   private _error?: GoogleSpreadsheetCellErrorValue;
+  private _deleted = false;
 
   constructor(
     readonly _sheet: GoogleSpreadsheetWorksheet,
@@ -25,6 +26,8 @@ export class GoogleSpreadsheetCell {
     this._updateRawData(rawCellData);
     this._rawData = rawCellData; // so TS does not complain
   }
+
+  get deleted() { return this._deleted; }
 
   // TODO: figure out how to deal with empty rawData
   // newData can be undefined/null if the cell is totally empty and unformatted
@@ -49,6 +52,25 @@ export class GoogleSpreadsheetCell {
   get a1Row() { return this._rowIndex + 1; } // a1 row numbers start at 1 instead of 0
   get a1Address() { return `${this.a1Column}${this.a1Row}`; }
 
+  /**
+   * @internal
+   * Used internally to update cell indices after deleting rows/columns.
+   * Should not be called directly.
+   */
+  _updateIndices(rowIndex: RowIndex, columnIndex: ColumnIndex) {
+    this._rowIndex = rowIndex;
+    this._columnIndex = columnIndex;
+  }
+
+  /**
+   * @internal
+   * Used internally to mark cell as deleted.
+   * Should not be called directly.
+   */
+  _markDeleted() {
+    this._deleted = true;
+  }
+
   // CELL CONTENTS - VALUE/FORMULA/NOTES ///////////////////////////////////////////////////////////
   get value(): number | boolean | string | null | GoogleSpreadsheetCellErrorValue {
     // const typeKey = _.keys(this._rawData.effectiveValue)[0];
@@ -60,6 +82,8 @@ export class GoogleSpreadsheetCell {
 
 
   set value(newValue: number | boolean | Date | string | null | undefined | GoogleSpreadsheetCellErrorValue) {
+    if (this._deleted) throw new Error('This cell has been deleted - reload cells before making updates.');
+
     // had to include the GoogleSpreadsheetCellErrorValue in the type to make TS happy
     if (newValue instanceof GoogleSpreadsheetCellErrorValue) {
       throw new Error("You can't manually set a value to an error");
