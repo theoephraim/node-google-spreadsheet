@@ -1,5 +1,65 @@
 # `google-spreadsheet` changelog
 
+## 5.1.0
+
+### Minor Changes
+
+- 3edb1ba: Add deleteDimension, deleteRows, and deleteColumns methods to GoogleSpreadsheetWorksheet
+- a2f00b2: Add comprehensive data manipulation and convenience methods to GoogleSpreadsheetWorksheet:
+
+  **Data Manipulation Methods:**
+
+  - pasteData: Insert delimited data at a coordinate
+  - appendDimension: Append rows or columns to sheet
+  - textToColumns: Split delimited text into columns
+  - deleteRange: Delete cells and shift remaining
+  - deleteDimension: Delete rows or columns
+  - moveDimension: Move rows or columns
+  - sortRange: Sort data by columns
+  - trimWhitespace: Remove leading/trailing spaces
+  - deleteDuplicates: Remove duplicate rows
+  - copyPaste: Copy and paste ranges
+  - cutPaste: Cut and paste ranges
+  - autoFill: Fill cells with patterns
+  - repeatCell: Repeat cell data across range
+  - appendCells: Append cell data to sheet
+  - findReplace: Find and replace text
+  - randomizeRange: Randomize row order
+
+  **Convenience Wrapper Methods (auto-fill sheetId):**
+
+  - addNamedRange: Create named ranges in worksheet
+  - updateNamedRange: Update existing named ranges
+  - deleteNamedRange: Delete named ranges
+  - setBasicFilter: Set basic filter on sheet
+  - clearBasicFilter: Clear basic filter from sheet
+  - updateBorders: Update cell borders in range
+
+  **Filter View Methods:**
+
+  - addFilterView: Add filter views to sheets
+  - updateFilterView: Update existing filter views
+  - deleteFilterView: Delete filter views
+  - duplicateFilterView: Duplicate filter views
+
+  **Conditional Formatting Methods:**
+
+  - addConditionalFormatRule: Add conditional format rules
+  - updateConditionalFormatRule: Update or move conditional format rules
+  - deleteConditionalFormatRule: Delete conditional format rules
+
+  **Banding Methods:**
+
+  - addBanding: Add alternating row/column colors
+  - updateBanding: Update banding properties
+  - deleteBanding: Delete banded ranges
+
+  **Developer Metadata Methods:**
+
+  - createDeveloperMetadata: Create custom metadata
+  - updateDeveloperMetadata: Update existing metadata
+  - deleteDeveloperMetadata: Delete metadata
+
 ## 5.0.3
 
 ### Patch Changes
