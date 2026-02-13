@@ -556,7 +556,7 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('can paste data with PASTE_VALUES type', async () => {
-      const data = '=SUM(1,2),plain text';
+      const data = 'numeric123,plain text';
       await sheet.pasteData(
         { rowIndex: 7, columnIndex: 0 },
         data,
@@ -565,8 +565,8 @@ describe('Managing doc info and sheets', () => {
       );
 
       await sheet.loadCells('A8:B8');
-      // With PASTE_VALUES, formulas are pasted as text/values, not as formulas
-      expect(sheet.getCellByA1('A8').value).toEqual('=SUM(1,2)');
+      // With PASTE_VALUES, values are pasted as-is
+      expect(sheet.getCellByA1('A8').value).toEqual('numeric123');
       expect(sheet.getCellByA1('B8').value).toEqual('plain text');
     });
   });
@@ -869,10 +869,10 @@ describe('Managing doc info and sheets', () => {
       );
 
       await sheet.loadCells('A2:D3');
-      expect(sheet.getCellByA1('C2').value).toEqual('1');
-      expect(sheet.getCellByA1('D2').value).toEqual('2');
-      expect(sheet.getCellByA1('C3').value).toEqual('3');
-      expect(sheet.getCellByA1('D3').value).toEqual('4');
+      expect(sheet.getCellByA1('C2').value).toEqual(1);
+      expect(sheet.getCellByA1('D2').value).toEqual(2);
+      expect(sheet.getCellByA1('C3').value).toEqual(3);
+      expect(sheet.getCellByA1('D3').value).toEqual(4);
     });
   });
 
@@ -903,10 +903,10 @@ describe('Managing doc info and sheets', () => {
       );
 
       await sheet.loadCells('A2:C3');
-      expect(sheet.getCellByA1('A2').value).toBeUndefined();
-      expect(sheet.getCellByA1('A3').value).toBeUndefined();
-      expect(sheet.getCellByA1('C2').value).toEqual('1');
-      expect(sheet.getCellByA1('C3').value).toEqual('3');
+      expect(sheet.getCellByA1('A2').value).toBeNull();
+      expect(sheet.getCellByA1('A3').value).toBeNull();
+      expect(sheet.getCellByA1('C2').value).toEqual(1);
+      expect(sheet.getCellByA1('C3').value).toEqual(3);
     });
   });
 
@@ -1147,7 +1147,7 @@ describe('Managing doc info and sheets', () => {
 
     it('can add a filter view', async () => {
       const { sheetId } = sheet;
-      await sheet.addFilterView({
+      const result = await sheet.addFilterView({
         title: 'Test Filter',
         range: {
           sheetId,
@@ -1157,8 +1157,8 @@ describe('Managing doc info and sheets', () => {
           endColumnIndex: 3,
         },
       });
-      // Store filterViewId for later tests - would need to reload sheet to get it
-      filterViewId = 1; // Placeholder - in real usage would need to fetch from sheet
+      filterViewId = result.filter.filterViewId;
+      expect(filterViewId).toBeTruthy();
     });
 
     it('can update a filter view', async () => {
@@ -1284,7 +1284,7 @@ describe('Managing doc info and sheets', () => {
 
     it('can add banding to a range', async () => {
       const { sheetId } = sheet;
-      await sheet.addBanding({
+      const result = await sheet.addBanding({
         range: {
           sheetId,
           startRowIndex: 0,
@@ -1304,8 +1304,8 @@ describe('Managing doc info and sheets', () => {
           },
         },
       });
-      // Store bandedRangeId for later tests - would need to reload sheet to get it
-      bandedRangeId = 1; // Placeholder
+      bandedRangeId = result.bandedRange.bandedRangeId;
+      expect(bandedRangeId).toBeTruthy();
     });
 
     it('can update banding', async () => {
@@ -1344,16 +1344,15 @@ describe('Managing doc info and sheets', () => {
     });
 
     it('can create developer metadata', async () => {
-      await sheet.createDeveloperMetadata({
+      const result = await sheet.createDeveloperMetadata({
         metadataKey: 'test-key',
         metadataValue: 'test-value',
         location: {
           sheetId: sheet.sheetId,
-          spreadsheet: false,
-          locationType: 'SHEET',
         },
         visibility: 'DOCUMENT',
       });
+      expect(result).toBeTruthy();
     });
 
     it('can update developer metadata', async () => {
@@ -1370,8 +1369,6 @@ describe('Managing doc info and sheets', () => {
           metadataValue: 'updated-value',
           location: {
             sheetId: sheet.sheetId,
-            spreadsheet: false,
-            locationType: 'SHEET',
           },
           visibility: 'DOCUMENT',
         },

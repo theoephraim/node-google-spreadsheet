@@ -15,6 +15,7 @@ Goal of the project is to provide a simplified, more ergonomic interface compare
 
 ## Common Commands
 - `bun test` — run tests (vitest in watch mode)
+- `bun run test <file>` — run specific test file (e.g., `bun run test src/test/data-operations.test.ts`)
 - `bun run test:ci` — run tests once
 - `bun run build` — build with tsdown
 - `bun run lint` — run eslint
