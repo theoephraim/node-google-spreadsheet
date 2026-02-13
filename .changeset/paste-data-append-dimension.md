@@ -29,3 +29,24 @@ Add comprehensive data manipulation and convenience methods to GoogleSpreadsheet
 - setBasicFilter: Set basic filter on sheet
 - clearBasicFilter: Clear basic filter from sheet
 - updateBorders: Update cell borders in range
+
+**Filter View Methods:**
+- addFilterView: Add filter views to sheets
+- updateFilterView: Update existing filter views
+- deleteFilterView: Delete filter views
+- duplicateFilterView: Duplicate filter views
+
+**Conditional Formatting Methods:**
+- addConditionalFormatRule: Add conditional format rules
+- updateConditionalFormatRule: Update or move conditional format rules
+- deleteConditionalFormatRule: Delete conditional format rules
+
+**Banding Methods:**
+- addBanding: Add alternating row/column colors
+- updateBanding: Update banding properties
+- deleteBanding: Delete banded ranges
+
+**Developer Metadata Methods:**
+- createDeveloperMetadata: Create custom metadata
+- updateDeveloperMetadata: Update existing metadata
+- deleteDeveloperMetadata: Delete metadata

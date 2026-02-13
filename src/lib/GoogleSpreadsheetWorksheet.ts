@@ -13,8 +13,8 @@ import {
   RowIndex, ColumnIndex, DataFilterWithoutWorksheetId, DataFilter, GetValuesRequestOptions, WorksheetGridProperties,
   WorksheetDimensionProperties, CellDataRange, AddRowOptions, GridRangeWithOptionalWorksheetId,
   DataValidationRule,
-  ProtectedRange, Integer, GridCoordinateWithOptionalWorksheetId, PasteType,
-  SortSpec,
+  ProtectedRange, Integer, GridCoordinateWithOptionalWorksheetId, PasteType, DelimiterType, PasteOrientation,
+  SortSpec, SourceAndDestination, DimensionRange,
   FilterView, ConditionalFormatRule, BandedRange, DeveloperMetadata, DataFilterObject,
 } from './types/sheets-types';
 
@@ -550,111 +550,6 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  /**
-   * @internal
-   * Used internally to update row numbers after deleting multiple rows.
-   * Should not be called directly.
-   * */
-  _shiftRowCacheBulk(startIndex: number, endIndex: number) {
-    const numDeleted = endIndex - startIndex;
-    // Convert from 0-based indices to 1-based row numbers
-    const startRow = startIndex + 1;
-    const endRow = endIndex;
-
-    // Mark rows in the deleted range as deleted, then remove from cache
-    for (let rowNum = startRow; rowNum <= endRow; rowNum++) {
-      const row = this._rowCache[rowNum];
-      if (row) {
-        (row as any)._deleted = true; // Mark as deleted
-      }
-      delete this._rowCache[rowNum];
-    }
-
-    // Shift rows after the deleted range
-    this._rowCache.forEach((row) => {
-      if (row.rowNumber > endRow) {
-        row._updateRowNumber(row.rowNumber - numDeleted);
-      }
-    });
-  }
-
-  /**
-   * @internal
-   * Used internally to shift cell cache after deleting rows.
-   * Should not be called directly.
-   * */
-  _shiftCellCacheRows(startIndex: number, endIndex: number) {
-    const numDeleted = endIndex - startIndex;
-
-    // Mark cells in the deleted row range as deleted, then remove from cache
-    for (let rowIndex = startIndex; rowIndex < endIndex; rowIndex++) {
-      const row = this._cells[rowIndex];
-      if (row) {
-        row.forEach((cell) => {
-          if (cell) cell._markDeleted();
-        });
-      }
-      delete this._cells[rowIndex];
-    }
-
-    // Collect rows that need to be shifted
-    const rowsToShift: Array<{ oldRowIndex: number, cells: any[] }> = [];
-    for (let rowIndex = endIndex; rowIndex < this._cells.length; rowIndex++) {
-      if (this._cells[rowIndex]) {
-        rowsToShift.push({ oldRowIndex: rowIndex, cells: this._cells[rowIndex] });
-      }
-    }
-
-    // Clear old positions and update to new positions
-    rowsToShift.forEach(({ oldRowIndex, cells }) => {
-      delete this._cells[oldRowIndex];
-      const newRowIndex = oldRowIndex - numDeleted;
-      this._cells[newRowIndex] = cells;
-      // Update each cell's internal row index
-      cells.forEach((cell, colIndex) => {
-        if (cell) cell._updateIndices(newRowIndex, colIndex);
-      });
-    });
-  }
-
-  /**
-   * @internal
-   * Used internally to shift cell cache after deleting columns.
-   * Should not be called directly.
-   * */
-  _shiftCellCacheColumns(startIndex: number, endIndex: number) {
-    const numDeleted = endIndex - startIndex;
-
-    // For each row, delete cells in the deleted column range and shift remaining
-    this._cells.forEach((row, rowIndex) => {
-      if (!row) return;
-
-      // Mark cells in the deleted column range as deleted, then remove from cache
-      for (let colIndex = startIndex; colIndex < endIndex; colIndex++) {
-        const cell = row[colIndex];
-        if (cell) cell._markDeleted();
-        delete row[colIndex];
-      }
-
-      // Collect cells that need to be shifted
-      const cellsToShift: Array<{ oldColIndex: number, cell: any }> = [];
-      for (let colIndex = endIndex; colIndex < row.length; colIndex++) {
-        if (row[colIndex]) {
-          cellsToShift.push({ oldColIndex: colIndex, cell: row[colIndex] });
-        }
-      }
-
-      // Clear old positions and update to new positions
-      cellsToShift.forEach(({ oldColIndex, cell }) => {
-        delete row[oldColIndex];
-        const newColIndex = oldColIndex - numDeleted;
-        row[newColIndex] = cell;
-        // Update cell's internal column index
-        cell._updateIndices(rowIndex, newColIndex);
-      });
-    });
-  }
-
   async clearRows(
     options?: {
       start?: number,
@@ -687,8 +582,8 @@ export class GoogleSpreadsheetWorksheet {
   /**
    * passes through the call to updateProperties to update only the gridProperties object
    */
-  async updateGridProperties(gridProperties: Partial<WorksheetGridProperties>) {
-    return this.updateProperties({ gridProperties: gridProperties as WorksheetGridProperties });
+  async updateGridProperties(gridProperties: WorksheetGridProperties) {
+    return this.updateProperties({ gridProperties });
   }
 
   /** resize, internally just calls updateGridProperties */
@@ -797,24 +692,103 @@ export class GoogleSpreadsheetWorksheet {
     return this._spreadsheet.deleteNamedRange(namedRangeId);
   }
 
-  async repeatCell() {
-    // Request type = `repeatCell`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#RepeatCellRequest
+  /**
+   * Updates all cells in a range with the same cell data
+   *
+   * @param range - The range to update (sheetId optional)
+   * @param cell - The cell data to repeat across the range
+   * @param fields - Which fields to update (use "*" for all fields)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#RepeatCellRequest
+   */
+  async repeatCell(
+    range: GridRangeWithOptionalWorksheetId,
+    cell: any,
+    fields: string
+  ) {
+    await this._makeSingleUpdateRequest('repeatCell', {
+      range: this._addSheetIdToRange(range),
+      cell,
+      fields,
+    });
   }
 
-  async autoFill() {
-    // Request type = `autoFill`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AutoFillRequest
+  /**
+   * Auto-fills cells with data following a pattern (like dragging the fill handle)
+   *
+   * @param range - The range to autofill (detects source location automatically, sheetId optional)
+   * @param sourceAndDestination - Explicit source and destination specification (alternative to range)
+   * @param useAlternateSeries - Whether to generate data with the alternate series
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#AutoFillRequest
+   */
+  async autoFill(
+    rangeOrSource: GridRangeWithOptionalWorksheetId | SourceAndDestination,
+    useAlternateSeries?: boolean
+  ) {
+    // Check if it's a SourceAndDestination by looking for the 'dimension' property
+    const isSourceAndDestination = 'dimension' in rangeOrSource;
+
+    await this._makeSingleUpdateRequest('autoFill', {
+      ...isSourceAndDestination
+        ? {
+          sourceAndDestination: {
+            ...rangeOrSource,
+            source: this._addSheetIdToRange((rangeOrSource as SourceAndDestination).source),
+          },
+        }
+        : { range: this._addSheetIdToRange(rangeOrSource as GridRangeWithOptionalWorksheetId) },
+      ...useAlternateSeries !== undefined && { useAlternateSeries },
+    });
   }
 
-  async cutPaste() {
-    // Request type = `cutPaste`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#CutPasteRequest
+  /**
+   * Cuts data from a source range and pastes it to a destination coordinate
+   *
+   * @param source - The source range to cut from (sheetId optional)
+   * @param destination - The top-left coordinate where data should be pasted (sheetId optional)
+   * @param pasteType - What kind of data to paste (defaults to PASTE_NORMAL)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#CutPasteRequest
+   */
+  async cutPaste(
+    source: GridRangeWithOptionalWorksheetId,
+    destination: GridCoordinateWithOptionalWorksheetId,
+    pasteType: PasteType = 'PASTE_NORMAL'
+  ) {
+    await this._makeSingleUpdateRequest('cutPaste', {
+      source: this._addSheetIdToRange(source),
+      destination: {
+        sheetId: this.sheetId,
+        rowIndex: destination.rowIndex,
+        columnIndex: destination.columnIndex,
+      },
+      pasteType,
+    });
   }
 
-  async copyPaste() {
-    // Request type = `copyPaste`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#CopyPasteRequest
+  /**
+   * Copies data from a source range and pastes it to a destination range
+   *
+   * @param source - The source range to copy from (sheetId optional)
+   * @param destination - The destination range to paste to (sheetId optional)
+   * @param pasteType - What kind of data to paste (defaults to PASTE_NORMAL)
+   * @param pasteOrientation - How data should be oriented (defaults to NORMAL)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#CopyPasteRequest
+   */
+  async copyPaste(
+    source: GridRangeWithOptionalWorksheetId,
+    destination: GridRangeWithOptionalWorksheetId,
+    pasteType: PasteType = 'PASTE_NORMAL',
+    pasteOrientation: PasteOrientation = 'NORMAL'
+  ) {
+    await this._makeSingleUpdateRequest('copyPaste', {
+      source: this._addSheetIdToRange(source),
+      destination: this._addSheetIdToRange(destination),
+      pasteType,
+      pasteOrientation,
+    });
   }
 
   // TODO: check types on these ranges
@@ -906,55 +880,25 @@ export class GoogleSpreadsheetWorksheet {
   }
 
   /**
-   * Delete rows or columns in a given range
+   * Deletes rows or columns from a sheet
+   *
+   * @param dimension - Whether to delete rows or columns
+   * @param rangeIndexes - Start and end indexes of rows/columns to delete
+   *
    * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDimensionRequest
    */
   async deleteDimension(
-    columnsOrRows: WorksheetDimension,
+    dimension: WorksheetDimension,
     rangeIndexes: DimensionRangeIndexes
   ) {
-    if (!columnsOrRows) throw new Error('You need to specify a dimension. i.e. COLUMNS|ROWS');
-    if (!_.isObject(rangeIndexes)) throw new Error('`range` must be an object containing `startIndex` and `endIndex`');
-    if (!_.isInteger(rangeIndexes.startIndex) || rangeIndexes.startIndex < 0) throw new Error('range.startIndex must be an integer >=0');
-    if (!_.isInteger(rangeIndexes.endIndex) || rangeIndexes.endIndex < 0) throw new Error('range.endIndex must be an integer >=0');
-    if (rangeIndexes.endIndex <= rangeIndexes.startIndex) throw new Error('range.endIndex must be greater than range.startIndex');
-
-    const result = await this._makeSingleUpdateRequest('deleteDimension', {
+    await this._makeSingleUpdateRequest('deleteDimension', {
       range: {
         sheetId: this.sheetId,
-        dimension: columnsOrRows,
+        dimension,
         startIndex: rangeIndexes.startIndex,
         endIndex: rangeIndexes.endIndex,
       },
     });
-
-    // Update cached rows and cells
-    if (columnsOrRows === 'ROWS') {
-      this._shiftRowCacheBulk(rangeIndexes.startIndex, rangeIndexes.endIndex);
-      this._shiftCellCacheRows(rangeIndexes.startIndex, rangeIndexes.endIndex);
-    } else {
-      this._shiftCellCacheColumns(rangeIndexes.startIndex, rangeIndexes.endIndex);
-    }
-
-    return result;
-  }
-
-  /**
-   * Delete rows by index
-   * @param startIndex - the start row index (inclusive, 0-based)
-   * @param endIndex - the end row index (exclusive)
-   */
-  async deleteRows(startIndex: number, endIndex: number) {
-    return this.deleteDimension('ROWS', { startIndex, endIndex });
-  }
-
-  /**
-   * Delete columns by index
-   * @param startIndex - the start column index (inclusive, 0-based)
-   * @param endIndex - the end column index (exclusive)
-   */
-  async deleteColumns(startIndex: number, endIndex: number) {
-    return this.deleteDimension('COLUMNS', { startIndex, endIndex });
   }
 
   async deleteEmbeddedObject() {
@@ -1009,9 +953,35 @@ export class GoogleSpreadsheetWorksheet {
     return this._spreadsheet.sheetsById[newSheetId];
   }
 
-  async findReplace() {
-    // Request type = `findReplace`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#FindReplaceRequest
+  /**
+   * Finds and replaces text in cells
+   *
+   * @param find - The value to search for
+   * @param replacement - The value to use as replacement
+   * @param options - Search options (matchCase, matchEntireCell, searchByRegex, includeFormulas)
+   * @param range - Optional range to search in (defaults to entire sheet, sheetId optional)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#FindReplaceRequest
+   */
+  async findReplace(
+    find: string,
+    replacement: string,
+    options?: {
+      matchCase?: boolean,
+      matchEntireCell?: boolean,
+      searchByRegex?: boolean,
+      includeFormulas?: boolean
+    },
+    range?: GridRangeWithOptionalWorksheetId
+  ) {
+    await this._makeSingleUpdateRequest('findReplace', {
+      find,
+      replacement,
+      ...options,
+      ...range
+        ? { range: this._addSheetIdToRange(range) }
+        : { sheetId: this.sheetId },
+    });
   }
 
   /**
@@ -1066,9 +1036,29 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async moveDimension() {
-    // Request type = `moveDimension`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#MoveDimensionRequest
+  /**
+   * Moves rows or columns to a different position within the sheet
+   *
+   * @param dimension - Whether to move rows or columns
+   * @param source - The indexes of rows/columns to move
+   * @param destinationIndex - Where to move them (calculated before removal)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#MoveDimensionRequest
+   */
+  async moveDimension(
+    dimension: WorksheetDimension,
+    source: DimensionRangeIndexes,
+    destinationIndex: number
+  ) {
+    await this._makeSingleUpdateRequest('moveDimension', {
+      source: {
+        sheetId: this.sheetId,
+        dimension,
+        startIndex: source.startIndex,
+        endIndex: source.endIndex,
+      },
+      destinationIndex,
+    });
   }
 
   async updateEmbeddedObjectPosition() {
@@ -1104,9 +1094,25 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async textToColumns() {
-    // Request type = `textToColumns`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#TextToColumnsRequest
+  /**
+   * Splits a column of text into multiple columns based on a delimiter
+   *
+   * @param source - The column to split (must span exactly one column)
+   * @param delimiterType - Type of delimiter to use
+   * @param delimiter - Custom delimiter character (only used when delimiterType is CUSTOM)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#TextToColumnsRequest
+   */
+  async textToColumns(
+    source: GridRangeWithOptionalWorksheetId,
+    delimiterType: DelimiterType,
+    delimiter?: string
+  ) {
+    await this._makeSingleUpdateRequest('textToColumns', {
+      source: this._addSheetIdToRange(source),
+      delimiterType,
+      ...delimiter && { delimiter },
+    });
   }
 
   /**
@@ -1124,9 +1130,22 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async deleteRange() {
-    // Request type = `deleteRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteRangeRequest
+  /**
+   * Deletes a range of cells and shifts remaining cells
+   *
+   * @param range - The range of cells to delete (sheetId optional)
+   * @param shiftDimension - How remaining cells should shift (ROWS = up, COLUMNS = left)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteRangeRequest
+   */
+  async deleteRange(
+    range: GridRangeWithOptionalWorksheetId,
+    shiftDimension: WorksheetDimension
+  ) {
+    await this._makeSingleUpdateRequest('deleteRange', {
+      range: this._addSheetIdToRange(range),
+      shiftDimension,
+    });
   }
 
   /**
@@ -1197,9 +1216,22 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async sortRange() {
-    // Request type = `sortRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SortRangeRequest
+  /**
+   * Sorts data in rows based on sort order per column
+   *
+   * @param range - The range to sort (sheetId optional)
+   * @param sortSpecs - Array of sort specifications (later specs used when values are equal)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#SortRangeRequest
+   */
+  async sortRange(
+    range: GridRangeWithOptionalWorksheetId,
+    sortSpecs: SortSpec[]
+  ) {
+    await this._makeSingleUpdateRequest('sortRange', {
+      range: this._addSheetIdToRange(range),
+      sortSpecs,
+    });
   }
 
   /**
@@ -1391,9 +1423,17 @@ export class GoogleSpreadsheetWorksheet {
     });
   }
 
-  async randomizeRange() {
-    // Request type = `randomizeRange`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#RandomizeRangeRequest
+  /**
+   * Randomizes the order of rows in a range
+   *
+   * @param range - The range to randomize (sheetId optional)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#RandomizeRangeRequest
+   */
+  async randomizeRange(range: GridRangeWithOptionalWorksheetId) {
+    await this._makeSingleUpdateRequest('randomizeRange', {
+      range: this._addSheetIdToRange(range),
+    });
   }
 
   async addDimensionGroup() {
@@ -1411,14 +1451,35 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#UpdateDimensionGroupRequest
   }
 
-  async trimWhitespace() {
-    // Request type = `trimWhitespace`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#TrimWhitespaceRequest
+  /**
+   * Trims whitespace from the start and end of each cell's text
+   *
+   * @param range - The range whose cells to trim (sheetId optional)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#TrimWhitespaceRequest
+   */
+  async trimWhitespace(range: GridRangeWithOptionalWorksheetId) {
+    await this._makeSingleUpdateRequest('trimWhitespace', {
+      range: this._addSheetIdToRange(range),
+    });
   }
 
-  async deleteDuplicates() {
-    // Request type = `deleteDuplicates`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDuplicatesRequest
+  /**
+   * Removes duplicate rows from a range based on specified columns
+   *
+   * @param range - The range to remove duplicates from (sheetId optional)
+   * @param comparisonColumns - Columns to check for duplicates (if empty, all columns are used)
+   *
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDuplicatesRequest
+   */
+  async deleteDuplicates(
+    range: GridRangeWithOptionalWorksheetId,
+    comparisonColumns?: DimensionRange[]
+  ) {
+    await this._makeSingleUpdateRequest('deleteDuplicates', {
+      range: this._addSheetIdToRange(range),
+      ...comparisonColumns && { comparisonColumns },
+    });
   }
 
   async addSlicer() {

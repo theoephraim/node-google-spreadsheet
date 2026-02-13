@@ -707,6 +707,160 @@ Param|Type|Required|Description
 - ✨ **Side effects** - borders are updated on the sheet
 
 
+### Filter Views
+
+#### `addFilterView(filter)` (async) :id=fn-addFilterView
+> Adds a filter view to the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`filter`|Object<br>[FilterView](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#FilterView)|✅|The filter view to add
+`filter.filterViewId`|Integer|-|ID of the filter view (auto-generated if not provided)
+`filter.title`|String|-|Name of the filter view
+`filter.range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|The range covered by this filter
+`filter.sortSpecs`|Array<[SortSpec](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#SortSpec)>|-|Sort order per column
+`filter.filterSpecs`|Array<[FilterSpec](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#FilterSpec)>|-|Filter specifications per column
+
+- ✨ **Side effects** - filter view is added to the sheet
+
+#### `updateFilterView(filter, fields)` (async) :id=fn-updateFilterView
+> Updates properties of a filter view
+
+Param|Type|Required|Description
+---|---|---|---
+`filter`|Object<br>[FilterView](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#FilterView)|✅|The new properties of the filter view
+`fields`|String|✅|The fields that should be updated (use "*" to update all fields)
+
+- ✨ **Side effects** - filter view is updated
+
+#### `deleteFilterView(filterId)` (async) :id=fn-deleteFilterView
+> Deletes a filter view from the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`filterId`|Integer|✅|The ID of the filter view to delete
+
+- ✨ **Side effects** - filter view is removed from the sheet
+
+#### `duplicateFilterView(filterId)` (async) :id=fn-duplicateFilterView
+> Duplicates a filter view
+
+Param|Type|Required|Description
+---|---|---|---
+`filterId`|Integer|✅|The ID of the filter view to duplicate
+
+- ✨ **Side effects** - new filter view is created
+
+
+### Conditional Formatting
+
+#### `addConditionalFormatRule(rule, index)` (async) :id=fn-addConditionalFormatRule
+> Adds a new conditional formatting rule at the given index
+
+Param|Type|Required|Description
+---|---|---|---
+`rule`|Object<br>[ConditionalFormatRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ConditionalFormatRule)|✅|The rule to add
+`rule.ranges`|Array<[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)>|-|The ranges that are formatted if the condition is true
+`rule.booleanRule`|Object<br>[BooleanRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BooleanRule)|-|The formatting is either 'on' or 'off'
+`rule.gradientRule`|Object<br>[GradientRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#GradientRule)|-|The formatting will vary based on gradients
+`index`|Integer|✅|The zero-based index where the rule should be inserted
+
+- ✨ **Side effects** - conditional format rule is added, all subsequent rules' indexes are incremented
+
+#### `updateConditionalFormatRule(options)` (async) :id=fn-updateConditionalFormatRule
+> Updates a conditional format rule at the given index, or moves it to another index
+
+Param|Type|Required|Description
+---|---|---|---
+`options.index`|Integer|✅|The zero-based index of the rule
+`options.rule`|Object<br>[ConditionalFormatRule](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#ConditionalFormatRule)|-|The rule to replace at the given index (mutually exclusive with newIndex)
+`options.newIndex`|Integer|-|The zero-based new index the rule should end up at (mutually exclusive with rule)
+`options.sheetId`|Integer|-|The sheet of the rule to move (required if newIndex is set)
+
+- ✨ **Side effects** - conditional format rule is updated or moved
+
+#### `deleteConditionalFormatRule(index, sheetId)` (async) :id=fn-deleteConditionalFormatRule
+> Deletes a conditional format rule at the given index
+
+Param|Type|Required|Description
+---|---|---|---
+`index`|Integer|✅|The zero-based index of the rule to be deleted
+`sheetId`|Integer|-|The sheet the rule is being deleted from (defaults to this sheet)
+
+- ✨ **Side effects** - conditional format rule is deleted, all subsequent rules' indexes are decremented
+
+
+### Banding
+
+#### `addBanding(bandedRange)` (async) :id=fn-addBanding
+> Adds a new banded range to the sheet (alternating row/column colors)
+
+Param|Type|Required|Description
+---|---|---|---
+`bandedRange`|Object<br>[BandedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandedRange)|✅|The banded range to add
+`bandedRange.bandedRangeId`|Integer|-|ID of the banded range (auto-generated if not provided)
+`bandedRange.range`|Object<br>[GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange)|-|The range over which properties are applied
+`bandedRange.rowProperties`|Object<br>[BandingProperties](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandingProperties)|-|Properties for row banding
+`bandedRange.columnProperties`|Object<br>[BandingProperties](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandingProperties)|-|Properties for column banding
+
+- ✨ **Side effects** - banded range is added to the sheet
+
+#### `updateBanding(bandedRange, fields)` (async) :id=fn-updateBanding
+> Updates properties of a banded range
+
+Param|Type|Required|Description
+---|---|---|---
+`bandedRange`|Object<br>[BandedRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/sheets#BandedRange)|✅|The banded range to update with the new properties
+`fields`|String|✅|The fields that should be updated (use "*" to update all fields)
+
+- ✨ **Side effects** - banded range is updated
+
+#### `deleteBanding(bandedRangeId)` (async) :id=fn-deleteBanding
+> Deletes a banded range from the sheet
+
+Param|Type|Required|Description
+---|---|---|---
+`bandedRangeId`|Integer|✅|The ID of the banded range to delete
+
+- ✨ **Side effects** - banded range is removed from the sheet
+
+
+### Developer Metadata
+
+#### `createDeveloperMetadata(developerMetadata)` (async) :id=fn-createDeveloperMetadata
+> Creates developer metadata
+
+Param|Type|Required|Description
+---|---|---|---
+`developerMetadata`|Object<br>[DeveloperMetadata](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata)|✅|The developer metadata to create
+`developerMetadata.metadataKey`|String|✅|The key of the metadata
+`developerMetadata.metadataValue`|String|-|The value of the metadata
+`developerMetadata.location`|Object<br>[DeveloperMetadataLocation](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata.DeveloperMetadataLocation)|-|Where the metadata is attached
+`developerMetadata.visibility`|String|-|Who can access the metadata: 'DOCUMENT' or 'PROJECT'
+
+- ✨ **Side effects** - developer metadata is created
+
+#### `updateDeveloperMetadata(dataFilters, developerMetadata, fields)` (async) :id=fn-updateDeveloperMetadata
+> Updates developer metadata that matches the specified filters
+
+Param|Type|Required|Description
+---|---|---|---
+`dataFilters`|Array<[DataFilter](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter)>|✅|The filters matching the developer metadata entries to update
+`developerMetadata`|Object<br>[DeveloperMetadata](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata)|✅|The value that all metadata matched by the filters will be updated to
+`fields`|String|✅|The fields that should be updated (use "*" to update all fields)
+
+- ✨ **Side effects** - matching developer metadata is updated
+
+#### `deleteDeveloperMetadata(dataFilter)` (async) :id=fn-deleteDeveloperMetadata
+> Deletes developer metadata that matches the specified filter
+
+Param|Type|Required|Description
+---|---|---|---
+`dataFilter`|Object<br>[DataFilter](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter)|✅|The filter describing the criteria used to select which developer metadata to delete
+
+- ✨ **Side effects** - matching developer metadata is deleted
+
+
 ### Exports
 
 See [Exports guide](guides/exports) for more info.
