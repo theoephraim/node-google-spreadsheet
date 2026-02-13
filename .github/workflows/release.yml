@@ -18,6 +18,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -34,8 +40,8 @@ jobs:
         with:
           version: bunx changeset version
           publish: bunx changeset publish
-          title: "Version Packages"
-          commit: "Version Packages"
+          title: "[Changesets] Versioned release"
+          commit: "[Changesets] Create versioned package(s) for publishing"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
