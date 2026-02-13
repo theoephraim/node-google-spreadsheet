@@ -416,6 +416,81 @@ describe('Managing doc info and sheets', () => {
     });
   });
 
+  describe('deleteDimension - deleting columns/rows from a sheet', () => {
+    let sheet: GoogleSpreadsheetWorksheet;
+
+    beforeAll(async () => {
+      sheet = await doc.addSheet({
+        title: `Delete dimension test ${+new Date()}`,
+        headerValues: ['a', 'b', 'c', 'd'],
+      });
+      await sheet.addRows([
+        {
+          a: 'a1', b: 'b1', c: 'c1', d: 'd1',
+        },
+        {
+          a: 'a2', b: 'b2', c: 'c2', d: 'd2',
+        },
+        {
+          a: 'a3', b: 'b3', c: 'c3', d: 'd3',
+        },
+      ]);
+    });
+
+    afterAll(async () => {
+      await sheet.delete();
+    });
+
+    it('should delete rows using deleteDimension', async () => {
+      // delete rows 2-3 (indices 2 and 3, which are the 2nd and 3rd data rows)
+      await sheet.deleteDimension('ROWS', { startIndex: 2, endIndex: 4 });
+
+      // read rows and check - should only have header + first data row now
+      const rows = await sheet.getRows<{
+        a: string,
+        b: string,
+        c: string,
+        d: string,
+      }>();
+      expect(rows.length).toEqual(1);
+      expect(rows[0].get('a')).toEqual('a1');
+      expect(rows[0].get('b')).toEqual('b1');
+    });
+
+    it('should delete columns using deleteDimension', async () => {
+      // delete columns B and C (indices 1 and 2)
+      await sheet.deleteDimension('COLUMNS', { startIndex: 1, endIndex: 3 });
+
+      // reload header row
+      await sheet.loadHeaderRow();
+      expect(sheet.headerValues).toEqual(['a', 'd']);
+    });
+
+    it('should delete rows using convenience method deleteRows', async () => {
+      // first add more rows so we can test deletion
+      await sheet.addRows([
+        { a: 'a4', d: 'd4' },
+        { a: 'a5', d: 'd5' },
+      ]);
+
+      // delete the first data row (index 1, since index 0 is header)
+      await sheet.deleteRows(1, 2);
+
+      const rows = await sheet.getRows<{ a: string, d: string }>();
+      expect(rows.length).toEqual(2);
+      expect(rows[0].get('a')).toEqual('a4');
+      expect(rows[1].get('a')).toEqual('a5');
+    });
+
+    it('should delete columns using convenience method deleteColumns', async () => {
+      // delete first column (column A)
+      await sheet.deleteColumns(0, 1);
+
+      await sheet.loadHeaderRow();
+      expect(sheet.headerValues).toEqual(['d']);
+    });
+  });
+
   describe('autoResizeDimensions - auto-resize columns/rows to fit content', () => {
     let sheet: GoogleSpreadsheetWorksheet;
 

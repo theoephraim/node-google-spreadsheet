@@ -712,9 +712,46 @@ export class GoogleSpreadsheetWorksheet {
     // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#ClearBasicFilterRequest
   }
 
-  async deleteDimension() {
-    // Request type = `deleteDimension`
-    // https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDimensionRequest
+  /**
+   * Delete rows or columns in a given range
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/request#DeleteDimensionRequest
+   */
+  async deleteDimension(
+    columnsOrRows: WorksheetDimension,
+    rangeIndexes: DimensionRangeIndexes
+  ) {
+    if (!columnsOrRows) throw new Error('You need to specify a dimension. i.e. COLUMNS|ROWS');
+    if (!_.isObject(rangeIndexes)) throw new Error('`range` must be an object containing `startIndex` and `endIndex`');
+    if (!_.isInteger(rangeIndexes.startIndex) || rangeIndexes.startIndex < 0) throw new Error('range.startIndex must be an integer >=0');
+    if (!_.isInteger(rangeIndexes.endIndex) || rangeIndexes.endIndex < 0) throw new Error('range.endIndex must be an integer >=0');
+    if (rangeIndexes.endIndex <= rangeIndexes.startIndex) throw new Error('range.endIndex must be greater than range.startIndex');
+
+    return this._makeSingleUpdateRequest('deleteDimension', {
+      range: {
+        sheetId: this.sheetId,
+        dimension: columnsOrRows,
+        startIndex: rangeIndexes.startIndex,
+        endIndex: rangeIndexes.endIndex,
+      },
+    });
+  }
+
+  /**
+   * Delete rows by index
+   * @param startIndex - the start row index (inclusive, 0-based)
+   * @param endIndex - the end row index (exclusive)
+   */
+  async deleteRows(startIndex: number, endIndex: number) {
+    return this.deleteDimension('ROWS', { startIndex, endIndex });
+  }
+
+  /**
+   * Delete columns by index
+   * @param startIndex - the start column index (inclusive, 0-based)
+   * @param endIndex - the end column index (exclusive)
+   */
+  async deleteColumns(startIndex: number, endIndex: number) {
+    return this.deleteDimension('COLUMNS', { startIndex, endIndex });
   }
 
   async deleteEmbeddedObject() {
