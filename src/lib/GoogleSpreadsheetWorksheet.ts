@@ -717,7 +717,7 @@ export class GoogleSpreadsheetWorksheet {
    */
   async updateDimensionProperties(
     columnsOrRows: WorksheetDimension,
-    properties: WorksheetDimensionProperties,
+    properties: Partial<WorksheetDimensionProperties>,
     bounds: Partial<DimensionRangeIndexes>
   ) {
     // Request type = `updateDimensionProperties`
