@@ -1,10 +1,16 @@
-import ky, { HTTPError, KyInstance } from 'ky'; // eslint-disable-line import/no-extraneous-dependencies
+import ky, { HTTPError, KyInstance, RetryOptions } from 'ky'; // eslint-disable-line import/no-extraneous-dependencies
 import * as _ from './toolkit';
 import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
 import { getFieldMask } from './utils';
 import {
-  DataFilter, GridRange, NamedRangeId, ProtectedRange,
-  SpreadsheetId, SpreadsheetProperties, WorksheetId, WorksheetProperties,
+  DataFilter,
+  GridRange,
+  NamedRangeId,
+  ProtectedRange,
+  SpreadsheetId,
+  SpreadsheetProperties,
+  WorksheetId,
+  WorksheetProperties,
 } from './types/sheets-types';
 import { PermissionRoles, PermissionsList, PublicPermissionRoles } from './types/drive-types';
 import { RecursivePartial } from './types/util-types';
@@ -112,10 +118,15 @@ export class GoogleSpreadsheet {
    * @category Initialization
    * */
   constructor(
-    /** id of google spreadsheet doc */
+    /** id of Google spreadsheet doc */
     spreadsheetId: SpreadsheetId,
     /** authentication to use with Google Sheets API */
-    auth: GoogleApiAuth
+    auth: GoogleApiAuth,
+    /**
+     * Options for customising the library.
+     * retryConfig: see the [ky documentation](https://github.com/sindresorhus/ky#retry) for details of the available options and defaults.
+     */
+    { retryConfig }: { retryConfig?: RetryOptions | number } = {}
   ) {
     this.spreadsheetId = spreadsheetId;
     this.auth = auth;
@@ -131,6 +142,7 @@ export class GoogleSpreadsheet {
         beforeRequest: [(r) => this._setAuthRequestHook(r)],
         beforeError: [(e) => this._errorHook(e)],
       },
+      retry: retryConfig,
     });
     this.driveApi = ky.create({
       prefixUrl: `${DRIVE_API_BASE_URL}/${spreadsheetId}`,
@@ -138,6 +150,7 @@ export class GoogleSpreadsheet {
         beforeRequest: [(r) => this._setAuthRequestHook(r)],
         beforeError: [(e) => this._errorHook(e)],
       },
+      retry: retryConfig,
     });
   }
 

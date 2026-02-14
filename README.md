@@ -197,6 +197,7 @@ Contributions are welcome, but please follow the existing conventions, use the l
 
 The docs site is generated using [docsify](https://docsify.js.org). To preview and run locally so you can make edits, run `npm run docs:preview` and head to http://localhost:3000
 The content lives in markdown files in the docs folder.
+The package manager for this project is `bun`.
 
 ## License
 
