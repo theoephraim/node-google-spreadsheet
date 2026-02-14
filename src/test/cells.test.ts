@@ -261,6 +261,23 @@ describe('Cell-based operations', () => {
         });
       });
     });
+
+    describe('stringValue setter', () => {
+      it('can set a string starting with "=" as a literal string (not a formula)', async () => {
+        c1.stringValue = '=SUM(A2:A10)';
+        await sheet.saveUpdatedCells();
+        expect(c1.valueType).toBe('stringValue');
+        expect(c1.value).toBe('=SUM(A2:A10)');
+        expect(c1.formula).toBeNull();
+      });
+
+      it('can set a regular string via stringValue', async () => {
+        c1.stringValue = 'just a string';
+        await sheet.saveUpdatedCells();
+        expect(c1.valueType).toBe('stringValue');
+        expect(c1.value).toBe('just a string');
+      });
+    });
   });
 
   describe('read-only (API key) access', () => {

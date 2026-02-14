@@ -58,7 +58,7 @@ Property|Type|Writeable|Description
 `value`|*|✅|This is the _value_ in the cell. If there is a formula in the cell, this will be the value the formula resolves to
 `valueType`|String|-|The type of the value contained in the cell, using google's terminology<br>_One of `boolValue`, `stringValue`, `numberValue`, `errorValue`_
 `boolValue`|boolean|✅|the value as a boolean, if the cell contains a boolean
-`stringValue`|string|✅|the value as a string, if the cell contains a string
+`stringValue`|string|✅|the value as a string, if the cell contains a string<br>_When setting, the value is always stored as a literal string — even if it starts with `=`_
 `numberValue`|string|✅|the value as a number, if the cell contains a number
 `formattedValue`|*|-|The value in the cell with [formatting rules](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/cells#numberformat) applied<br>_Ex: value is `123.456`, formattedValue is `$123.46`_
 `formula`|String|✅|The formula in the cell (if there is one)
