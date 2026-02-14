@@ -47,10 +47,10 @@ describe('Data operations - rows, columns, and ranges', () => {
       // header row
       expect(rows[0].get('a')).toEqual('a1');
       expect(rows[0].get('b')).toEqual('b1');
-      expect(rows[1].get('a')).toBeUndefined();
-      expect(rows[1].get('b')).toBeUndefined();
-      expect(rows[2].get('a')).toBeUndefined();
-      expect(rows[2].get('b')).toBeUndefined();
+      expect(rows[1].get('a')).toEqual('');
+      expect(rows[1].get('b')).toEqual('');
+      expect(rows[2].get('a')).toEqual('');
+      expect(rows[2].get('b')).toEqual('');
       expect(rows[3].get('a')).toEqual('a2');
       expect(rows[3].get('b')).toEqual('b2');
     });

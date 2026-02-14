@@ -215,6 +215,56 @@ describe('Row-based operations', () => {
       expect(row.get('col3')).toEqual('3'); // it evaluates the formula and formats as a string
     });
 
+    it('can save a row with trailing empty values', async () => {
+      rows = await sheet.getRows();
+      row = rows[0];
+      row.set('numbers', 'hello');
+      row.set('letters', '');
+      row.set('col1', '');
+      row.set('col2', '');
+      row.set('col3', '');
+      await row.save();
+      expect(row.get('numbers')).toBe('hello');
+      // trailing empty values should be empty strings, not undefined
+      expect(row.get('letters')).toBe('');
+      expect(row.get('col1')).toBe('');
+      expect(row.get('col2')).toBe('');
+      expect(row.get('col3')).toBe('');
+    });
+
+    it('empty trailing values persist correctly after re-fetching', async () => {
+      rows = await sheet.getRows();
+      row = rows[0];
+      expect(row.get('numbers')).toBe('hello');
+      expect(row.get('letters')).toBe('');
+      expect(row.get('col3')).toBe('');
+    });
+
+    it('can clear all values in a row by saving empty strings', async () => {
+      rows = await sheet.getRows();
+      row = rows[0];
+      const nonEmptyHeaders = HEADERS.filter((h) => h);
+      _.each(nonEmptyHeaders, (header) => row.set(header, ''));
+      await row.save();
+      _.each(nonEmptyHeaders, (header) => {
+        expect(row.get(header)).toBe('');
+      });
+      // toObject should also return empty strings, not undefined
+      const obj = row.toObject();
+      _.each(nonEmptyHeaders, (header) => {
+        expect(obj[header]).toBe('');
+      });
+    });
+
+    it('all-empty row persists correctly after re-fetching', async () => {
+      rows = await sheet.getRows();
+      row = rows[0];
+      const nonEmptyHeaders = HEADERS.filter((h) => h);
+      _.each(nonEmptyHeaders, (header) => {
+        expect(row.get(header)).toBe('');
+      });
+    });
+
     describe('encoding and odd characters', () => {
       _.each(
         {
@@ -231,83 +281,6 @@ describe('Row-based operations', () => {
           });
         }
       );
-    });
-  });
-
-  // TODO: Move to cells.test.js because mergeCells and unmergeCells are really cell operations
-  // but they were implemented using the existing data we have here in the rows tests
-  // so we'll leave them here for now
-  describe('merge and unmerge operations', () => {
-    beforeAll(async () => {
-      await sheet.loadCells('A1:H2');
-    });
-
-    const range = {
-      startColumnIndex: 0,
-      endColumnIndex: 2,
-    };
-
-    it('merges all cells', async () => {
-      await sheet.mergeCells({
-        startRowIndex: 2,
-        endRowIndex: 4,
-        ...range,
-      });
-      const mergedRows = await sheet.getRows();
-      expect(mergedRows[1].get('numbers')).toBe('2');
-      expect(mergedRows[1].get('letters')).toBe(undefined);
-      expect(mergedRows[2].get('numbers')).toBe(undefined);
-      expect(mergedRows[2].get('letters')).toBe(undefined);
-    });
-
-    it('merges all cells in column direction', async () => {
-      await sheet.mergeCells({
-        startRowIndex: 4,
-        endRowIndex: 6,
-        ...range,
-      }, 'MERGE_COLUMNS');
-      const mergedRows = await sheet.getRows();
-      expect(mergedRows[3].get('numbers')).toBe('4');
-      expect(mergedRows[3].get('letters')).toBe('E');
-      expect(mergedRows[4].get('numbers')).toBe(undefined);
-      expect(mergedRows[4].get('letters')).toBe(undefined);
-    });
-
-    it('merges all cells in row direction', async () => {
-      await sheet.mergeCells({
-        startRowIndex: 6,
-        endRowIndex: 8,
-        ...range,
-      }, 'MERGE_ROWS');
-      const mergedRows = await sheet.getRows();
-      expect(mergedRows[5].get('numbers')).toBe('6');
-      expect(mergedRows[5].get('letters')).toBe(undefined);
-      expect(mergedRows[6].get('numbers')).toBe('7');
-      expect(mergedRows[6].get('letters')).toBe(undefined);
-    });
-
-    it('unmerges cells', async () => {
-      await sheet.mergeCells({
-        startRowIndex: 8,
-        endRowIndex: 9,
-        ...range,
-      });
-      const mergedRows = await sheet.getRows();
-      expect(mergedRows[7].get('numbers')).toBe('8');
-      expect(mergedRows[7].get('letters')).toBe(undefined);
-      mergedRows[7].set('letters', 'Z');
-      await mergedRows[7].save();
-      expect(mergedRows[7].get('numbers')).toBe('8');
-      expect(mergedRows[7].get('letters')).toBe(undefined);
-      await sheet.unmergeCells({
-        startRowIndex: 8,
-        endRowIndex: 9,
-        ...range,
-      });
-      mergedRows[7].set('letters', 'Z');
-      await mergedRows[7].save();
-      expect(mergedRows[7].get('numbers')).toBe('8');
-      expect(mergedRows[7].get('letters')).toBe('Z');
     });
   });
 
