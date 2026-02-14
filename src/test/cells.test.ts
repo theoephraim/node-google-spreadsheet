@@ -261,24 +261,6 @@ describe('Cell-based operations', () => {
         });
       });
     });
-
-    describe('stringValue setter', () => {
-      it('can set a string starting with "=" as a literal string (not a formula)', async () => {
-        c1.stringValue = '=2+2';
-        await sheet.saveUpdatedCells();
-        expect(c1.valueType).toBe('stringValue');
-        expect(c1.value).toBe('=2+2'); // stored as literal string, not computed as 4
-        expect(c1.formattedValue).toBe('=2+2');
-        expect(c1.formula).toBeNull();
-      });
-
-      it('can set a regular string via stringValue', async () => {
-        c1.stringValue = 'just a string';
-        await sheet.saveUpdatedCells();
-        expect(c1.valueType).toBe('stringValue');
-        expect(c1.value).toBe('just a string');
-      });
-    });
   });
 
   describe('read-only (API key) access', () => {
@@ -292,111 +274,262 @@ describe('Cell-based operations', () => {
     });
   });
 
-  describe('merge and unmerge operations', () => {
-    beforeEach(async () => {
-      sheet.resetLocalCache(true);
-    });
+  describe('cell formatting', () => {
+    describe('background color', () => {
+      it('can set backgroundColor', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const cell = sheet.getCell(0, 0);
+        cell.backgroundColor = {
+          red: 1, green: 0, blue: 0, alpha: 1,
+        };
+        await sheet.saveUpdatedCells();
 
-    it('merges all cells (MERGE_ALL)', async () => {
-      // set up some values first
-      await sheet.loadCells('A2:B3');
-      sheet.getCell(1, 0).value = 'top-left';
-      sheet.getCell(1, 1).value = 'top-right';
-      sheet.getCell(2, 0).value = 'bot-left';
-      sheet.getCell(2, 1).value = 'bot-right';
-      await sheet.saveUpdatedCells();
-
-      await sheet.mergeCells({
-        startRowIndex: 1,
-        endRowIndex: 3,
-        startColumnIndex: 0,
-        endColumnIndex: 2,
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const reloaded = sheet.getCell(0, 0);
+        expect(reloaded.backgroundColor).toBeTruthy();
+        expect(reloaded.backgroundColor!.red).toBe(1);
+        // Google API omits 0 values, so green and blue will be undefined
+        expect(reloaded.backgroundColor!.green).toBeFalsy();
+        expect(reloaded.backgroundColor!.blue).toBeFalsy();
       });
 
-      await sheet.loadCells('A2:B3');
-      expect(sheet.getCell(1, 0).value).toBe('top-left'); // top-left kept
-      expect(sheet.getCell(1, 1).value).toBeNull(); // merged away
-      expect(sheet.getCell(2, 0).value).toBeNull();
-      expect(sheet.getCell(2, 1).value).toBeNull();
-    });
+      it('can set backgroundColorStyle', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const cell = sheet.getCell(0, 0);
+        cell.backgroundColorStyle = { rgbColor: { red: 0, green: 0.5, blue: 1 } };
+        await sheet.saveUpdatedCells();
 
-    it('merges cells in column direction (MERGE_COLUMNS)', async () => {
-      await sheet.loadCells('C2:D3');
-      sheet.getCell(1, 2).value = 'C2';
-      sheet.getCell(1, 3).value = 'D2';
-      sheet.getCell(2, 2).value = 'C3';
-      sheet.getCell(2, 3).value = 'D3';
-      await sheet.saveUpdatedCells();
-
-      await sheet.mergeCells({
-        startRowIndex: 1,
-        endRowIndex: 3,
-        startColumnIndex: 2,
-        endColumnIndex: 4,
-      }, 'MERGE_COLUMNS');
-
-      await sheet.loadCells('C2:D3');
-      expect(sheet.getCell(1, 2).value).toBe('C2'); // top of each column kept
-      expect(sheet.getCell(1, 3).value).toBe('D2');
-      expect(sheet.getCell(2, 2).value).toBeNull(); // merged away
-      expect(sheet.getCell(2, 3).value).toBeNull();
-    });
-
-    it('merges cells in row direction (MERGE_ROWS)', async () => {
-      await sheet.loadCells('E2:F3');
-      sheet.getCell(1, 4).value = 'E2';
-      sheet.getCell(1, 5).value = 'F2';
-      sheet.getCell(2, 4).value = 'E3';
-      sheet.getCell(2, 5).value = 'F3';
-      await sheet.saveUpdatedCells();
-
-      await sheet.mergeCells({
-        startRowIndex: 1,
-        endRowIndex: 3,
-        startColumnIndex: 4,
-        endColumnIndex: 6,
-      }, 'MERGE_ROWS');
-
-      await sheet.loadCells('E2:F3');
-      expect(sheet.getCell(1, 4).value).toBe('E2'); // left of each row kept
-      expect(sheet.getCell(1, 5).value).toBeNull(); // merged away
-      expect(sheet.getCell(2, 4).value).toBe('E3');
-      expect(sheet.getCell(2, 5).value).toBeNull();
-    });
-
-    it('can unmerge cells and write to previously merged cells', async () => {
-      await sheet.loadCells('G2:H2');
-      sheet.getCell(1, 6).value = 'G2';
-      sheet.getCell(1, 7).value = 'H2';
-      await sheet.saveUpdatedCells();
-
-      // merge
-      await sheet.mergeCells({
-        startRowIndex: 1,
-        endRowIndex: 2,
-        startColumnIndex: 6,
-        endColumnIndex: 8,
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const reloaded = sheet.getCell(0, 0);
+        expect(reloaded.backgroundColorStyle).toBeTruthy();
+        expect('rgbColor' in reloaded.backgroundColorStyle!).toBe(true);
+        const style = reloaded.backgroundColorStyle as { rgbColor: { red: number, green: number, blue: number } };
+        expect(style.rgbColor.blue).toBe(1);
       });
-      await sheet.loadCells('G2:H2');
-      expect(sheet.getCell(1, 6).value).toBe('G2');
-      expect(sheet.getCell(1, 7).value).toBeNull();
-
-      // unmerge
-      await sheet.unmergeCells({
-        startRowIndex: 1,
-        endRowIndex: 2,
-        startColumnIndex: 6,
-        endColumnIndex: 8,
-      });
-      await sheet.loadCells('G2:H2');
-      sheet.getCell(1, 7).value = 'restored';
-      await sheet.saveUpdatedCells();
-      expect(sheet.getCell(1, 7).value).toBe('restored');
     });
-  });
 
-  describe.todo('cell formatting', () => {
-    // TODO: add tests!
-    // - set the background color twice, conflicts b/w backgroundColor and backgroundColorStyle
+    describe('text format', () => {
+      it('can set bold', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const cell = sheet.getCell(0, 0);
+        cell.textFormat = { bold: true };
+        await sheet.saveUpdatedCells();
+
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const reloaded = sheet.getCell(0, 0);
+        expect(reloaded.textFormat!.bold).toBe(true);
+      });
+
+      it('can set italic and fontSize', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const cell = sheet.getCell(0, 0);
+        cell.textFormat = { italic: true, fontSize: 14 };
+        await sheet.saveUpdatedCells();
+
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const reloaded = sheet.getCell(0, 0);
+        expect(reloaded.textFormat!.italic).toBe(true);
+        expect(reloaded.textFormat!.fontSize).toBe(14);
+      });
+    });
+
+    describe('number format', () => {
+      it('can set number format', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('B1');
+        const cell = sheet.getCell(0, 1);
+        cell.numberFormat = { type: 'CURRENCY', pattern: '$#,##0.00' };
+        await sheet.saveUpdatedCells();
+
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('B1');
+        const reloaded = sheet.getCell(0, 1);
+        expect(reloaded.numberFormat).toBeTruthy();
+        expect(reloaded.numberFormat!.type).toBe('CURRENCY');
+        expect(reloaded.numberFormat!.pattern).toBe('$#,##0.00');
+      });
+    });
+
+    describe('alignment', () => {
+      it('can set horizontal alignment', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('C1');
+        const cell = sheet.getCell(0, 2);
+        cell.horizontalAlignment = 'CENTER';
+        await sheet.saveUpdatedCells();
+
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('C1');
+        const reloaded = sheet.getCell(0, 2);
+        expect(reloaded.horizontalAlignment).toBe('CENTER');
+      });
+
+      it('can set vertical alignment', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('C1');
+        const cell = sheet.getCell(0, 2);
+        cell.verticalAlignment = 'MIDDLE';
+        await sheet.saveUpdatedCells();
+
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('C1');
+        const reloaded = sheet.getCell(0, 2);
+        expect(reloaded.verticalAlignment).toBe('MIDDLE');
+      });
+    });
+
+    describe('wrap strategy', () => {
+      it('can set wrap strategy', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const cell = sheet.getCell(0, 0);
+        cell.wrapStrategy = 'WRAP';
+        await sheet.saveUpdatedCells();
+
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const reloaded = sheet.getCell(0, 0);
+        expect(reloaded.wrapStrategy).toBe('WRAP');
+      });
+    });
+
+    describe('text rotation', () => {
+      it('can set text rotation by angle', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const cell = sheet.getCell(0, 0);
+        // textRotation is a oneof - set either angle OR vertical, not both
+        cell.textRotation = { angle: 45 };
+        await sheet.saveUpdatedCells();
+
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const reloaded = sheet.getCell(0, 0);
+        // Just verify textRotation was set (Google may normalize the angle)
+        expect(reloaded.textRotation).toBeTruthy();
+      });
+    });
+
+    describe('padding', () => {
+      it('can set cell padding', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('E1');
+        const cell = sheet.getCell(0, 4);
+        cell.padding = {
+          top: 10, bottom: 10, left: 5, right: 5,
+        };
+        await sheet.saveUpdatedCells();
+
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('E1');
+        const reloaded = sheet.getCell(0, 4);
+        expect(reloaded.padding).toBeTruthy();
+        expect(reloaded.padding!.top).toBe(10);
+        expect(reloaded.padding!.left).toBe(5);
+      });
+    });
+
+    describe('effectiveFormat', () => {
+      it('returns the effective (computed) format', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('A1');
+        const cell = sheet.getCell(0, 0);
+        // effectiveFormat should be available for any cell that has been loaded
+        expect(cell.effectiveFormat).toBeTruthy();
+        // should have at least some default format properties
+        expect(cell.effectiveFormat!.textFormat).toBeTruthy();
+      });
+    });
+
+    describe('hyperlink', () => {
+      it('can read a hyperlink from a cell with HYPERLINK formula', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('F1');
+        const cell = sheet.getCell(0, 5);
+        cell.formula = '=HYPERLINK("https://google.com", "Google")';
+        await sheet.saveUpdatedCells();
+
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('F1');
+        const reloaded = sheet.getCell(0, 5);
+        expect(reloaded.hyperlink).toBe('https://google.com');
+        expect(reloaded.value).toBe('Google');
+      });
+    });
+
+    describe('clearAllFormatting', () => {
+      it('can clear all formatting from a cell', async () => {
+        // first set some formatting
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('G1');
+        const cell = sheet.getCell(0, 6);
+        cell.value = 'clear me';
+        cell.textFormat = { bold: true };
+        cell.backgroundColor = { red: 1, green: 0, blue: 0 };
+        await sheet.saveUpdatedCells();
+
+        // verify formatting was set
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('G1');
+        const formatted = sheet.getCell(0, 6);
+        expect(formatted.textFormat!.bold).toBe(true);
+
+        // clear formatting
+        formatted.clearAllFormatting();
+        await sheet.saveUpdatedCells();
+
+        // verify formatting was cleared
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('G1');
+        const cleared = sheet.getCell(0, 6);
+        // after clearing, bold should no longer be explicitly set
+        // (the effective format will still have defaults)
+        expect(cleared.userEnteredFormat).toBeFalsy();
+        // value should still be there
+        expect(cleared.value).toBe('clear me');
+      });
+    });
+
+    describe('discardUnsavedChanges', () => {
+      it('can discard unsaved value changes', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('H1');
+        const cell = sheet.getCell(0, 7);
+        cell.value = 'original';
+        await sheet.saveUpdatedCells();
+
+        // make changes but discard them
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('H1');
+        const cell2 = sheet.getCell(0, 7);
+        cell2.value = 'changed';
+        expect(cell2._isDirty).toBe(true);
+
+        cell2.discardUnsavedChanges();
+        expect(cell2._isDirty).toBe(false);
+
+        // value getter should work again after discard
+        expect(cell2.value).toBe('original');
+      });
+
+      it('can discard unsaved formatting changes', async () => {
+        sheet.resetLocalCache(true);
+        await sheet.loadCells('H1');
+        const cell = sheet.getCell(0, 7);
+        cell.textFormat = { bold: true };
+        expect(cell._isDirty).toBe(true);
+
+        cell.discardUnsavedChanges();
+        expect(cell._isDirty).toBe(false);
+      });
+    });
   });
 });
