@@ -1399,6 +1399,43 @@ describe('Managing doc info and sheets', () => {
       });
     });
 
+    it('can load cells using a developer metadata filter', async () => {
+      // create row-level metadata on row 0
+      await sheet.createDeveloperMetadata({
+        metadataKey: 'row-meta-key',
+        metadataValue: 'row-meta-value',
+        location: {
+          dimensionRange: {
+            sheetId: sheet.sheetId,
+            dimension: 'ROWS',
+            startIndex: 0,
+            endIndex: 1,
+          },
+        },
+        visibility: 'DOCUMENT',
+      });
+
+      // load cells using developer metadata filter on doc
+      await doc.loadCells({
+        developerMetadataLookup: { metadataKey: 'row-meta-key' },
+      });
+
+      // load cells using developer metadata filter on sheet
+      sheet.resetLocalCache(true);
+      await sheet.loadCells({
+        developerMetadataLookup: { metadataKey: 'row-meta-key' },
+      });
+
+      // verify cells were loaded (row 0 should be accessible)
+      const cell = sheet.getCell(0, 0);
+      expect(cell).toBeTruthy();
+
+      // clean up
+      await sheet.deleteDeveloperMetadata({
+        developerMetadataLookup: { metadataKey: 'row-meta-key' },
+      });
+    });
+
     it('can delete developer metadata', async () => {
       await sheet.deleteDeveloperMetadata({
         developerMetadataLookup: {
