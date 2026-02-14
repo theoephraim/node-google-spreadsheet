@@ -122,12 +122,16 @@ export class GoogleSpreadsheet {
     spreadsheetId: SpreadsheetId,
     /** authentication to use with Google Sheets API */
     auth: GoogleApiAuth,
-    /**
-     * Options for customising the library.
-     * retryConfig: see the [ky documentation](https://github.com/sindresorhus/ky#retry) for details of the available options and defaults.
-     */
-    { retryConfig }: { retryConfig?: RetryOptions | number } = {}
+    /** Additional options */
+    options?: {
+      /**
+       * customize retry behavior --
+       * see the [ky documentation](https://github.com/sindresorhus/ky#retry) for details of the available options and defaults.
+       * */
+      retryConfig?: RetryOptions | number
+    }
   ) {
+    const { retryConfig } = options || {};
     this.spreadsheetId = spreadsheetId;
     this.auth = auth;
 

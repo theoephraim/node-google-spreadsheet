@@ -26,6 +26,7 @@ _Welcome to the docs site for_
 - managing worksheets - add, remove, resize, update properties (ex: title), duplicate to same or other document
 - managing docs - create new doc, delete doc, basic sharing/permissions
 - export - download sheet/docs in various formats
+- automatic retries with exponential backoff for failed/rate-limited requests (powered by [ky](https://github.com/sindresorhus/ky), [customizable](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet#fn-newGoogleSpreadsheet))
 
 **Docs site -**
 Full docs available at [https://theoephraim.github.io/node-google-spreadsheet](https://theoephraim.github.io/node-google-spreadsheet)
@@ -201,6 +202,7 @@ Contributions are welcome, but please follow the existing conventions, use the l
 
 The docs site is generated using [docsify](https://docsify.js.org). To preview and run locally so you can make edits, run `npm run docs:preview` and head to http://localhost:3000
 The content lives in markdown files in the docs folder.
+The package manager for this project is `bun`.
 
 ## License
 

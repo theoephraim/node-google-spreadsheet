@@ -22,6 +22,7 @@
 - managing worksheets - add, remove, resize, update properties (ex: title), duplicate to same or other document
 - managing docs - create new doc, delete doc, basic sharing/permissions
 - export - download sheet/docs in various formats
+- automatic retries with exponential backoff for failed/rate-limited requests (powered by [ky](https://github.com/sindresorhus/ky), [customizable](https://theoephraim.github.io/node-google-spreadsheet/#/classes/google-spreadsheet#fn-newGoogleSpreadsheet))
 
 **Docs site -**
 Full docs available at [https://theoephraim.github.io/node-google-spreadsheet](https://theoephraim.github.io/node-google-spreadsheet)

@@ -21,6 +21,27 @@ _Class Reference_
 | `auth`          | `GoogleAuth` \|<br/> `JWT` \|<br/> `OAuth2Client` \|<br/> `{ apiKey: string }` \|<br/> `{ token: string }` | ✅        | Authentication to use<br/>See [Authentication](guides/authentication) for more info |
 | `options`       | `{ retryConfig: RetryConfig \| number }`                                                                   | ❎        | Options for configuring library behaviour.                                          |
 
+#### Automatic Request Retries
+
+This library uses [ky](https://github.com/sindresorhus/ky) under the hood for HTTP requests, which **automatically retries failed requests 2 times** (3 total attempts) with exponential backoff. Retries are triggered for network errors and the following HTTP status codes: `408`, `413`, `429`, `500`, `502`, `503`, `504`. For `429` (rate limit) responses, ky will respect the `Retry-After` header if present.
+
+You can customize this behavior via the `retryConfig` option — pass a number to set the retry limit, or an object for full control:
+
+```javascript
+// disable retries
+const doc = new GoogleSpreadsheet(id, auth, { retryConfig: 0 });
+
+// custom retry config (see ky docs for all options)
+const doc = new GoogleSpreadsheet(id, auth, {
+  retryConfig: {
+    limit: 5,
+    backoffLimit: 3000,
+  }
+});
+```
+
+See the [ky retry documentation](https://github.com/sindresorhus/ky#retry) for all available options.
+
 ### Creating a new document
 
 In cases where you need to create a new document and then work with it, a static method is provided:
