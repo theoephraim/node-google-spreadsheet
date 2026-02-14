@@ -215,6 +215,56 @@ describe('Row-based operations', () => {
       expect(row.get('col3')).toEqual('3'); // it evaluates the formula and formats as a string
     });
 
+    it('can save a row with trailing empty values', async () => {
+      rows = await sheet.getRows();
+      row = rows[0];
+      row.set('numbers', 'hello');
+      row.set('letters', '');
+      row.set('col1', '');
+      row.set('col2', '');
+      row.set('col3', '');
+      await row.save();
+      expect(row.get('numbers')).toBe('hello');
+      // trailing empty values should be empty strings, not undefined
+      expect(row.get('letters')).toBe('');
+      expect(row.get('col1')).toBe('');
+      expect(row.get('col2')).toBe('');
+      expect(row.get('col3')).toBe('');
+    });
+
+    it('empty trailing values persist correctly after re-fetching', async () => {
+      rows = await sheet.getRows();
+      row = rows[0];
+      expect(row.get('numbers')).toBe('hello');
+      expect(row.get('letters')).toBe('');
+      expect(row.get('col3')).toBe('');
+    });
+
+    it('can clear all values in a row by saving empty strings', async () => {
+      rows = await sheet.getRows();
+      row = rows[0];
+      const nonEmptyHeaders = HEADERS.filter((h) => h);
+      _.each(nonEmptyHeaders, (header) => row.set(header, ''));
+      await row.save();
+      _.each(nonEmptyHeaders, (header) => {
+        expect(row.get(header)).toBe('');
+      });
+      // toObject should also return empty strings, not undefined
+      const obj = row.toObject();
+      _.each(nonEmptyHeaders, (header) => {
+        expect(obj[header]).toBe('');
+      });
+    });
+
+    it('all-empty row persists correctly after re-fetching', async () => {
+      rows = await sheet.getRows();
+      row = rows[0];
+      const nonEmptyHeaders = HEADERS.filter((h) => h);
+      _.each(nonEmptyHeaders, (header) => {
+        expect(row.get(header)).toBe('');
+      });
+    });
+
     describe('encoding and odd characters', () => {
       _.each(
         {

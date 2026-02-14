@@ -13,7 +13,15 @@ export class GoogleSpreadsheetRow<T extends Record<string, any> = Record<string,
     /** raw underlying data for row */
     private _rawData: any[]
   ) {
+    this._padRawData();
+  }
 
+  /** pad _rawData with empty strings so it always matches header length */
+  private _padRawData() {
+    const headerLength = this._worksheet.headerValues.length;
+    while (this._rawData.length < headerLength) {
+      this._rawData.push('');
+    }
   }
 
   private _deleted = false;
@@ -92,7 +100,8 @@ export class GoogleSpreadsheetRow<T extends Record<string, any> = Record<string,
       },
     });
     const data = await response.json<any>();
-    this._rawData = data.updatedData.values[0];
+    this._rawData = data.updatedData.values?.[0] || [];
+    this._padRawData();
   }
 
   /** delete this row */
