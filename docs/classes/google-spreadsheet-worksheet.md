@@ -153,7 +153,7 @@ The cell-based interface lets you load and update individual cells in a sheeet, 
 
 !> This method does not return the cells it loads, instead they are kept in a local cache managed by the sheet. See methods below (`getCell` and `getCellByA1`) to access them.
 
-You can filter the cells you want to fetch in several ways. See [Data Filters](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter) for more info. Strings are treated as A1 ranges, objects are detected to be a [GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange) with sheetId not required.
+You can filter the cells you want to fetch in several ways. See [Data Filters](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter) for more info. Strings are treated as A1 ranges, objects are detected to be a [GridRange](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets/other#GridRange) with sheetId not required. Objects with a `developerMetadataLookup` key are treated as [DeveloperMetadataLookup](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter#DeveloperMetadataLookup) filters.
 
 ```javascript
 await sheet.loadCells(); // no filter - will load ALL cells in the sheet
@@ -163,6 +163,9 @@ await sheet.loadCells({ // GridRange object
 });
 await sheet.loadCells({ startRowIndex: 50 }); // not all props required
 await sheet.loadCells(['B2:D5', 'B50:D55']); // can pass an array of filters
+await sheet.loadCells({ // DeveloperMetadataLookup filter
+  developerMetadataLookup: { metadataKey: 'my-key' }
+});
 ```
 
 !> If using an API key (read-only access), only A1 ranges are supported

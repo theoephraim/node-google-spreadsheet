@@ -250,7 +250,10 @@ export class GoogleSpreadsheetWorksheet {
         return `${this.a1SheetName}!${filter}`;
       }
       if (_.isObject(filter)) {
-        // TODO: detect and support DeveloperMetadata filters
+        // pass through developer metadata filters without adding sheetId
+        if ('developerMetadataLookup' in filter) {
+          return filter;
+        }
 
         // check if the user passed in a sheet id
         const filterAny = filter as any;

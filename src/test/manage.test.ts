@@ -1376,6 +1376,29 @@ describe('Managing doc info and sheets', () => {
       );
     });
 
+    it('can search developer metadata', async () => {
+      // create a metadata entry to search for
+      await sheet.createDeveloperMetadata({
+        metadataKey: 'search-test-key',
+        metadataValue: 'search-test-value',
+        location: { sheetId: sheet.sheetId },
+        visibility: 'DOCUMENT',
+      });
+
+      const results = await doc.searchDeveloperMetadata([
+        { developerMetadataLookup: { metadataKey: 'search-test-key' } },
+      ]);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].metadataKey).toBe('search-test-key');
+      expect(results[0].metadataValue).toBe('search-test-value');
+
+      // clean up
+      await sheet.deleteDeveloperMetadata({
+        developerMetadataLookup: { metadataKey: 'search-test-key' },
+      });
+    });
+
     it('can delete developer metadata', async () => {
       await sheet.deleteDeveloperMetadata({
         developerMetadataLookup: {
