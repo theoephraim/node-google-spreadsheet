@@ -274,6 +274,109 @@ describe('Cell-based operations', () => {
     });
   });
 
+  describe('merge and unmerge operations', () => {
+    beforeEach(async () => {
+      sheet.resetLocalCache(true);
+    });
+
+    it('merges all cells (MERGE_ALL)', async () => {
+      // set up some values first
+      await sheet.loadCells('A2:B3');
+      sheet.getCell(1, 0).value = 'top-left';
+      sheet.getCell(1, 1).value = 'top-right';
+      sheet.getCell(2, 0).value = 'bot-left';
+      sheet.getCell(2, 1).value = 'bot-right';
+      await sheet.saveUpdatedCells();
+
+      await sheet.mergeCells({
+        startRowIndex: 1,
+        endRowIndex: 3,
+        startColumnIndex: 0,
+        endColumnIndex: 2,
+      });
+
+      await sheet.loadCells('A2:B3');
+      expect(sheet.getCell(1, 0).value).toBe('top-left'); // top-left kept
+      expect(sheet.getCell(1, 1).value).toBeNull(); // merged away
+      expect(sheet.getCell(2, 0).value).toBeNull();
+      expect(sheet.getCell(2, 1).value).toBeNull();
+    });
+
+    it('merges cells in column direction (MERGE_COLUMNS)', async () => {
+      await sheet.loadCells('C2:D3');
+      sheet.getCell(1, 2).value = 'C2';
+      sheet.getCell(1, 3).value = 'D2';
+      sheet.getCell(2, 2).value = 'C3';
+      sheet.getCell(2, 3).value = 'D3';
+      await sheet.saveUpdatedCells();
+
+      await sheet.mergeCells({
+        startRowIndex: 1,
+        endRowIndex: 3,
+        startColumnIndex: 2,
+        endColumnIndex: 4,
+      }, 'MERGE_COLUMNS');
+
+      await sheet.loadCells('C2:D3');
+      expect(sheet.getCell(1, 2).value).toBe('C2'); // top of each column kept
+      expect(sheet.getCell(1, 3).value).toBe('D2');
+      expect(sheet.getCell(2, 2).value).toBeNull(); // merged away
+      expect(sheet.getCell(2, 3).value).toBeNull();
+    });
+
+    it('merges cells in row direction (MERGE_ROWS)', async () => {
+      await sheet.loadCells('E2:F3');
+      sheet.getCell(1, 4).value = 'E2';
+      sheet.getCell(1, 5).value = 'F2';
+      sheet.getCell(2, 4).value = 'E3';
+      sheet.getCell(2, 5).value = 'F3';
+      await sheet.saveUpdatedCells();
+
+      await sheet.mergeCells({
+        startRowIndex: 1,
+        endRowIndex: 3,
+        startColumnIndex: 4,
+        endColumnIndex: 6,
+      }, 'MERGE_ROWS');
+
+      await sheet.loadCells('E2:F3');
+      expect(sheet.getCell(1, 4).value).toBe('E2'); // left of each row kept
+      expect(sheet.getCell(1, 5).value).toBeNull(); // merged away
+      expect(sheet.getCell(2, 4).value).toBe('E3');
+      expect(sheet.getCell(2, 5).value).toBeNull();
+    });
+
+    it('can unmerge cells and write to previously merged cells', async () => {
+      await sheet.loadCells('G2:H2');
+      sheet.getCell(1, 6).value = 'G2';
+      sheet.getCell(1, 7).value = 'H2';
+      await sheet.saveUpdatedCells();
+
+      // merge
+      await sheet.mergeCells({
+        startRowIndex: 1,
+        endRowIndex: 2,
+        startColumnIndex: 6,
+        endColumnIndex: 8,
+      });
+      await sheet.loadCells('G2:H2');
+      expect(sheet.getCell(1, 6).value).toBe('G2');
+      expect(sheet.getCell(1, 7).value).toBeNull();
+
+      // unmerge
+      await sheet.unmergeCells({
+        startRowIndex: 1,
+        endRowIndex: 2,
+        startColumnIndex: 6,
+        endColumnIndex: 8,
+      });
+      await sheet.loadCells('G2:H2');
+      sheet.getCell(1, 7).value = 'restored';
+      await sheet.saveUpdatedCells();
+      expect(sheet.getCell(1, 7).value).toBe('restored');
+    });
+  });
+
   describe.todo('cell formatting', () => {
     // TODO: add tests!
     // - set the background color twice, conflicts b/w backgroundColor and backgroundColorStyle
