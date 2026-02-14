@@ -1376,6 +1376,66 @@ describe('Managing doc info and sheets', () => {
       );
     });
 
+    it('can search developer metadata', async () => {
+      // create a metadata entry to search for
+      await sheet.createDeveloperMetadata({
+        metadataKey: 'search-test-key',
+        metadataValue: 'search-test-value',
+        location: { sheetId: sheet.sheetId },
+        visibility: 'DOCUMENT',
+      });
+
+      const results = await doc.searchDeveloperMetadata([
+        { developerMetadataLookup: { metadataKey: 'search-test-key' } },
+      ]);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].metadataKey).toBe('search-test-key');
+      expect(results[0].metadataValue).toBe('search-test-value');
+
+      // clean up
+      await sheet.deleteDeveloperMetadata({
+        developerMetadataLookup: { metadataKey: 'search-test-key' },
+      });
+    });
+
+    it('can load cells using a developer metadata filter', async () => {
+      // create row-level metadata on row 0
+      await sheet.createDeveloperMetadata({
+        metadataKey: 'row-meta-key',
+        metadataValue: 'row-meta-value',
+        location: {
+          dimensionRange: {
+            sheetId: sheet.sheetId,
+            dimension: 'ROWS',
+            startIndex: 0,
+            endIndex: 1,
+          },
+        },
+        visibility: 'DOCUMENT',
+      });
+
+      // load cells using developer metadata filter on doc
+      await doc.loadCells({
+        developerMetadataLookup: { metadataKey: 'row-meta-key' },
+      });
+
+      // load cells using developer metadata filter on sheet
+      sheet.resetLocalCache(true);
+      await sheet.loadCells({
+        developerMetadataLookup: { metadataKey: 'row-meta-key' },
+      });
+
+      // verify cells were loaded (row 0 should be accessible)
+      const cell = sheet.getCell(0, 0);
+      expect(cell).toBeTruthy();
+
+      // clean up
+      await sheet.deleteDeveloperMetadata({
+        developerMetadataLookup: { metadataKey: 'row-meta-key' },
+      });
+    });
+
     it('can delete developer metadata', async () => {
       await sheet.deleteDeveloperMetadata({
         developerMetadataLookup: {

@@ -216,6 +216,23 @@ Param|Type|Required|Description
 
 - ↩️ **Returns** - Buffer (or stream) containing ODS data
 
+### Developer Metadata
+
+#### `searchDeveloperMetadata(filters)` (async) :id=fn-searchDeveloperMetadata
+> Search for developer metadata entries matching the given filters
+
+Param|Type|Required|Description
+---|---|---|---
+`filters`|Array<[DataFilter](https://developers.google.com/sheets/api/reference/rest/v4/DataFilter)>|✅|Array of DataFilter objects to match against
+
+- ↩️ **Returns** - `Promise<DeveloperMetadata[]>` - array of matching [DeveloperMetadata](https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata#DeveloperMetadata) objects
+
+```javascript
+const results = await doc.searchDeveloperMetadata([
+  { developerMetadataLookup: { metadataKey: 'my-key' } },
+]);
+```
+
 ### Deletion
 #### `delete()` (async) :id=fn-delete
 > delete the document

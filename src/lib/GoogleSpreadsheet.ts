@@ -4,6 +4,8 @@ import { GoogleSpreadsheetWorksheet } from './GoogleSpreadsheetWorksheet';
 import { getFieldMask } from './utils';
 import {
   DataFilter,
+  DataFilterObject,
+  DeveloperMetadata,
   GridRange,
   NamedRangeId,
   ProtectedRange,
@@ -412,15 +414,12 @@ export class GoogleSpreadsheet {
   async loadCells(
     /**
      * single filter or array of filters
-     * strings are treated as A1 ranges, objects are treated as GridRange objects
+     * strings are treated as A1 ranges, objects are treated as GridRange objects,
+     * objects with a `developerMetadataLookup` key are treated as DeveloperMetadataLookup filters
      * pass nothing to fetch all cells
      * */
     filters?: DataFilter | DataFilter[]
   ) {
-    // TODO: make it support DeveloperMetadataLookup objects
-
-
-
     // TODO: switch to this mode if using a read-only auth token?
     const readOnlyMode = this.authMode === AUTH_MODES.API_KEY;
 
@@ -433,7 +432,9 @@ export class GoogleSpreadsheet {
         if (readOnlyMode) {
           throw new Error('Only A1 ranges are supported when fetching cells with read-only access (using only an API key)');
         }
-        // TODO: make this support Developer Metadata filters
+        if ('developerMetadataLookup' in filter) {
+          return { developerMetadataLookup: filter.developerMetadataLookup };
+        }
         return { gridRange: filter };
       }
       throw new Error('Each filter must be an A1 range string or a gridrange object');
@@ -646,6 +647,24 @@ export class GoogleSpreadsheet {
    */
   async deletePermission(permissionId: string) {
     await this.driveApi.delete(`permissions/${permissionId}`);
+  }
+
+  // DEVELOPER METADATA ///////////////////////////////////////////////////////////////////////////
+
+  /**
+   * search for developer metadata entries matching the given filters
+   * @see https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.developerMetadata/search
+   */
+  async searchDeveloperMetadata(
+    /** array of DataFilter objects to match against */
+    filters: DataFilterObject[]
+  ): Promise<DeveloperMetadata[]> {
+    const response = await this.sheetsApi.post('developerMetadata:search', {
+      json: { dataFilters: filters },
+    });
+    const data = await response.json<any>();
+    if (!data.matchedDeveloperMetadata) return [];
+    return data.matchedDeveloperMetadata.map((m: any) => m.developerMetadata);
   }
 
   //

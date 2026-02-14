@@ -410,8 +410,8 @@ export type GridRange = {
 };
 export type GridRangeWithoutWorksheetId = Omit<GridRange, 'sheetId'>;
 export type GridRangeWithOptionalWorksheetId = MakeOptional<GridRange, 'sheetId'>;
-export type DataFilter = A1Range | GridRange;
-export type DataFilterWithoutWorksheetId = A1Range | GridRangeWithoutWorksheetId;
+export type DataFilter = A1Range | GridRange | DataFilterObject;
+export type DataFilterWithoutWorksheetId = A1Range | GridRangeWithoutWorksheetId | DataFilterObject;
 
 /**
  * A coordinate in a sheet. All indexes are zero-based.
