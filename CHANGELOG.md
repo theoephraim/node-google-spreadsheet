@@ -1,5 +1,17 @@
 # `google-spreadsheet` changelog
 
+## 5.2.0
+
+### Minor Changes
+
+- 74cdc44: Add searchDeveloperMetadata method and support DeveloperMetadataLookup filters in loadCells
+- 71ee84d: Add retryConfig parameter to allow customising error handling
+
+### Patch Changes
+
+- fd12a3b: Fix crash when saving a row with all empty values, and ensure empty cells always return `''` instead of `undefined`
+- 557ce16: Allow setting `cell.stringValue` to strings starting with `=` — they are now stored as literal string values instead of throwing an error
+
 ## 5.1.0
 
 ### Minor Changes
