@@ -38,12 +38,7 @@ jobs:
         run: bun run build
 
       - name: Create Release PR or Publish
-        uses: changesets/action@v1
-        with:
-          version: bunx changeset version
-          publish: bunx changeset publish
-          title: "[Changesets] Versioned release"
-          commit: "[Changesets] Create versioned package(s) for publishing"
+        run: bunx @varlock/bumpy ci release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+          GH_TOKEN: ${{ github.token }}
+          BUMPY_GH_TOKEN: ${{ secrets.BUMPY_GH_TOKEN }}

@@ -1,5 +1,8 @@
 {
   "editor.formatOnSave": true,
+  "files.associations": {
+    "**/.bumpy/_config.json": "jsonc",
+  },
   "[typescript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },

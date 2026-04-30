@@ -1,6 +1,6 @@
 ---
 name: work-on
-description: Work on an issue or PR - implement changes, add tests, update docs, lint, add changesets, and create a PR
+description: Work on an issue or PR - implement changes, add tests, update docs, lint, add bump file, and create a PR
 ---
 
 You are given an issue or external PR to implement. The input may be a URL, pasted issue text, or pasted PR diff/description.

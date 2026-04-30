@@ -11,7 +11,8 @@ Goal of the project is to provide a simplified, more ergonomic interface compare
 - Tested with `vitest`
 - Linted with `eslint`
 - Uses `bun` as package manager
-- Versioning/releases managed with `changesets`
+- Env vars (for testing) managed with `varlock`
+- Versioning/releases managed with `@varlock/bumpy`
 
 ## Common Commands
 - `bun test` — run tests (vitest in watch mode)
