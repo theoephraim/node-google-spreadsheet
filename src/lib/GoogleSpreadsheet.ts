@@ -193,12 +193,12 @@ export class GoogleSpreadsheet {
     if (!(error instanceof HTTPError)) return error;
 
     const { response } = error;
-    const errorDataText = await response?.text();
     let errorData;
     try {
+      const errorDataText = await response?.clone().text();
       errorData = JSON.parse(errorDataText);
     } catch (e) {
-      // console.log('parsing json failed', errorDataText);
+      // body may have already been consumed, or response may not be JSON
     }
 
     if (errorData) {
