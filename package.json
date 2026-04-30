@@ -69,7 +69,7 @@
     "nock": "^14.0.11",
     "tsdown": "^0.20.3",
     "typescript": "^5.9.3",
-    "varlock": "^0.2.2",
+    "varlock": "^1.0.0",
     "vitest": "^4.0.18"
   },
   "peerDependencies": {
