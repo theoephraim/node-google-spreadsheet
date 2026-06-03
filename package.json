@@ -51,7 +51,7 @@
     "test:ci": "vitest run"
   },
   "dependencies": {
-    "es-toolkit": "^1.46.1",
+    "es-toolkit": "^1.47.0",
     "ky": "^2.0.2"
   },
   "devDependencies": {
