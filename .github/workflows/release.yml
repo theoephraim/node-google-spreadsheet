@@ -4,41 +4,76 @@ on:
   push:
     branches: [main]
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency:
+  group: bumpy-release
+  cancel-in-progress: false
 
 jobs:
-  release:
+  plan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      mode: ${{ steps.plan.outputs.mode }}
+      packages: ${{ steps.plan.outputs.packages }}
+      bumpy_version: ${{ steps.bumpy-version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - id: bumpy-version
+        name: Resolve bumpy version
+        run: |
+          VERSION=$(jq -r '.devDependencies["@varlock/bumpy"] // .dependencies["@varlock/bumpy"]' package.json | sed 's/[\^~]//')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "BUMPY_VERSION=$VERSION" >> "$GITHUB_ENV"
+      - id: plan
+        run: bunx "@varlock/bumpy@$BUMPY_VERSION" ci plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  version-pr:
+    needs: plan
+    if: needs.plan.outputs.mode == 'version-pr'
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
-      id-token: write # required for trusted publishing
-
+    env:
+      BUMPY_VERSION: ${{ needs.plan.outputs.bumpy_version }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Use Node.js 24
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v6
         with:
-          node-version: 24
-          registry-url: "https://registry.npmjs.org"
-      
-      # Ensure npm 11.5.1 or later is installed (for trusted publishing)
-      - name: Update npm
-        run: npm install -g npm@latest
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - run: bunx "@varlock/bumpy@$BUMPY_VERSION" ci release --expect-mode version-pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUMPY_GH_TOKEN: ${{ secrets.BUMPY_GH_TOKEN }}
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build
-        run: bun run build
-
-      - name: Create Release PR or Publish
-        run: bunx @varlock/bumpy ci release
+  publish:
+    needs: plan
+    if: needs.plan.outputs.mode == 'publish'
+    runs-on: ubuntu-latest
+    environment: publish
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      BUMPY_VERSION: ${{ needs.plan.outputs.bumpy_version }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-node@v6
+        with:
+          node-version: latest
+      - run: npm install -g npm@latest # needed for oidc/staged
+      - run: bun install
+      - run: bun run build
+      - run: bunx "@varlock/bumpy@$BUMPY_VERSION" ci release --expect-mode publish
         env:
           GH_TOKEN: ${{ github.token }}
           BUMPY_GH_TOKEN: ${{ secrets.BUMPY_GH_TOKEN }}

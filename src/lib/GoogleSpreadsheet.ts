@@ -142,19 +142,23 @@ export class GoogleSpreadsheet {
 
     // create a ky instance with sheet root URL and hooks to handle auth
     this.sheetsApi = ky.create({
-      prefixUrl: `${SHEETS_API_BASE_URL}/${spreadsheetId}`,
+      prefix: `${SHEETS_API_BASE_URL}/${spreadsheetId}`,
       timeout: 180_000,
       hooks: {
-        beforeRequest: [(r) => this._setAuthRequestHook(r)],
-        beforeError: [(e) => this._errorHook(e)],
+        beforeRequest: [
+          ({ request }) => this._setAuthRequestHook(request),
+        ],
+        beforeError: [
+          ({ error }) => this._errorHook(error),
+        ],
       },
       retry: retryConfig,
     });
     this.driveApi = ky.create({
-      prefixUrl: `${DRIVE_API_BASE_URL}/${spreadsheetId}`,
+      prefix: `${DRIVE_API_BASE_URL}/${spreadsheetId}`,
       hooks: {
-        beforeRequest: [(r) => this._setAuthRequestHook(r)],
-        beforeError: [(e) => this._errorHook(e)],
+        beforeRequest: [({ request }) => this._setAuthRequestHook(request)],
+        beforeError: [({ error }) => this._errorHook(error)],
       },
       retry: retryConfig,
     });
@@ -185,26 +189,21 @@ export class GoogleSpreadsheet {
   }
 
   /** @internal */
-  async _errorHook(error: HTTPError) {
-    const { response } = error;
-    const errorDataText = await response?.text();
-    let errorData;
-    try {
-      errorData = JSON.parse(errorDataText);
-    } catch (e) {
-      // console.log('parsing json failed', errorDataText);
-    }
+  async _errorHook(error: Error) {
+    if (!(error instanceof HTTPError)) return error;
 
-    if (errorData) {
-      // usually the error has a code and message, but occasionally not
-      if (!errorData.error) return error;
+    // ky pre-parses the response body into error.data (the response body is already consumed)
+    const errorData = typeof error.data === 'string' ? (() => {
+      try { return JSON.parse(error.data as string); } catch { return undefined; }
+    })() : error.data;
 
+    if (errorData?.error) {
       const { code, message } = errorData.error;
       error.message = `Google API error - [${code}] ${message}`;
       return error;
     }
 
-    if (_.get(error, 'response.status') === 403) {
+    if (error.response?.status === 403) {
       if ('apiKey' in this.auth) {
         throw new Error('Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)');
       }
@@ -494,7 +493,7 @@ export class GoogleSpreadsheet {
 
     const exportUrl = this._spreadsheetUrl.replace('edit', 'export');
     const response = await this.sheetsApi.get(exportUrl, {
-      prefixUrl: '', // unset baseUrl since we're not hitting the normal sheets API
+      prefix: '', // unset baseUrl since we're not hitting the normal sheets API
       searchParams: {
         id: this.spreadsheetId,
         format: fileType,

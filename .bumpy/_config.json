@@ -8,5 +8,9 @@
         "theoephraim"
       ]
     }
-  ]
+  ],
+  "publish": {
+    "provenance": true,
+    "npmStaged": true
+  }
 }
