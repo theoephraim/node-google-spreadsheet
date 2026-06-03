@@ -192,25 +192,18 @@ export class GoogleSpreadsheet {
   async _errorHook(error: Error) {
     if (!(error instanceof HTTPError)) return error;
 
-    const { response } = error;
-    let errorData;
-    try {
-      const errorDataText = await response?.clone().text();
-      errorData = JSON.parse(errorDataText);
-    } catch (e) {
-      // body may have already been consumed, or response may not be JSON
-    }
+    // ky pre-parses the response body into error.data (the response body is already consumed)
+    const errorData = typeof error.data === 'string' ? (() => {
+      try { return JSON.parse(error.data as string); } catch { return undefined; }
+    })() : error.data;
 
-    if (errorData) {
-      // usually the error has a code and message, but occasionally not
-      if (!errorData.error) return error;
-
+    if (errorData?.error) {
       const { code, message } = errorData.error;
       error.message = `Google API error - [${code}] ${message}`;
       return error;
     }
 
-    if (_.get(error, 'response.status') === 403) {
+    if (error.response?.status === 403) {
       if ('apiKey' in this.auth) {
         throw new Error('Sheet is private. Use authentication or make public. (see https://github.com/theoephraim/node-google-spreadsheet#a-note-on-authentication for details)');
       }
