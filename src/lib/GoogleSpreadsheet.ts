@@ -142,19 +142,23 @@ export class GoogleSpreadsheet {
 
     // create a ky instance with sheet root URL and hooks to handle auth
     this.sheetsApi = ky.create({
-      prefixUrl: `${SHEETS_API_BASE_URL}/${spreadsheetId}`,
+      prefix: `${SHEETS_API_BASE_URL}/${spreadsheetId}`,
       timeout: 180_000,
       hooks: {
-        beforeRequest: [(r) => this._setAuthRequestHook(r)],
-        beforeError: [(e) => this._errorHook(e)],
+        beforeRequest: [
+          ({ request }) => this._setAuthRequestHook(request),
+        ],
+        beforeError: [
+          ({ error }) => this._errorHook(error),
+        ],
       },
       retry: retryConfig,
     });
     this.driveApi = ky.create({
-      prefixUrl: `${DRIVE_API_BASE_URL}/${spreadsheetId}`,
+      prefix: `${DRIVE_API_BASE_URL}/${spreadsheetId}`,
       hooks: {
-        beforeRequest: [(r) => this._setAuthRequestHook(r)],
-        beforeError: [(e) => this._errorHook(e)],
+        beforeRequest: [({ request }) => this._setAuthRequestHook(request)],
+        beforeError: [({ error }) => this._errorHook(error)],
       },
       retry: retryConfig,
     });
@@ -185,7 +189,9 @@ export class GoogleSpreadsheet {
   }
 
   /** @internal */
-  async _errorHook(error: HTTPError) {
+  async _errorHook(error: Error) {
+    if (!(error instanceof HTTPError)) return error;
+
     const { response } = error;
     const errorDataText = await response?.text();
     let errorData;
@@ -494,7 +500,7 @@ export class GoogleSpreadsheet {
 
     const exportUrl = this._spreadsheetUrl.replace('edit', 'export');
     const response = await this.sheetsApi.get(exportUrl, {
-      prefixUrl: '', // unset baseUrl since we're not hitting the normal sheets API
+      prefix: '', // unset baseUrl since we're not hitting the normal sheets API
       searchParams: {
         id: this.spreadsheetId,
         format: fileType,
