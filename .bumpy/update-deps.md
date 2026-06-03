@@ -1,5 +1,5 @@
 ---
-google-spreadsheet: patch
+google-spreadsheet: minor
 ---
 
 bump deps
