@@ -1,0 +1,31 @@
+# Uses `pull_request_target` so fork PR comments work — runs with write
+# perms and secrets, so it MUST NOT execute PR code (no `bun install`, no
+# PR-defined scripts). Bumpy only reads files; its version is resolved from
+# the base branch's package.json.
+name: Bumpy Check
+on: pull_request_target
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Resolve bumpy version from base
+        run: |
+          git fetch origin main --depth=1
+          VERSION=$(git show "origin/main:package.json" \
+            | jq -r '.devDependencies["@varlock/bumpy"] // .dependencies["@varlock/bumpy"]' \
+            | sed 's/[\^~]//')
+          echo "BUMPY_VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - run: bunx "@varlock/bumpy@$BUMPY_VERSION" ci check
+        env:
+          GH_TOKEN: ${{ github.token }}
